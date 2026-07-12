@@ -11,7 +11,9 @@ import {
   PREUVE_TYPE_LABELS,
   DEMI_JOURNEE_LABELS,
 } from '@/lib/parcours-labels'
-import { deleteSequenceAction } from '@/app/(app)/parcours/actions'
+import { PAYER_TYPE_LABELS, CONTRACTUALISATION_STATUS_LABELS, PARTICIPANT_STATUS_LABELS } from '@/lib/participant-labels'
+import { computePaymentTriggerDate } from '@/lib/participant'
+import { deleteSequenceAction, addFinancementAction } from '@/app/(app)/parcours/actions'
 import type { FormationSnapshot } from '@/lib/formation'
 
 export default async function ParcoursDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +29,20 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
       beneficiaire: { select: { companyName: true } },
       donneurOrdre: { select: { companyName: true } },
       sequences: { orderBy: { ordre: 'asc' }, include: { formateur: { select: { firstName: true, lastName: true } } } },
-      _count: { select: { participants: true, contractualisations: true } },
+      contractualisations: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          payerClient: { select: { companyName: true } },
+          payerParticipant: { select: { firstName: true, lastName: true } },
+          financeur: { select: { name: true } },
+          financements: true,
+          _count: { select: { participants: true } },
+        },
+      },
+      participants: {
+        orderBy: { createdAt: 'asc' },
+        include: { participant: true, contractualisation: { select: { payerType: true } } },
+      },
     },
   })
   if (!parcours) notFound()
@@ -168,10 +183,163 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
-      <p className="t-caption-1" style={{ marginTop: 'var(--space-6)' }}>
-        {parcours._count.participants} participant{parcours._count.participants > 1 ? 's' : ''} ·{' '}
-        {parcours._count.contractualisations} contractualisation{parcours._count.contractualisations > 1 ? 's' : ''}
-      </p>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 'var(--space-9)',
+          marginBottom: 'var(--space-5)',
+        }}
+      >
+        <h2 className="t-heading">Contractualisations ({parcours.contractualisations.length})</h2>
+        {canWrite && (
+          <Link href={`/parcours/${parcours.id}/contractualisations/nouveau`} className="btn btn-sm btn-primary">
+            Ajouter une contractualisation
+          </Link>
+        )}
+      </div>
+
+      {parcours.contractualisations.length === 0 ? (
+        <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
+          Aucune contractualisation — le montant HT du parcours restera à 0 €.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {parcours.contractualisations.map((c) => {
+            const payerName =
+              c.payerClient?.companyName ??
+              (c.payerParticipant ? `${c.payerParticipant.firstName} ${c.payerParticipant.lastName}` : null) ??
+              c.financeur?.name ??
+              '—'
+            const paymentTrigger =
+              c.payerType === 'INDIVIDU' && c.retractationEndsAt && parcours.dateDebut
+                ? computePaymentTriggerDate(parcours.dateDebut, c.retractationEndsAt)
+                : null
+            return (
+              <div key={c.id} className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <span className="badge badge-neutral">{PAYER_TYPE_LABELS[c.payerType] ?? c.payerType}</span>
+                      <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
+                        {payerName}
+                      </span>
+                      <span className="badge badge-accent">
+                        {CONTRACTUALISATION_STATUS_LABELS[c.status] ?? c.status}
+                      </span>
+                    </div>
+                    <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                      {euros(c.montantHT)} HT{c.remise > 0 && <> · remise {euros(c.remise)}</>} ·{' '}
+                      {c._count.participants} participant{c._count.participants > 1 ? 's' : ''}
+                      {c.numeroEngagement && <> · engagement {c.numeroEngagement}</>}
+                    </p>
+                  </div>
+                  {canWrite && (
+                    <Link href={`/parcours/${parcours.id}/contractualisations/${c.id}/modifier`} className="btn btn-sm btn-ghost">
+                      Modifier
+                    </Link>
+                  )}
+                </div>
+
+                {c.payerType === 'INDIVIDU' && c.retractationEndsAt && (
+                  <div className="badge badge-warning" style={{ marginTop: 'var(--space-3)' }}>
+                    Rétractation jusqu&apos;au {new Date(c.retractationEndsAt).toLocaleDateString('fr-FR')} — aucun
+                    paiement ne peut être demandé avant.
+                    {paymentTrigger && (
+                      <> Déclenchement du paiement : {paymentTrigger.toLocaleDateString('fr-FR')} (max J-2, rétractation).</>
+                    )}
+                  </div>
+                )}
+
+                {c.financements.length > 0 && (
+                  <p className="t-caption-1" style={{ marginTop: 'var(--space-3)' }}>
+                    Financement{c.financements.length > 1 ? 's' : ''} :{' '}
+                    {c.financements.map((f) => `${f.type} (${euros(f.montantPrisEnCharge)})`).join(' · ')}
+                  </p>
+                )}
+
+                {canWrite && (
+                  <form action={addFinancementAction} style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-4)', alignItems: 'flex-end' }}>
+                    <input type="hidden" name="contractualisationId" value={c.id} />
+                    <input type="hidden" name="parcoursId" value={parcours.id} />
+                    <div>
+                      <label className="input-label">Type de financement</label>
+                      <select className="input" name="type" defaultValue="ENTREPRISE_DIRECTE">
+                        <option value="ENTREPRISE_DIRECTE">Entreprise directe</option>
+                        <option value="OPCO">OPCO</option>
+                        <option value="CPF">CPF</option>
+                        <option value="FONDS_PROPRES">Fonds propres</option>
+                        <option value="AUTRE">Autre</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="input-label">Montant pris en charge (€)</label>
+                      <input className="input" type="number" step="0.01" min="0" name="montantPrisEnCharge" />
+                    </div>
+                    <button type="submit" className="btn btn-sm btn-secondary">
+                      Ajouter un financement
+                    </button>
+                  </form>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 'var(--space-9)',
+          marginBottom: 'var(--space-5)',
+        }}
+      >
+        <h2 className="t-heading">Participants ({parcours.participants.length})</h2>
+        {canWrite && (
+          <Link href={`/parcours/${parcours.id}/participants/nouveau`} className="btn btn-sm btn-primary">
+            Inscrire un participant
+          </Link>
+        )}
+      </div>
+
+      {parcours.participants.length === 0 ? (
+        <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
+          Aucun participant inscrit.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {parcours.participants.map((pp) => (
+            <div key={pp.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
+                    {pp.participant.firstName} {pp.participant.lastName}
+                  </span>
+                  <span className="badge badge-neutral">{PARTICIPANT_STATUS_LABELS[pp.status] ?? pp.status}</span>
+                  {pp.besoinAccessibilite && (
+                    <span className={`badge ${pp.adaptationTraceeAt ? 'badge-accent' : 'badge-danger'}`}>
+                      {pp.adaptationTraceeAt ? 'Accessibilité tracée' : 'Accessibilité NON tracée'}
+                    </span>
+                  )}
+                </div>
+                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                  {pp.contractualisation ? PAYER_TYPE_LABELS[pp.contractualisation.payerType] : 'Aucun payeur assigné'} ·{' '}
+                  {pp.hoursAttended.toString()}h assistées
+                  {pp.status === 'ABANDON' && pp.abandonReason && <> · {pp.abandonReason}</>}
+                </p>
+              </div>
+              {canWrite && (
+                <Link href={`/parcours/${parcours.id}/participants/${pp.id}/modifier`} className="btn btn-sm btn-ghost">
+                  Gérer
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </>
   )
 }

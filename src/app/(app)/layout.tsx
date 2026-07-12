@@ -47,6 +47,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             Parcours
           </Link>
           <Link
+            href="/participants"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Participants
+          </Link>
+          <Link
+            href="/financeurs"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Financeurs
+          </Link>
+          <Link
             href="/formateurs"
             className="t-nav-m"
             style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}

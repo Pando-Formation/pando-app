@@ -19,6 +19,7 @@
     "verify:slice2": "tsx prisma/fixtures/slice2-clients.ts",
     "verify:slice3": "tsx prisma/fixtures/slice3-formateurs.ts",
     "verify:slice4": "tsx prisma/fixtures/slice4-parcours.ts",
+    "verify:slice5": "tsx prisma/fixtures/slice5-participants.ts",
     "mail:dev": "maildev"
   },
   "prisma": {

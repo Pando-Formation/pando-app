@@ -5,6 +5,27 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/authz'
 import { parcoursInputSchema, sequenceInputSchema } from '@/lib/validation/parcours'
 import { createParcours, updateParcours, addSequence, updateSequence, deleteSequence } from '@/lib/parcours'
+import {
+  contractualisationInputSchema,
+  financementInputSchema,
+  enrollParticipantInputSchema,
+  parcoursParticipantInputSchema,
+} from '@/lib/validation/participant'
+import {
+  createContractualisation,
+  updateContractualisation,
+  addFinancement,
+  enrollParticipant,
+  updateParcoursParticipant,
+} from '@/lib/participant'
+import { toCents } from '@/lib/money'
+
+function parseEuros(raw: FormDataEntryValue | null): string {
+  const s = String(raw ?? '').trim()
+  if (!s) return '0'
+  const n = Number(s)
+  return String(Number.isNaN(n) ? 0 : toCents(n))
+}
 
 export type ParcoursActionState = {
   formError?: string
@@ -148,4 +169,147 @@ export async function deleteSequenceAction(formData: FormData) {
   if (!id) return
   await deleteSequence(id)
   revalidatePath(`/parcours/${parcoursId}`)
+}
+
+export type ContractualisationActionState = {
+  formError?: string
+  fieldErrors?: Record<string, string[]>
+} | null
+
+function formDataToContractualisationInput(formData: FormData) {
+  return {
+    payerType: String(formData.get('payerType') ?? 'ORGANISATION'),
+    payerId: String(formData.get('payerId') ?? ''),
+    status: String(formData.get('status') ?? 'BROUILLON'),
+    priceMode: String(formData.get('priceMode') ?? 'FORFAIT_JOUR'),
+    montantHT: parseEuros(formData.get('montantHT')),
+    remise: parseEuros(formData.get('remise')),
+    delaiReglement: optionalText(formData, 'delaiReglement'),
+    numeroEngagement: optionalText(formData, 'numeroEngagement'),
+    codeService: optionalText(formData, 'codeService'),
+  }
+}
+
+export async function createContractualisationAction(
+  _prevState: ContractualisationActionState,
+  formData: FormData,
+): Promise<ContractualisationActionState> {
+  await requireAdmin()
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!parcoursId) return { formError: 'Parcours introuvable.' }
+
+  const parsed = contractualisationInputSchema.safeParse(formDataToContractualisationInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await createContractualisation(parcoursId, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}`)
+}
+
+export async function updateContractualisationAction(
+  _prevState: ContractualisationActionState,
+  formData: FormData,
+): Promise<ContractualisationActionState> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id) return { formError: 'Contractualisation introuvable.' }
+
+  const parsed = contractualisationInputSchema.safeParse(formDataToContractualisationInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await updateContractualisation(id, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}`)
+}
+
+export async function addFinancementAction(formData: FormData) {
+  await requireAdmin()
+  const contractualisationId = String(formData.get('contractualisationId') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!contractualisationId) return
+
+  const parsed = financementInputSchema.safeParse({
+    type: String(formData.get('type') ?? 'AUTRE'),
+    financeurId: optionalText(formData, 'financeurId'),
+    dossierNumber: optionalText(formData, 'dossierNumber'),
+    montantPrisEnCharge: parseEuros(formData.get('montantPrisEnCharge')),
+  })
+  if (!parsed.success) return
+
+  await addFinancement(contractualisationId, parsed.data)
+  revalidatePath(`/parcours/${parcoursId}`)
+}
+
+export type EnrollActionState = {
+  formError?: string
+  fieldErrors?: Record<string, string[]>
+} | null
+
+export async function enrollParticipantAction(
+  _prevState: EnrollActionState,
+  formData: FormData,
+): Promise<EnrollActionState> {
+  await requireAdmin()
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!parcoursId) return { formError: 'Parcours introuvable.' }
+
+  const parsed = enrollParticipantInputSchema.safeParse({
+    participantId: String(formData.get('participantId') ?? ''),
+    contractualisationId: optionalText(formData, 'contractualisationId'),
+  })
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await enrollParticipant(parcoursId, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}`)
+}
+
+export type ParcoursParticipantActionState = {
+  formError?: string
+  fieldErrors?: Record<string, string[]>
+} | null
+
+export async function updateParcoursParticipantAction(
+  _prevState: ParcoursParticipantActionState,
+  formData: FormData,
+): Promise<ParcoursParticipantActionState> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id) return { formError: 'Inscription introuvable.' }
+
+  const parsed = parcoursParticipantInputSchema.safeParse({
+    status: String(formData.get('status') ?? 'INSCRIT'),
+    abandonReason: optionalText(formData, 'abandonReason'),
+    besoinAccessibilite: optionalText(formData, 'besoinAccessibilite'),
+    adaptationProposee: optionalText(formData, 'adaptationProposee'),
+    traceResponse: formData.get('traceResponse') === 'on',
+    referentHandicapId: optionalText(formData, 'referentHandicapId'),
+  })
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await updateParcoursParticipant(id, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}`)
 }
