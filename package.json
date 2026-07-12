@@ -21,6 +21,7 @@
     "verify:slice4": "tsx prisma/fixtures/slice4-parcours.ts",
     "verify:slice5": "tsx prisma/fixtures/slice5-participants.ts",
     "verify:slice6": "tsx prisma/fixtures/slice6-documents.ts",
+    "verify:slice7": "tsx prisma/fixtures/slice7-communication.ts",
     "mail:dev": "maildev"
   },
   "prisma": {

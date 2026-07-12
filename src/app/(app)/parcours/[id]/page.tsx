@@ -27,6 +27,8 @@ import {
   markDocumentSignedAction,
 } from '@/app/(app)/parcours/document-actions'
 import { GenerateDocumentButton } from '@/components/participants/GenerateDocumentButton'
+import { DELIVERY_STATUS_LABELS, deliveryStatusBadgeClass } from '@/lib/communication-labels'
+import { sendConvocationsAction, simulateDeliveryAction } from '@/app/(app)/parcours/communication-actions'
 import type { FormationSnapshot } from '@/lib/formation'
 
 export default async function ParcoursDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,9 +62,14 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
         orderBy: { createdAt: 'asc' },
         include: { participant: true, contractualisation: { select: { payerType: true } } },
       },
+      communicationSequences: {
+        include: { messages: { orderBy: { createdAt: 'desc' } } },
+      },
     },
   })
   if (!parcours) notFound()
+
+  const messages = parcours.communicationSequences.flatMap((cs) => cs.messages)
 
   const snapshot = parcours.formationVersion.snapshot as unknown as FormationSnapshot
 
@@ -213,12 +220,21 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
                     </a>
                   ))}
                   {canWrite && (
-                    <GenerateDocumentButton
-                      action={generateConvocationAction}
-                      parcoursId={parcours.id}
-                      hiddenFields={{ sequenceId: s.id }}
-                      label="Générer la convocation"
-                    />
+                    <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                      <GenerateDocumentButton
+                        action={generateConvocationAction}
+                        parcoursId={parcours.id}
+                        hiddenFields={{ sequenceId: s.id }}
+                        label="Générer la convocation"
+                      />
+                      <form action={sendConvocationsAction}>
+                        <input type="hidden" name="sequenceId" value={s.id} />
+                        <input type="hidden" name="parcoursId" value={parcours.id} />
+                        <button type="submit" className="btn btn-sm btn-primary">
+                          Envoyer les convocations
+                        </button>
+                      </form>
+                    </div>
                   )}
                 </div>
               )}
@@ -469,6 +485,61 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
                 <Link href={`/parcours/${parcours.id}/participants/${pp.id}/modifier`} className="btn btn-sm btn-ghost">
                   Gérer
                 </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2 className="t-heading" style={{ marginTop: 'var(--space-9)', marginBottom: 'var(--space-3)' }}>
+        Envois &amp; preuve de livraison ({messages.length})
+      </h2>
+      <p className="t-caption-1" style={{ marginBottom: 'var(--space-5)' }}>
+        🔴 Envoi simulé — aucun compte Brevo réel n&apos;est branché. Les boutons « Simuler » jouent le rôle d&apos;un
+        webhook de livraison, pour montrer la règle qui compte : un échec ne s&apos;affiche JAMAIS en vert.
+      </p>
+
+      {messages.length === 0 ? (
+        <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
+          Aucun envoi pour le moment — utilisez « Envoyer les convocations » sur une séquence.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {messages.map((m) => (
+            <div key={m.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
+                    {m.subject}
+                  </span>
+                  <span className={`badge ${deliveryStatusBadgeClass(m.deliveryStatus)}`}>
+                    {DELIVERY_STATUS_LABELS[m.deliveryStatus] ?? m.deliveryStatus}
+                  </span>
+                </div>
+                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                  {m.recipientEmail}
+                  {m.deliveryStatus === 'SOFT_BOUNCE' && <> · tentative {m.retryCount}/2 avant escalade</>}
+                  {m.deliveredAt && <> · livré le {new Date(m.deliveredAt).toLocaleString('fr-FR')}</>}
+                  {m.bouncedAt && !m.deliveredAt && <> · échec le {new Date(m.bouncedAt).toLocaleString('fr-FR')}</>}
+                </p>
+              </div>
+              {canWrite && ['SENT', 'SOFT_BOUNCE'].includes(m.deliveryStatus) && (
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  {[
+                    { outcome: 'DELIVERED', label: 'Simuler : livré' },
+                    { outcome: 'HARD_BOUNCE', label: 'Simuler : échec dur' },
+                    { outcome: 'SOFT_BOUNCE', label: 'Simuler : bounce doux' },
+                  ].map((sim) => (
+                    <form key={sim.outcome} action={simulateDeliveryAction}>
+                      <input type="hidden" name="messageId" value={m.id} />
+                      <input type="hidden" name="parcoursId" value={parcours.id} />
+                      <input type="hidden" name="outcome" value={sim.outcome} />
+                      <button type="submit" className="btn btn-sm btn-ghost">
+                        {sim.label}
+                      </button>
+                    </form>
+                  ))}
+                </div>
               )}
             </div>
           ))}
