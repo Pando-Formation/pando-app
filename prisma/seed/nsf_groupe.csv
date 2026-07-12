@@ -1,0 +1,94 @@
+code,titre,domaine_code,domaine_titre
+100,Formations générales,10,Formations générales
+110,Spécialités pluriscientifiques,11,Mathématiques et sciences
+111,Physique-chimie,11,Mathématiques et sciences
+112,"Chimie-biologie, biochimie",11,Mathématiques et sciences
+113,Sciences naturelles (biologie-géologie),11,Mathématiques et sciences
+114,Mathématiques,11,Mathématiques et sciences
+115,Physique,11,Mathématiques et sciences
+116,Chimie,11,Mathématiques et sciences
+117,Sciences de la Terre,11,Mathématiques et sciences
+118,Sciences de la vie,11,Mathématiques et sciences
+120,Spécialités pluridisciplinaires Sciences humaines et droit,12,Sciences humaines et droit
+121,Géographie,12,Sciences humaines et droit
+122,Economie,12,Sciences humaines et droit
+123,"Sciences (y compris démographie, anthropologie)",12,Sciences humaines et droit
+124,Psychologie,12,Sciences humaines et droit
+125,Linguistique,12,Sciences humaines et droit
+126,Histoire,12,Sciences humaines et droit
+127,"Philosophie, éthique et théologie",12,Sciences humaines et droit
+128,"Droit, sciences politiques",12,Sciences humaines et droit
+130,Spécialités littéraires et artistiques plurivalentes,13,Lettres et arts
+131,"Français, littérature et civilisation française",13,Lettres et arts
+132,Arts plastiques,13,Lettres et arts
+133,"Musique, arts du spectacle",13,Lettres et arts
+134,Autres disciplines artistiques et spécialités artistiques plurivalentes,13,Lettres et arts
+135,Langues et civilisations anciennes,13,Lettres et arts
+136,"Langues vivantes, civilisations étrangères et régionales",13,Lettres et arts
+200,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)",20,Spécialités pluritechnologiques de la production
+201,"Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)",20,Spécialités pluritechnologiques de la production
+210,Spécialités plurivalentes de l'agronomie et de l'agriculture,21,"Agriculture, pêche, forêt et espaces verts"
+211,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)",21,"Agriculture, pêche, forêt et espaces verts"
+212,"Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)",21,"Agriculture, pêche, forêt et espaces verts"
+213,"Forêts, espaces naturels, faune sauvage, pêche",21,"Agriculture, pêche, forêt et espaces verts"
+214,"Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)",21,"Agriculture, pêche, forêt et espaces verts"
+220,Spécialités pluritechnologiques des transformations,22,Transformations
+221,"Agro-alimentaire, alimentation, cuisine",22,Transformations
+222,Transformations chimiques et apparentées (y compris industrie pharmaceutique),22,Transformations
+223,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)",22,Transformations
+224,"Matériaux de construction, verre, céramique",22,Transformations
+225,"Plasturgie, matériaux composites",22,Transformations
+226,"Papier, carton",22,Transformations
+227,"Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)",22,Transformations
+230,"Spécialités pluritechnologiques Génie civil, construction, bois",23,"Génie civil, construction, bois"
+231,"Mines et carrières, génie civil, topographie",23,"Génie civil, construction, bois"
+232,Bâtiment : construction et couverture,23,"Génie civil, construction, bois"
+233,Bâtiment : finitions,23,"Génie civil, construction, bois"
+234,Travail du bois et de l'ameublement,23,"Génie civil, construction, bois"
+240,Spécialités pluritechnologiques Matériaux souples,24,Matériaux souples
+241,Textile,24,Matériaux souples
+242,"Habillement (y compris mode, couture)",24,Matériaux souples
+243,Cuirs et peaux,24,Matériaux souples
+250,Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),25,"Mécanique, électricité, électronique"
+251,"Mécanique générale et de précision, usinage",25,"Mécanique, électricité, électronique"
+252,Moteurs et mécanique auto,25,"Mécanique, électricité, électronique"
+253,Mécanique aéronautique et spatiale,25,"Mécanique, électricité, électronique"
+254,"Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",25,"Mécanique, électricité, électronique"
+255,"Electricité, électronique (non compris automatismes, productique)",25,"Mécanique, électricité, électronique"
+300,Spécialités plurivalentes des services,30,Spécialités plurivalentes des services
+310,Spécialités plurivalentes des échanges et de la gestion (y compris administration générale des entreprises et des collectivités),31,Echanges et gestion
+311,"Transport, manutention, magasinage",31,Echanges et gestion
+312,"Commerce, vente",31,Echanges et gestion
+313,"Finance, banques, assurances",31,Echanges et gestion
+314,"Comptabilité, gestion",31,Echanges et gestion
+315,"Ressources humaines, gestion du personnel, gestion de l'emploi",31,Echanges et gestion
+320,Spécialités plurivalentes de la communication,32,Communication et information
+321,Journalisme et communication (y compris communication graphique et publicité),32,Communication et information
+322,Techniques de l'imprimerie et de l'édition,32,Communication et information
+323,"Techniques de l'image et du son, métiers connexes du spectacle",32,Communication et information
+324,"Secrétariat, bureautique",32,Communication et information
+325,"Documentation, bibliothèques, administration des données",32,Communication et information
+326,"Informatique, traitement de l'information, réseau de transmission des données",32,Communication et information
+330,Spécialités plurivalentes sanitaires et sociales,33,Services aux personnes
+331,Santé,33,Services aux personnes
+332,Travail social,33,Services aux personnes
+333,Enseignement formation,33,Services aux personnes
+334,"Accueil, hôtellerie, tourisme",33,Services aux personnes
+335,"Animation culturelle, sportive et de loisirs",33,Services aux personnes
+336,"Coiffure, esthétique et autres spécialités des services aux personnes",33,Services aux personnes
+340,Spécialités plurivalentes des services à la collectivité,34,Services à la collectivité
+341,"Aménagement du territoire, développement, urbanisme",34,Services à la collectivité
+342,Protection et développement du patrimoine,34,Services à la collectivité
+343,"Nettoyage, assainissement, protection de l'environnement",34,Services à la collectivité
+344,"Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)",34,Services à la collectivité
+345,Application des droits et statuts des personnes,34,Services à la collectivité
+346,Spécialités militaires,34,Services à la collectivité
+410,Spécialités concernant plusieurs capacités,41,Domaines des capacités individuelles
+411,Pratiques sportives (y compris arts martiaux),41,Domaines des capacités individuelles
+412,Développement des capacités mentales et apprentissage de base,41,Domaines des capacités individuelles
+413,Développement des capacités comportementales et relationnelles,41,Domaines des capacités individuelles
+414,Développement des capacités individuelles d'organisation,41,Domaines des capacités individuelles
+415,"Développement des capacités d'orientation, d'insertion ou de réinsertion sociales et professionnelles",41,Domaines des capacités individuelles
+421,Jeux et activités spécifiques de loisirs,42,Domaines des activités quotidiennes et de loisirs
+422,Economie et activités domestiques,42,Domaines des activités quotidiennes et de loisirs
+423,"Vie familiale, vie sociale et autres formations au développement personnel",42,Domaines des activités quotidiennes et de loisirs

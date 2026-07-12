@@ -1,0 +1,1900 @@
+// ═══════════════════════════════════════════════════════════════════════════
+//  PANDO — schema.prisma
+//  v1.0 · derived from PANDO_APP_REFERENCE.md v1.3
+//
+//  GOVERNING PRINCIPLE — PROOF-AS-EXHAUST
+//  Every operational step emits its own evidence. No artefact is producible
+//  without the work having happened. This schema is where that stops being
+//  prose and starts being enforced.
+//
+//  Markers used below:
+//    🔴 = prevents a defect found in live PANDO data, or a legal requirement
+//    🔒 = personal data (RGPD)
+//    ⚙  = extension point — modelled, shipped empty, pending Alexandra (§18)
+//
+//  ⚠ CHECK CONSTRAINTS: Prisma cannot express all invariants. Those marked
+//    [CHECK] must be added as raw SQL in a follow-up migration. They are
+//    listed together at the bottom of this file. Do not skip them — several
+//    are the only thing standing between you and a false audit trail.
+// ═══════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  1 · IDENTITY & ACCESS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Roles are a SET, not a field. Alexandra is SUPER_ADMIN *and* FORMATEUR.
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  COMMERCIAL // Yann — owns the Demande pipeline
+  FORMATEUR
+}
+
+enum AuthMethod {
+  GOOGLE_OAUTH // admins — domain-restricted to pando-formation.fr
+  MAGIC_LINK // formateurs — external emails (gmail, blueje.com…)
+}
+
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique /// 🔒
+  name       String? /// 🔒
+  avatarUrl  String?
+  roles      Role[] /// 🔴 a SET — permissions are the union
+  authMethod AuthMethod
+  isActive   Boolean    @default(true)
+
+  /// A User who is also a Formateur (Alexandra). Nullable: most admins are not.
+  formateur   Formateur? @relation(fields: [formateurId], references: [id])
+  formateurId String?    @unique
+
+  clientsAssigned    Client[]              @relation("ClientOwner")
+  demandesOwned      Demande[]
+  analysesCompleted  AnalyseBesoin[]
+  actionsOwned       ActionAmelioration[]
+  actionsVerified    ActionAmelioration[]  @relation("ActionVerifier")
+  veilleEntries      Veille[]
+  referentHandicapOf ParcoursParticipant[] @relation("ReferentHandicap")
+  auditLogs          AuditLog[]
+  sessions           AuthSession[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? /// soft delete — never hard-delete a user with audit history
+
+  @@index([email])
+}
+
+/// Auth.js session. Formateurs get a REAL session (30d), not a one-shot token —
+/// they open the app in a training room, on a phone, on the morning of J1.
+model AuthSession {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+
+  @@index([userId])
+}
+
+/// Single-use magic link. Only an email already on a Formateur record may request one.
+model MagicLinkToken {
+  id        String    @id @default(uuid())
+  email     String /// 🔒
+  token     String    @unique
+  expiresAt DateTime /// 15 minutes
+  usedAt    DateTime?
+  createdIp String?
+
+  @@index([email])
+  @@index([token])
+}
+
+enum TokenPurpose {
+  SIGN_DOCUMENT
+  COMPLETE_EVALUATION
+  DOWNLOAD_ATTESTATION
+  CONFIRM_INSCRIPTION
+  AUDITOR_READONLY // time-boxed, scoped selection of parcours
+}
+
+/// Participants, clients and auditors have NO accounts. Two audiences,
+/// two mechanisms, never conflated.
+model AccessToken {
+  id           String       @id @default(uuid())
+  token        String       @unique
+  purpose      TokenPurpose
+  email        String /// 🔒
+  /// Scoped target — exactly one of these is set. [CHECK]
+  parcoursId   String?
+  parcours     Parcours?    @relation(fields: [parcoursId], references: [id])
+  documentId   String?
+  document     Document?    @relation(fields: [documentId], references: [id])
+  evaluationId String?
+  evaluation   Evaluation?  @relation(fields: [evaluationId], references: [id])
+  /// AUDITOR_READONLY may scope to many parcours
+  auditScope   String[]     @default([])
+
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+}
+
+/// PANDO itself. Singleton. Holds the ORGANISATION's NDA —
+/// 🔴 which is NOT the same field as Formateur.nda. The live sheet conflates them.
+model Organisation {
+  id            String  @id @default(uuid())
+  name          String  @default("PANDO")
+  legalName     String?
+  siret         String /// String. Always. 14 chars.
+  nda           String /// 🔴 11950745495 — PANDO's, not Alexandra's
+  address       String?
+  postalCode    String? /// String — leading zeros
+  city          String?
+  /// PANDO does not bill VAT: formation professionnelle continue is exonerated.
+  vatExempt     Boolean @default(true)
+  vatExemptCode String  @default("art. 261-4-4° a CGI")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  2 · REFERENCE DATA  (seeded from prisma/seed/ — never edited in-app)
+//     §4.12. The rows live in CSV. This file describes only the structure.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// NSF — the taxonomy the BPF is built on.
+/// grand_domaine (4) → domaine (17) → groupe (93) → specialite (380)
+///                                      × champs (17)
+model NsfGrandDomaine {
+  code     String       @id /// "1".."4"
+  titre    String
+  domaines NsfDomaine[]
+}
+
+model NsfDomaine {
+  code             String          @id /// "10".."42"
+  titre            String
+  grandDomaine     NsfGrandDomaine @relation(fields: [grandDomaineCode], references: [code])
+  grandDomaineCode String
+  groupes          NsfGroupe[]
+}
+
+model NsfGroupe {
+  code        String          @id /// "100".."423"
+  titre       String
+  domaine     NsfDomaine      @relation(fields: [domaineCode], references: [code])
+  domaineCode String
+  specialites NsfSpecialite[]
+}
+
+/// 🔴 THE TRAP. `champs` is a FUNCTION axis, not a topic axis.
+/// 315m / 315n / 315p / 315r / 315t / 315w are the SAME subject
+/// (ressources humaines) with six different functions.
+/// The UI must cascade — a flat 380-item dropdown gets mis-picked once
+/// and then poisons every BPF filing thereafter.
+model NsfChamps {
+  code        String          @id /// "a".."z"
+  titre       String /// "Conception", "Organisation, gestion", "Contrôle, prévention"…
+  specialites NsfSpecialite[]
+}
+
+model NsfSpecialite {
+  code       String      @id /// "315m", "413z"…
+  titre      String
+  groupe     NsfGroupe   @relation(fields: [groupeCode], references: [code])
+  groupeCode String
+  champs     NsfChamps   @relation(fields: [champsCode], references: [code])
+  champsCode String
+  formations Formation[]
+
+  @@index([groupeCode])
+}
+
+/// NAF. Two classifications coexist. 🔴 Migration CANNOT be automated:
+/// of 604 correspondences, 272 are `Multiple` and 102 rév.2 codes split
+/// across several NAF 2025 codes. A human must choose.
+enum NafVersion {
+  REV2
+  V2025
+}
+
+model NafCode {
+  code    String     @id /// "85.59A" (rév.2) or "85.59Y" (2025)
+  version NafVersion
+  libelle String
+  section String? /// A..U — the coarse grouping `Client.secteur` derives from
+
+  @@index([version])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  3 · CLIENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum ClientStatus {
+  PROSPECT
+  ACTIF
+  EN_PAUSE
+}
+
+enum ClientOrigin {
+  DIRECT
+  APPEL_OFFRE
+  RESEAU
+  INBOUND_SITE
+}
+
+enum NafSource {
+  MANUAL
+  SIRENE
+}
+
+model Client {
+  id                 String  @id @default(uuid())
+  companyName        String
+  /// 🔴 String. ALWAYS. The live sheet stores this as a float (5.0837292700014E13)
+  /// and a float cannot be written here.
+  siret              String? @unique
+  siren              String?
+  /// 🔴 Sourced from SIRENE (catégorie juridique 7xxx = personne morale de droit
+  /// public). Gates a LEGAL invoicing obligation: public clients MUST be invoiced
+  /// through Chorus Pro. Mairie de Bordeaux = 7210 (commune). A PDF emailed to a
+  /// Mairie is not a valid invoice.
+  isPublicSector     Boolean @default(false)
+  categorieJuridique String? /// INSEE code, from SIRENE
+
+  /// 🔴 Store BOTH classifications. Never overwrite — NAF feeds the BPF,
+  /// and a silently re-coded client is a misdeclared one.
+  nafRev2   String?
+  naf2025   String?
+  nafSource NafSource @default(MANUAL)
+  secteur   String? /// PANDO's coarse grouping — derived from NAF section
+
+  address    String?
+  postalCode String? /// 🔴 String — the live sheet stores 75019.0 as a float,
+  ///                     and Le 104 appears with two different postcodes.
+  city       String?
+  region     String? /// PANDO region
+
+  status ClientStatus @default(PROSPECT)
+  origin ClientOrigin @default(DIRECT)
+
+  /// 🔴 FK, not a free-text 'moi' | 'yann' string.
+  assignedTo   User?   @relation("ClientOwner", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  comments String?
+
+  contacts               ClientContact[]
+  demandes               Demande[]
+  parcoursAsClient       Parcours[]           @relation("ParcoursClient")
+  parcoursAsBeneficiaire Parcours[]           @relation("ParcoursBeneficiaire")
+  parcoursAsDonneurOrdre Parcours[]           @relation("ParcoursDonneurOrdre")
+  contractualisations    Contractualisation[]
+  participants           Participant[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([siret])
+  @@index([status])
+}
+
+/// 🔴 The live sheet cleanly distinguishes the operational correspondent
+/// (Marion, Chargée de dév RH) from the signatory (Bénédicte, DRH) — and then
+/// the architecture flattened them into two fields on Client. That makes
+/// turnover, dual signatories and per-person signature attribution impossible.
+enum ContactRole {
+  PRINCIPAL
+  ADMINISTRATIF
+  SIGNATAIRE
+}
+
+enum Civilite {
+  MADAME
+  MONSIEUR
+  AUTRE
+}
+
+model ClientContact {
+  id       String        @id @default(uuid())
+  client   Client        @relation(fields: [clientId], references: [id])
+  clientId String
+  roles    ContactRole[] /// a contact may hold several
+
+  civilite  Civilite?
+  firstName String /// 🔒
+  lastName  String /// 🔒
+  fonction  String?
+  email     String /// 🔒
+  phone     String? /// 🔒 🔴 String — the sheet stores 0646633164 as 6.46633164E8
+  ///                    and the leading zero is gone.
+
+  isActive Boolean @default(true) /// handles turnover without destroying history
+
+  signedContractualisations Contractualisation[] @relation("Signataire")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  4 · CATALOGUE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// The four branded programmes are a MARKETING LAYER over a wider catalogue.
+/// Live data contains "Médiation et gestion des conflits", "Bien-être au travail",
+/// "Devenir manager du changement" — none of which is BAM!/POP!/CLIC!/WOW!.
+enum BrandProgramme {
+  BAM
+  POP
+  CLIC
+  WOW
+}
+
+enum FormationFormat {
+  PRESENTIEL
+  DISTANCIEL
+  ELEARNING
+  PRESENTIEL_DISTANCIEL
+  PRESENTIEL_ELEARNING
+  DISTANCIEL_ELEARNING
+  MIXTE_COMPLET
+}
+
+/// BPF "code prestation dispensée" (process doc)
+enum PrestationCode {
+  DIPLOME
+  CERTIFICATION
+  CQP_NON_ENREGISTRE
+  AUTRE_ACTION_FORMATION
+  BILAN_COMPETENCES
+  VAE
+}
+
+model Formation {
+  id             String          @id @default(uuid())
+  internalCode   String          @unique
+  title          String
+  subtitle       String?
+  brandProgramme BrandProgramme? /// nullable — marketing layer only
+
+  /// 🔴 CLIC! is the only programme where an absence breaks the PEDAGOGY,
+  /// not the paperwork. "Format intra uniquement — collectif complet requis."
+  requiresFullCohort Boolean @default(false)
+  intraOnly          Boolean @default(false)
+
+  /// 🔴 REQUIRED. Certificats de réalisation and the BPF are denominated in HOURS.
+  /// The current architecture only has durationDays.
+  durationHours Decimal @db.Decimal(6, 2)
+  durationDays  Decimal @db.Decimal(5, 2)
+
+  format         FormationFormat
+  prerequisites  String
+  targetAudience String
+
+  /// 🔴 Array. NOT objectif1/objectif2/objectif3 — BAM! has five.
+  pedagogicObjectives String[]
+
+  methodesPedagogiques String? /// Criterion 4
+  modalitesEvaluation  String? /// Criterion 3
+  delaiAcces           String /// 🔴 Criterion 1 — must be published
+  accessibilite        String /// 🔴 Criterion 3 — accessibility statement
+
+  priceIntraPerDay    Int? /// euro cents
+  priceInterPerPerson Int? /// euro cents
+
+  /// 🔴 Is WOW! coaching even a BPF *action de formation*? It may be an
+  /// accompagnement, not a formation — in which case it is out of the BPF
+  /// and possibly out of OPCO eligibility. ACCOUNTANT'S CALL (§15 Q14).
+  bpfIncluded    Boolean         @default(true)
+  prestationCode PrestationCode?
+
+  /// 🔴 FK to the seeded NSF taxonomy — not a String.
+  /// The BPF declares hours and trainees BY spécialité.
+  specialite   NsfSpecialite? @relation(fields: [specialiteId], references: [code])
+  specialiteId String?
+
+  tauxSatisfaction Decimal? @db.Decimal(5, 2) /// published results
+  tauxReussite     Decimal? @db.Decimal(5, 2)
+
+  isActive Boolean @default(true)
+
+  versions FormationVersion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandProgramme])
+}
+
+/// 🔴 IMMUTABLE ONCE USED. Edit a programme's objectives in 2027 and every
+/// convention signed in 2026 would otherwise reference a record that no longer
+/// says what the client signed. Auditors check exactly this.
+/// At contract time the version is SNAPSHOTTED onto the Parcours.
+model FormationVersion {
+  id          String    @id @default(uuid())
+  formation   Formation @relation(fields: [formationId], references: [id])
+  formationId String
+  version     Int
+
+  /// Full frozen copy of the Formation at this version. Generated documents
+  /// (programme PDF, convention) read from HERE, never from the live Formation.
+  snapshot Json
+
+  effectiveFrom DateTime   @default(now())
+  parcours      Parcours[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([formationId, version])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  5 · FORMATEURS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 🔴 Replaces the boolean `isInternal`. The distinction has legal consequences.
+enum FormateurContractType {
+  INTERNE_DIRIGEANT // Alexandra — owner, acting under PANDO
+  INTERNE_SALARIE
+  EXTERNE_PRESTATAIRE // Sophie, Anthony — own SIREN, own NDA, ST convention
+}
+
+model Formateur {
+  id         String    @id @default(uuid())
+  civilite   Civilite?
+  firstName  String /// 🔒
+  lastName   String /// 🔒
+  email      String    @unique /// 🔒 — magic-link identity
+  phone      String? /// 🔒 String
+  /// 🔴 THE FIELD THE SPREADSHEET CORRUPTED. Sophie's address is wrong on 6 of 7
+  /// rows because someone dragged a cell and Excel incremented the street number
+  /// (28 → 29 → 30 → … → 34 rue Joliot Curie). It prints onto the convention de
+  /// sous-traitance. Here it exists ONCE and cannot drift.
+  address    String?
+  postalCode String?
+  city       String?
+
+  contractType FormateurContractType
+
+  /// 🔴 EXTERNAL ONLY. [CHECK] contractType = EXTERNE_PRESTATAIRE OR both are null.
+  /// In the live sheet Alexandra's siren reads 909625113 — which is the SIREN
+  /// embedded in OPTA'S's own SIRET. One number cannot be two companies' SIREN:
+  /// it is the client's SIREN pasted into the formateur cell.
+  siren String?
+  nda   String? /// NOT the same field as Organisation.nda
+
+  /// 🔴 VAT is PER FORMATEUR, never global.
+  /// Sophie: 0 (franchise en base). Anthony: 0.20. Alexandra: n/a (internal).
+  /// Because PANDO makes exonerated supplies it very likely CANNOT DEDUCT input
+  /// VAT — so Anthony's 20% is an ABSORBED COST, not a pass-through.
+  tvaRate            Decimal @default(0) @db.Decimal(4, 2)
+  tarifJour          Int? /// euro cents
+  forfaitDeplacement Int     @default(0) /// euro cents — 20€ Sophie/Anthony, 0€ Alexandra
+
+  isQualiopiCertified Boolean @default(false) /// external only — matters for CPF
+
+  expertises        String[]
+  yearsFormation    Int?
+  yearsManagement   Int?
+  availabilityNotes String?
+
+  isActive Boolean @default(true)
+
+  user        User?
+  competences FormateurCompetence[]
+  sequences   Sequence[]
+  evaluations Evaluation[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([email])
+  @@index([contractType])
+}
+
+/// Criterion 5. `yearsFormation: Int` is not evidence.
+/// WOW! specifically requires a certified coach under regular supervision —
+/// PANDO's own product doc calls this non-negotiable. Both are evidenced here.
+enum CompetenceType {
+  CV
+  DIPLOME
+  CERTIFICATION
+  FORMATION_CONTINUE
+  SUPERVISION
+}
+
+model FormateurCompetence {
+  id          String         @id @default(uuid())
+  formateur   Formateur      @relation(fields: [formateurId], references: [id])
+  formateurId String
+  type        CompetenceType
+  title       String
+  date        DateTime
+  /// 🔴 Certifications lapse. A formateur with an expired certification
+  /// delivering a parcours is a Criterion 5 non-conformity. Alert BEFORE expiry.
+  expiresAt   DateTime?
+  document    Document?      @relation(fields: [documentId], references: [id])
+  documentId  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([formateurId])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  6 · DEMANDE  (the commercial pipeline — had no home in the old model)
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum DemandeStatus {
+  NOUVELLE
+  ANALYSE
+  PROPOSITION_ENVOYEE
+  GAGNEE
+  PERDUE
+}
+
+enum DemandeSource {
+  APPEL_DECOUVERTE // the website's primary conversion — currently lands nowhere
+  APPEL_OFFRE // devis optional; expect a bon de commande instead
+  RESEAU
+  INBOUND_SITE
+}
+
+model Demande {
+  id       String        @id @default(uuid())
+  client   Client        @relation(fields: [clientId], references: [id])
+  clientId String
+  source   DemandeSource
+  status   DemandeStatus @default(NOUVELLE)
+
+  owner   User?   @relation(fields: [ownerId], references: [id]) /// COMMERCIAL (Yann)
+  ownerId String?
+
+  analyseBesoin AnalyseBesoin?
+  parcours      Parcours?
+  lostReason    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
+/// 🔴 THE MOST CONSEQUENTIAL ARTEFACT IN THE SYSTEM — and it was modelled as a
+/// manual to-do flag and an optional PDF upload. It is the document that
+/// justifies every adaptation PANDO makes, and under the incoming référentiel
+/// individualisation moves to the CENTRE of the audit.
+/// It is STRUCTURED DATA at the demande stage, feeding the proposition, the
+/// programme adaptation and the positionnement.
+model AnalyseBesoin {
+  id        String  @id @default(uuid())
+  demande   Demande @relation(fields: [demandeId], references: [id])
+  demandeId String  @unique
+
+  contexteOrganisation String
+  problematique        String /// the real problem, in the client's own words
+  objectifsClient      String[]
+  profilsCibles        String
+  contraintes          String /// time, budget, geography, availability
+  indicateursSucces    String[] /// how the client will know it worked
+
+  /// 🔴 What PANDO CHANGED because of the above.
+  /// This — not the questionnaire — is the actual proof of individualisation.
+  adaptationsProposees String
+
+  confidentiality Confidentiality @default(INTERNE)
+
+  completedBy   User?     @relation(fields: [completedById], references: [id])
+  completedById String?
+  completedAt   DateTime?
+
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  7 · PARCOURS & SÉQUENCE  ← the split everything depends on
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 🔴 Because of the appel d'offre model, PANDO is NOT ALWAYS THE PRIME.
+/// OPTA'S (Besançon) won the CAF 92 contract; PANDO delivers it at 700€/day —
+/// exactly PANDO's wholesale formateur rate, against 1535€ retail for Le 104.
+enum PandoRole {
+  PRESTATAIRE_DIRECT // PANDO holds the convention with the end client
+  SOUS_TRAITANT // a donneur d'ordre holds it; PANDO delivers and invoices them
+}
+
+enum Track {
+  INTRA
+  INTER
+}
+
+enum ParcoursStatus {
+  BROUILLON
+  CONFIRME
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum PriceMode {
+  FORFAIT_JOUR // day rate × days × sessions
+  PAR_PERSONNE // inter
+  NEGOCIE // appels d'offre
+}
+
+/// What is SOLD, CONTRACTED, INVOICED, CERTIFIED.
+/// A single startDate/endDate CANNOT express OPTA'S (6 séquences, June 2026 →
+/// March 2027) or BAM! (10 events, 4 modalities, 9 weeks). Hence Sequence[].
+model Parcours {
+  id        String @id @default(uuid())
+  reference String @unique /// "2026-F101" — carry over the existing scheme
+
+  /// 🔴 SNAPSHOT, frozen at contract. Not a live FK to Formation.
+  formationVersion   FormationVersion @relation(fields: [formationVersionId], references: [id])
+  formationVersionId String
+
+  demande   Demande? @relation(fields: [demandeId], references: [id])
+  demandeId String?  @unique
+
+  pandoRole PandoRole      @default(PRESTATAIRE_DIRECT)
+  track     Track
+  status    ParcoursStatus @default(BROUILLON)
+
+  /// 🔴 NULLABLE. An INTER parcours has no client — participants enrol
+  /// individually and payers live on Contractualisation.
+  client   Client? @relation("ParcoursClient", fields: [clientId], references: [id])
+  clientId String?
+
+  /// 🔴 Whose people are actually trained, if different.
+  /// OPTA'S buys; CAF des Hauts-de-Seine hosts. The old model had one FK.
+  beneficiaire   Client? @relation("ParcoursBeneficiaire", fields: [beneficiaireId], references: [id])
+  beneficiaireId String?
+
+  /// 🔴 The prime, when pandoRole = SOUS_TRAITANT. [CHECK]
+  donneurOrdre   Client? @relation("ParcoursDonneurOrdre", fields: [donneurOrdreId], references: [id])
+  donneurOrdreId String?
+
+  /// 🔴 DERIVED from séquences. Never entered by hand.
+  dateDebut  DateTime?
+  dateFin    DateTime?
+  totalHours Decimal   @default(0) @db.Decimal(7, 2)
+
+  minParticipants Int?
+  maxParticipants Int? /// [CHECK] when requiresFullCohort: min = max
+
+  /// 🔴 v1.4 — LIST PRICE ONLY. The DEAL lives on Contractualisation.
+  /// In an inter cohort, a payer buying 4 seats negotiates a volume discount
+  /// that a payer buying 1 seat does not get. priceMode and remise are
+  /// properties of the PAYER, not of the parcours.
+  ///
+  /// 🔴 DERIVED: montantHT = Σ contractualisations.montantHT.
+  /// Same treatment as dateDebut / dateFin. Never entered by hand — two
+  /// independent totals means one of them is a lie.
+  montantHT      Int @default(0) /// euro cents — DERIVED
+  delaiReglement Int @default(30) /// days — default; overridable per payer
+
+  cancellationReason String? /// 🔴 REQUIRED on ANNULE. No silent cancellation. [CHECK]
+
+  sequences              Sequence[]
+  participants           ParcoursParticipant[]
+  contractualisations    Contractualisation[]
+  documents              Document[]
+  evaluations            Evaluation[]
+  automationJobs         AutomationJob[]
+  communicationSequences CommunicationSequence[]
+  accessTokens           AccessToken[]
+  evidenceLinks          EvidenceLink[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([dateDebut])
+  @@index([clientId])
+}
+
+enum SequenceType {
+  PRESENTIEL
+  DISTANCIEL
+  ELEARNING
+  COACHING // WOW!, flash coaching
+  TRAVAIL_AUTONOME // BAM! S3 étude de cas, S7 collectif autonome
+  DEFI // ⚙ défi intersession — pending Alexandra (§18)
+}
+
+/// Presence is NOT the same thing across PANDO's parcours.
+/// Four proof types, one table.
+enum PreuveType {
+  SIGNATURE // présentiel
+  CONNEXION // distanciel / visio — join/leave log
+  COMPLETION // e-learning capsule — completion event
+  COMPTE_RENDU // coaching
+  PAPER // 🔴 the fallback that must never be removed
+}
+
+enum DemiJournee {
+  MATIN
+  APRES_MIDI
+}
+
+/// What is CONVENED, ATTENDED, PROVED.
+/// Convocation (J-7) and émargement (J0) fire PER SEQUENCE. Everything else
+/// fires once per parcours. This is the Parcours/Séquence split as behaviour.
+model Sequence {
+  id         String   @id @default(uuid())
+  parcours   Parcours @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+  ordre      Int
+
+  /// "Jour 2 — Structurer l'organisation de son équipe"
+  /// "DJ1 — Sommes-nous réellement une équipe de direction ?"
+  titre String
+
+  type         SequenceType
+  date         DateTime
+  demiJournees DemiJournee[] /// 🔴 THE LEGAL UNIT. A 7h day = MATIN + APRES_MIDI.
+  ///                            CLIC! is three séquences of ONE demi-journée each.
+  heures       Decimal       @db.Decimal(5, 2)
+  lieu         String?
+  preuveType   PreuveType
+
+  /// 🔴 PER SEQUENCE. A 15-week POP! may involve several formateurs, and the
+  /// flash coaching may be someone else entirely.
+  formateur   Formateur? @relation(fields: [formateurId], references: [id])
+  formateurId String?
+
+  /// Rescheduling: [CHECK] a date change must recompute all pending automations
+  /// anchored to this séquence, and raise a BLOCKING alert if the new date is
+  /// less than 7 days away (the convocation becomes impossible to send on time).
+  rescheduledFrom DateTime?
+
+  attendances     Attendance[]
+  livrables       SequenceLivrable[]
+  documents       Document[]
+  automationJobs  AutomationJob[]
+  defiSubmissions DefiSubmission[]
+  compteRendus    CompteRendu[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([parcoursId, ordre])
+  @@index([date])
+}
+
+/// 🔴 Confidentiality is a ROW-LEVEL access boundary, not a UI toggle.
+/// It surfaced twice, independently: WOW! ("confidentialité absolue" — the
+/// product doc calls it non-negotiable) and CLIC! (a CODIR admitting "nos
+/// arbitrages se font par évitement" is not something the Mairie's comms team
+/// — or PANDO's commercial — should ever read).
+/// THIS CANNOT BE BOLTED ON LATER.
+enum Confidentiality {
+  PUBLIC // everyone with parcours access
+  INTERNE // PANDO staff
+  RESTREINT // assigned formateur + participants concerned + SUPER_ADMIN. NOT COMMERCIAL.
+  CONFIDENTIEL // the coach and the beneficiary ONLY. Not even SUPER_ADMIN reads content.
+}
+
+enum LivrableType {
+  REGLES_DU_JEU
+  REFERENTIEL_DECISIONNEL
+  ENGAGEMENTS_COLLECTIFS
+  AUTRE
+}
+
+/// 🔴 COLLECTIVE ACQUIS. CLIC! produces three règles du jeu, a référentiel
+/// décisionnel (3 principes partagés), and collective commitments. These ARE
+/// the acquis — and they belong to NOBODY.
+/// "Travail centré sur le collectif, pas sur les individus" (product doc).
+/// The évaluation des acquis for CLIC! CANNOT be an individual quiz.
+model SequenceLivrable {
+  id         String       @id @default(uuid())
+  sequence   Sequence     @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId String
+  type       LivrableType
+  content    Json /// the actual principles, structured
+
+  validatedBy String[] /// participant ids who signed off
+  validatedAt DateTime?
+
+  confidentiality Confidentiality @default(RESTREINT)
+
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sequenceId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  8 · CONTRACTUALISATION  ← the payer axis
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 🔴 A CONVENTION DOES NOT BELONG TO A PARCOURS. It belongs to a
+/// PAYER × PARCOURS pairing.
+/// An inter cohort of 8 can have 5 different payers → 5 conventions,
+/// 5 devis, 5 invoices, 5 signature chains, in parallel, on one parcours.
+enum PayerType {
+  ORGANISATION // employer → convention de formation
+  INDIVIDU // 🔴 self-funding → CONTRAT de formation professionnelle,
+  ///               10-day délai de rétractation, capped deposit
+  OPCO
+  DONNEUR_ORDRE // PANDO is the sous-traitant
+}
+
+enum ContractualisationStatus {
+  BROUILLON
+  DEVIS_ENVOYE
+  DEVIS_SIGNE
+  CONVENTION_ENVOYEE
+  CONVENTION_SIGNEE
+  FACTUREE
+  PAYEE
+  ANNULEE
+}
+
+model Contractualisation {
+  id         String   @id @default(uuid())
+  parcours   Parcours @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+
+  payerType PayerType
+
+  /// Exactly one payer target is set. [CHECK]
+  payerClient        Client?      @relation(fields: [payerClientId], references: [id])
+  payerClientId      String?
+  payerParticipant   Participant? @relation("PayerParticipant", fields: [payerParticipantId], references: [id])
+  payerParticipantId String?
+  financeur          Financeur?   @relation(fields: [financeurId], references: [id])
+  financeurId        String?
+
+  signataire   ClientContact? @relation("Signataire", fields: [signataireId], references: [id])
+  signataireId String?
+
+  status ContractualisationStatus @default(BROUILLON)
+
+  /// 🔴 v1.4 — THE DEAL LIVES HERE, not on Parcours.
+  /// Groupe Cassous buys 4 seats and negotiates a discount; Cabinet Mérignac
+  /// buys 1 and does not. One parcours, several prices.
+  priceMode      PriceMode @default(FORFAIT_JOUR)
+  montantHT      Int       @default(0) /// euro cents — PANDO never charges VAT
+  remise         Int       @default(0) /// euro cents
+  delaiReglement Int? /// overrides Parcours default
+
+  /// 🔴 PUBLIC SECTOR (Chorus Pro). Public procurement does not sign devis —
+  /// it issues a bon de commande with an engagement number, and the invoice
+  /// MUST transit Chorus Pro.
+  numeroEngagement String?
+  codeService      String?
+  chorusProSentAt  DateTime?
+
+  /// 🔴 RÉTRACTATION. If payerType = INDIVIDU, the payment trigger is
+  /// max(J-2, retractationEndsAt) — NEVER simply J-2. The process doc's
+  /// "paiement 48h avant" may be UNLAWFUL for a self-funding individual.
+  retractationEndsAt DateTime?
+
+  qontoQuoteId   String? @unique /// idempotency lock
+  qontoInvoiceId String? @unique /// idempotency lock
+
+  documents    Document[]
+  participants ParcoursParticipant[]
+  /// 🔴 v1.4 — see Financement. The funding route belongs to the PAYER.
+  financements Financement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parcoursId])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  9 · PARTICIPANTS  ← per-participant state machine
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 🔴 NOT demographic metadata. IT SELECTS THE LEGAL DOCUMENT.
+enum Situation {
+  SALARIE // employer pays → convention de formation
+  PARTICULIER // 🔴 self-funds → contrat de formation professionnelle + rétractation
+  INDEPENDANT
+}
+
+model Participant {
+  id         String    @id @default(uuid())
+  civilite   Civilite?
+  firstName  String /// 🔒
+  lastName   String /// 🔒
+  email      String /// 🔒
+  address    String? /// 🔒
+  postalCode String? /// 🔒 String
+  city       String? /// 🔒
+  fonction   String?
+  situation  Situation
+
+  client   Client? @relation(fields: [clientId], references: [id])
+  clientId String?
+
+  parcours            ParcoursParticipant[]
+  contractualisations Contractualisation[]  @relation("PayerParticipant")
+  attendances         Attendance[]
+  evaluations         Evaluation[]
+
+  /// 🔒 RGPD: anonymise at retention end. Structural records survive.
+  /// Legal basis is LEGAL OBLIGATION (Qualiopi + accounting), not legitimate
+  /// interest — a stronger footing, and the correct answer to why a right-to-
+  /// erasure request cannot fully erase during the retention window.
+  anonymizedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+enum ParticipantStatus {
+  INSCRIT
+  CONVOQUE
+  EN_COURS
+  TERMINE
+  ABANDON
+  ABSENT
+  ANNULE
+}
+
+enum StepStatus {
+  PENDING
+  SENT
+  DELIVERED
+  DONE
+  FAILED /// 🔴 a hard-bounced email is FAILED. It is NEVER `DONE`.
+}
+
+/// 🔴 THE PER-PARTICIPANT STATE MACHINE.
+/// The session's status is DERIVED from the participants', not the reverse.
+/// This is the difference between "session in progress" and "3 participants
+/// have not completed their positionnement — J2's convocation goes out tomorrow."
+model ParcoursParticipant {
+  id            String      @id @default(uuid())
+  parcours      Parcours    @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId    String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId String
+
+  /// 🔴 Which payer covers this participant. In INTER, this varies row by row.
+  contractualisation   Contractualisation? @relation(fields: [contractualisationId], references: [id])
+  contractualisationId String?
+
+  status ParticipantStatus @default(INSCRIT)
+
+  /// 🔴 An abandon is a MANAGED EVENT, not a gap. Reason required. [CHECK]
+  abandonReason String?
+
+  convocationStatus    StepStatus @default(PENDING)
+  positionnementStatus StepStatus @default(PENDING)
+  acquisStatus         StepStatus @default(PENDING)
+  attestationIssuedAt  DateTime?
+
+  /// 🔴 DERIVED from Attendance. The attestation reflects REAL hours,
+  /// never contracted hours.
+  hoursAttended Decimal @default(0) @db.Decimal(6, 2)
+
+  /// 🔴 ACCESSIBILITY IS A CHAIN, NOT A CHECKBOX.
+  /// need declared → référent handicap → adaptation proposed → response traced.
+  /// A declared need with no traced response is a non-conformity.
+  besoinAccessibilite String? /// 🔒 SENSITIVE — declaration only
+  adaptationProposee  String? /// 🔴 what was actually offered
+  adaptationTraceeAt  DateTime? /// 🔴 proof the declaration was ANSWERED
+  referentHandicap    User?     @relation("ReferentHandicap", fields: [referentHandicapId], references: [id])
+  referentHandicapId  String?
+
+  paymentStatus String? /// 🔴 if payerType = INDIVIDU: max(J-2, retractationEndsAt)
+  paidAt        DateTime?
+
+  /// ⚙ EXTENSION POINTS — modelled, shipped empty. Pending Alexandra (§18).
+  /// Activating a nullable relation is a config change.
+  /// Adding a relation to a live schema is a migration.
+  carnetIssuedAt  DateTime? /// ⚙ paper Carnet PANDO → one timestamp
+  carnetEntries   CarnetEntry[] /// ⚙ digital Carnet → the richest evidence PANDO has
+  planAction      PlanAction? /// ⚙ plan d'action 90 jours
+  defiSubmissions DefiSubmission[] /// ⚙ défis intersession
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([parcoursId, participantId])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  10 · ATTENDANCE  (the hardest thing in the build)
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT_JUSTIFIE
+  ABSENT_NON_JUSTIFIE
+  ABANDON
+}
+
+/// 🔴 THE UNIT IS THE DEMI-JOURNÉE. Not the day. This is the legal granularity
+/// and it is what produces certified hours.
+/// 🔴 BOTH PARTIES SIGN — participant AND formateur, per demi-journée.
+/// 🔴 OFFLINE IS NOT OPTIONAL. Training rooms have bad wifi. Signatures queue
+///    locally (IndexedDB) and sync on reconnect.
+/// 🔴 THE PAPER FALLBACK STAYS FOREVER. A dead router must never block a session
+///    or destroy an audit trail. Anyone who removes it to keep the product
+///    "clean" is creating a Qualiopi incident.
+model Attendance {
+  id            String      @id @default(uuid())
+  sequence      Sequence    @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId    String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  participantId String
+  demiJournee   DemiJournee
+
+  status     AttendanceStatus
+  preuveType PreuveType
+
+  signatureData String? /// base64 signature image
+  signedAt      DateTime?
+  signedIp      String?
+
+  formateurSignedAt DateTime?
+
+  /// Distanciel — connection log
+  connectedAt    DateTime?
+  disconnectedAt DateTime?
+  /// E-learning — completion trace
+  completedAt    DateTime?
+  score          Decimal?  @db.Decimal(5, 2)
+
+  /// 🔴 REQUIRED when status is an absence. [CHECK]
+  /// An attendance gap with no reason reads as sloppiness. With a reason and a
+  /// traced response, it reads as a managed event. That distinction is the whole
+  /// of Criterion 3 in one sentence.
+  justification String?
+
+  /// The scanned PDF, when preuveType = PAPER
+  document   Document? @relation(fields: [documentId], references: [id])
+  documentId String?
+
+  syncedAt DateTime? /// offline queue → server
+
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sequenceId, participantId, demiJournee])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  11 · EVALUATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum EvaluationType {
+  POSITIONNEMENT
+  SATISFACTION_MI_PARCOURS
+  ACQUIS /// 🔴 LEARNING OUTCOMES — not satisfaction. Most OF conflate these and
+  ///        fail on exactly this. The centre of the incoming référentiel.
+  EVALUATION_FORMATION
+  QUESTIONNAIRE_COMMANDITAIRE
+  QUESTIONNAIRE_FORMATEUR
+  QUESTIONNAIRE_FINANCEUR
+  FROID_3M
+  FROID_6M
+  FROID_12M
+}
+
+/// 🔴 CLIC!'s acquis are COLLECTIVE. The proof of learning is a cohort-level
+/// artefact (SequenceLivrable), not an individual quiz.
+enum EvaluationScope {
+  INDIVIDUEL
+  COLLECTIF
+}
+
+model Evaluation {
+  id         String          @id @default(uuid())
+  parcours   Parcours        @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+  type       EvaluationType
+  scope      EvaluationScope @default(INDIVIDUEL)
+
+  participant   Participant? @relation(fields: [participantId], references: [id])
+  participantId String?
+  formateur     Formateur?   @relation(fields: [formateurId], references: [id])
+  formateurId   String?
+
+  status       StepStatus @default(PENDING)
+  scheduledFor DateTime? /// 🔴 the daily sweeper reads THIS. See AutomationJob.
+  sentAt       DateTime?
+  completedAt  DateTime?
+
+  /// External collection tool reference — but NOT the source of truth.
+  externalId String?
+
+  /// 🔴 MIRROR THE ANSWERS. If the survey account lapses or the vendor changes,
+  /// your EVIDENCE OF LEARNING EVAPORATES. The tool collects; PANDO owns.
+  responses Json?
+  score     Decimal? @db.Decimal(5, 2)
+
+  accessTokens  AccessToken[]
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parcoursId])
+  @@index([scheduledFor])
+  @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  12 · DOCUMENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum DocumentType {
+  PROPOSITION
+  DEVIS
+  BON_DE_COMMANDE /// 🔴 public procurement — replaces the signed devis
+  CONVENTION_DE_FORMATION /// employer pays
+  CONTRAT_DE_FORMATION_PRO /// 🔴 individual self-funds — 10-day rétractation
+  ANNEXE_CONVENTION
+  AVENANT_CONVENTION
+  CONVENTION_SOUS_TRAITANCE
+  PROGRAMME /// 🔴 GENERATED from FormationVersion, never uploaded
+  CONVOCATION
+  FEUILLE_EMARGEMENT
+  ATTESTATION_FORMATION /// nominative — the participant's
+  CERTIFICAT_REALISATION /// 🔴 the FUNDER's document. Different artefact. Was missing.
+  FACTURE
+  AVOIR
+  SUPPORT_FORMATION
+  ANALYSE_BESOIN
+  CV_FORMATEUR
+  DIPLOME_FORMATEUR
+  AUTRE
+}
+
+/// 🔴 VERSIONED. The convention carries mandatory legal mentions (Code du
+/// travail); the invoice carries the VAT exonération mention (art. 261-4-4° a
+/// CGI). These change. A document must record WHICH TEMPLATE VERSION produced it
+/// — otherwise a template edit retroactively invalidates the provenance of every
+/// document ever generated.
+model DocumentTemplate {
+  id            String       @id @default(uuid())
+  type          DocumentType
+  version       Int
+  body          String /// merge-field template
+  legalMentions String? /// editable by SUPER_ADMIN only
+  effectiveFrom DateTime     @default(now())
+  isActive      Boolean      @default(true)
+
+  documents Document[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([type, version])
+}
+
+enum SignatureStatus {
+  NOT_REQUIRED
+  PENDING
+  SENT
+  SIGNED
+  EXPIRED
+  REFUSED
+}
+
+model Document {
+  id   String       @id @default(uuid())
+  type DocumentType
+
+  parcours             Parcours?           @relation(fields: [parcoursId], references: [id])
+  parcoursId           String?
+  sequence             Sequence?           @relation(fields: [sequenceId], references: [id])
+  sequenceId           String?
+  contractualisation   Contractualisation? @relation(fields: [contractualisationId], references: [id])
+  contractualisationId String?
+
+  /// 🔴 Provenance.
+  template          DocumentTemplate? @relation(fields: [templateVersionId], references: [id])
+  templateVersionId String?
+
+  filename    String
+  storagePath String /// 🔴 PANDO's OWN bucket. Qonto invoices and YouSign signed
+  ///                    PDFs are MIRRORED here. Your proof never lives only in a
+  ///                    third party.
+  mimeType    String
+  sizeBytes   Int?
+
+  signatureStatus   SignatureStatus @default(NOT_REQUIRED)
+  yousignRequestId  String?         @unique
+  signedAt          DateTime?
+  signatureAttempts Int             @default(0) /// max 3, then escalate
+
+  /// A signed document is a legal fact. NEVER deleted — only marked.
+  isVoid     Boolean @default(false)
+  voidReason String?
+
+  /// 🔴 v1.4 — RGPD SCOPING. THE PROCESS DOC IS WRONG ON THIS POINT.
+  /// It says: "Envoi de toutes les attestations de formation des participants :
+  /// client." In a mixed-payer inter cohort that would send Groupe Cassous the
+  /// attestations of Enedis's employee — cross-organisation disclosure of
+  /// personal data with no legal basis.
+  ///
+  /// RULE: a payer receives ONLY the artefacts of the participants it paid for.
+  /// Attestations, certificats and the questionnaire commanditaire are scoped by
+  /// contractualisationId — NEVER by parcoursId. [CHECK 14]
+  ///
+  /// (Open: the feuille d'émargement lists every name in the room. If an OPCO
+  /// demands it as proof, whose names does it show? Standard practice treats it
+  /// as an internal document — confirm with the OPCOs PANDO invoices.)
+
+  accessTokens  AccessToken[]
+  attendances   Attendance[]
+  competences   FormateurCompetence[]
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? /// soft delete only
+
+  @@index([parcoursId])
+  @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  13 · AUTOMATION ENGINE
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum TriggerType {
+  ANALYSE_BESOIN
+  DEVIS_SEND
+  DEVIS_ALERT_UNSIGNED
+  LISTE_PARTICIPANTS_ALERT /// 🔴 J-12. THE ALERT NOBODY MODELLED.
+  CONVENTION_SEND
+  CONVENTION_ALERT_UNSIGNED /// J-5 — too late to recover without the J-12 alert
+  CONVENTION_ST_SEND
+  FACTURE_SEND
+  PROGRAMME_SEND
+  CONVOCATION_SEND /// 🔴 PER SEQUENCE, J-7
+  POSITIONNEMENT_SEND
+  EMARGEMENT_READY /// 🔴 PER SEQUENCE, J0
+  SATISFACTION_MI_SEND
+  ACQUIS_SEND
+  EVAL_FORMATION_SEND
+  ATTESTATION_SEND
+  CERTIFICAT_REALISATION
+  SUPPORTS_SEND
+  QUESTIONNAIRE_COMMANDITAIRE
+  QUESTIONNAIRE_FORMATEUR
+  QUESTIONNAIRE_FINANCEUR
+  EVAL_FROID_3M
+  EVAL_FROID_6M
+  EVAL_FROID_12M
+  INTER_MINIMUM_ALERT /// J-14 under-subscription
+  COMPETENCE_EXPIRY_ALERT
+}
+
+enum AnchorType {
+  PARCOURS_START
+  PARCOURS_END
+  SEQUENCE_DATE
+  CONTRACT_EVENT
+  FIXED_DATE
+}
+
+enum JobStatus {
+  SCHEDULED
+  QUEUED
+  RUNNING
+  DONE
+  FAILED /// 🔴 never silently promoted to DONE
+  CANCELLED
+  ACKNOWLEDGED /// admin acknowledged an impossible deadline
+}
+
+/// 🔴 "Je souhaite pouvoir dupliquer ces parcours types … je n'aurai qu'à
+/// changer les dates." — the founder. A template is an ordered set of
+/// (trigger, anchor, offset) tuples. Instantiate against a parcours, set the
+/// séquence dates, and the whole chain schedules itself.
+model AutomationTemplate {
+  id          String  @id @default(uuid())
+  name        String
+  formationId String?
+  steps       Json /// [{ trigger, anchor, offsetDays, audience }]
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// 🔴 CLOUD TASKS CANNOT SCHEDULE 12 MONTHS AHEAD.
+/// The maximum schedule time is 30 DAYS from now — beyond that it errors.
+/// The old architecture created cold-eval jobs with addMonths(endDate, 12).
+/// THEY WOULD ALL FAIL AT ENQUEUE.
+///
+/// CORRECT PATTERN:
+///   1. persist the due date here (scheduledFor)
+///   2. a DAILY Cloud Scheduler sweeper queries what is due in the next 24h
+///   3. the sweeper enqueues Cloud Tasks jobs for that window only
+/// Build this once. It also serves the communication sequences.
+model AutomationJob {
+  id         String    @id @default(uuid())
+  parcours   Parcours  @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+  sequence   Sequence? @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId String?
+
+  trigger    TriggerType
+  anchor     AnchorType
+  offsetDays Int         @default(0)
+
+  scheduledFor DateTime /// 🔴 the sweeper reads THIS
+  status       JobStatus @default(SCHEDULED)
+
+  executedAt DateTime?
+  attempts   Int       @default(0)
+  lastError  String?
+
+  cloudTaskName String? @unique /// idempotency
+
+  communicationMessages CommunicationMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scheduledFor, status])
+  @@index([parcoursId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  14 · COMMUNICATION  (free-form — the founder's explicit ask)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// TWO ENGINES, ONE SCHEDULER.
+/// The Qualiopi triggers above are FIXED — law and référentiel require them.
+/// These are ARBITRARY and EDITABLE — PANDO's pedagogy lives BETWEEN the
+/// séquences: the défis, the nudges, the capsule reminders.
+/// This is "apprentissage dans le flux du travail" made operational.
+model CommunicationTemplate {
+  id       String  @id @default(uuid())
+  name     String
+  messages Json /// [{ anchor, offsetDays, audience, subject, body, attachments }]
+  isActive Boolean @default(true)
+
+  sequences CommunicationSequence[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CommunicationSequence {
+  id         String                @id @default(uuid())
+  parcours   Parcours              @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+  template   CommunicationTemplate @relation(fields: [templateId], references: [id])
+  templateId String
+
+  messages CommunicationMessage[]
+
+  createdAt DateTime @default(now())
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED /// ✅ THIS is the proof
+  SOFT_BOUNCE /// auto-retry ×2 over 24h, then escalate
+  HARD_BOUNCE /// 🔴 ALERT. The address is dead. The artefact is NOT proved.
+  BLOCKED
+  SPAM
+  OPENED
+}
+
+/// 🔴 A CONVOCATION THAT HARD-BOUNCED WAS NOT SENT.
+/// For Qualiopi, proof of DISPATCH is not proof of DELIVERY.
+/// A step whose email hard-bounced must NEVER render as a green tick. This is
+/// the most dangerous silent failure in the system: an audit trail that LOOKS
+/// complete and isn't.
+model CommunicationMessage {
+  id         String                 @id @default(uuid())
+  sequence   CommunicationSequence? @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId String?
+  job        AutomationJob?         @relation(fields: [jobId], references: [id])
+  jobId      String?
+
+  recipientEmail String /// 🔒
+  subject        String
+  body           String
+  attachments    String[]
+
+  scheduledFor DateTime
+  sentAt       DateTime?
+
+  /// Brevo. 🔴 THE APP OWNS THE SCHEDULING. Brevo only delivers.
+  /// No J-7 / J-5 / +3-month logic inside Brevo automations — or your Qualiopi
+  /// timing lives in a third party and your proof is not queryable.
+  brevoMessageId String?        @unique
+  deliveryStatus DeliveryStatus @default(PENDING)
+  deliveredAt    DateTime?
+  bouncedAt      DateTime?
+  retryCount     Int            @default(0)
+
+  /// Editable until sent. Sent messages are immutable.
+  isEditable Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scheduledFor, deliveryStatus])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  15 · FINANCEMENT & BPF
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum FinancementType {
+  ENTREPRISE_DIRECTE
+  OPCO
+  CPF
+  FONDS_PROPRES
+  AUTRE
+}
+
+model Financeur {
+  id           String  @id @default(uuid())
+  name         String
+  siret        String? @unique
+  type         String? /// OPCO name, etc.
+  contactEmail String? /// 🔒
+
+  financements        Financement[]
+  contractualisations Contractualisation[]
+
+  createdAt DateTime @default(now())
+}
+
+/// 🔴 ENTIRELY ABSENT FROM THE OLD MODEL. The funding route determines which
+/// documents are mandatory, whether a subcontractor needs its OWN Qualiopi, and
+/// WHICH BPF LINE the revenue lands on. Without it, bpfIncluded / prestationCode
+/// / specialite are decorative and the BPF CANNOT BE GENERATED.
+model Financement {
+  id String @id @default(uuid())
+
+  /// 🔴 v1.4 — MOVED FROM Parcours.
+  /// The funding route is a property of the PAYER, not of the parcours.
+  /// One inter cohort can carry three funding origins at once: Groupe Cassous
+  /// through its OPCO, Cabinet Mérignac direct, Bordeaux Métropole public money.
+  ///
+  /// THE BPF DECLARES REVENUE *BY FUNDING ORIGIN*. Hang this off Parcours and
+  /// the BPF for every mixed-payer inter session is wrong — and it is a legal
+  /// filing.
+  contractualisation   Contractualisation @relation(fields: [contractualisationId], references: [id], onDelete: Cascade)
+  contractualisationId String
+
+  type        FinancementType
+  financeur   Financeur?      @relation(fields: [financeurId], references: [id])
+  financeurId String?
+
+  dossierNumber       String?
+  montantPrisEnCharge Int     @default(0) /// euro cents
+  status              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contractualisationId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  16 · QUALIOPI  (the référentiel is DATA, not code)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 🔴 DO NOT HARDCODE A DOCUMENT CHECKLIST INTO A REACT PAGE.
+/// The old Slice 8 was "a read-only audit view showing every required document
+/// with status and timestamp" — which scores DOCUMENTS, not INDICATORS. A
+/// parcours can hold all 11 documents and still be non-conforme.
+///
+/// Modelled as data, conformity is COMPUTED. And when the référentiel changes
+/// — a projet de décret targets 1 November 2026 — it is a MIGRATION, not a
+/// REWRITE.
+model Referentiel {
+  id            String    @id @default(uuid())
+  name          String /// "RNQ v9"
+  version       String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive      Boolean   @default(false)
+
+  criteres Critere[]
+
+  createdAt DateTime @default(now())
+}
+
+model Critere {
+  id            String      @id @default(uuid())
+  referentiel   Referentiel @relation(fields: [referentielId], references: [id])
+  referentielId String
+  numero        Int /// 1..7
+  titre         String
+
+  indicateurs Indicateur[]
+
+  @@unique([referentielId, numero])
+}
+
+model Indicateur {
+  id            String  @id @default(uuid())
+  critere       Critere @relation(fields: [critereId], references: [id])
+  critereId     String
+  numero        Int /// 1..32 (22 applicable to a pure OF)
+  libelle       String
+  /// Does this indicator apply to PANDO's activity?
+  applicable    Boolean @default(true)
+  expectedProof String?
+
+  evidenceLinks EvidenceLink[]
+
+  @@unique([critereId, numero])
+}
+
+/// The join that makes conformity computable. Any artefact can prove any
+/// indicator. Conformity is derived — PER PARCOURS, because auditors SAMPLE.
+/// A single missing demi-journée of émargement on a sampled parcours is a
+/// non-conformity. The dashboard must surface the weak parcours BEFORE the
+/// auditor picks them.
+model EvidenceLink {
+  id           String     @id @default(uuid())
+  indicateur   Indicateur @relation(fields: [indicateurId], references: [id])
+  indicateurId String
+
+  /// Exactly one artefact is linked. [CHECK]
+  parcours        Parcours?           @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId      String?
+  document        Document?           @relation(fields: [documentId], references: [id])
+  documentId      String?
+  attendance      Attendance?         @relation(fields: [attendanceId], references: [id])
+  attendanceId    String?
+  evaluation      Evaluation?         @relation(fields: [evaluationId], references: [id])
+  evaluationId    String?
+  analyseBesoin   AnalyseBesoin?      @relation(fields: [analyseBesoinId], references: [id])
+  analyseBesoinId String?
+  livrable        SequenceLivrable?   @relation(fields: [livrableId], references: [id])
+  livrableId      String?
+  reclamation     Reclamation?        @relation(fields: [reclamationId], references: [id])
+  reclamationId   String?
+  action          ActionAmelioration? @relation(fields: [actionId], references: [id])
+  actionId        String?
+  veille          Veille?             @relation(fields: [veilleId], references: [id])
+  veilleId        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([indicateurId])
+  @@index([parcoursId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  17 · AMÉLIORATION CONTINUE  (three absent models ≈ two entire criteria)
+// ═══════════════════════════════════════════════════════════════════════════
+
+enum ReclamationSource {
+  PARTICIPANT
+  CLIENT
+  FORMATEUR
+  FINANCEUR
+  AUTRE
+}
+
+/// BINARY. You either have a traced intake → qualification → response → action
+/// loop, or you do not. There was NO model for this at all.
+model Reclamation {
+  id          String            @id @default(uuid())
+  source      ReclamationSource
+  receivedAt  DateTime
+  receivedVia String?
+  description String
+
+  qualification String? /// severity / type
+  responseAt    DateTime?
+  responseText  String?
+
+  action   ActionAmelioration? @relation(fields: [actionId], references: [id])
+  actionId String?
+
+  confidentiality Confidentiality @default(INTERNE)
+  closedAt        DateTime?
+
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ActionOrigin {
+  RECLAMATION
+  EVALUATION
+  AUDIT
+  VEILLE
+  INTERNE
+}
+
+/// 🔴 "We take feedback into account" is EXPLICITLY NO LONGER SUFFICIENT.
+/// The expectation is DATED actions, with a NAMED OWNER, and evidence of
+/// WHAT ACTUALLY CHANGED.
+model ActionAmelioration {
+  id          String       @id @default(uuid())
+  origin      ActionOrigin
+  description String
+
+  /// 🔴 A NAMED PERSON. Not "the team".
+  owner   User     @relation(fields: [ownerId], references: [id])
+  ownerId String
+  dueDate DateTime /// 🔴 required
+
+  status String @default("OPEN")
+
+  /// 🔴 WHAT CONCRETELY CHANGED. Not "actioned".
+  outcome      String?
+  verifiedAt   DateTime?
+  verifiedBy   User?     @relation("ActionVerifier", fields: [verifiedById], references: [id])
+  verifiedById String?
+
+  reclamations  Reclamation[]
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([dueDate])
+}
+
+enum VeilleType {
+  LEGALE
+  METIER
+  PEDAGOGIQUE
+  HANDICAP
+  INNOVATION
+}
+
+/// Criterion 6. Design target: A TWO-MINUTE LOG ENTRY.
+/// If it takes longer it will not be done, and Criterion 6 fails on an empty table.
+model Veille {
+  id      String     @id @default(uuid())
+  type    VeilleType
+  source  String
+  summary String
+
+  /// 🔴 WHAT CHANGED AT PANDO BECAUSE OF THIS.
+  /// A log of links is not veille.
+  soWhat String
+
+  date     DateTime
+  author   User     @relation(fields: [authorId], references: [id])
+  authorId String
+
+  evidenceLinks EvidenceLink[]
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([date])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  18 · PEDAGOGY  ⚙ EXTENSION POINTS — pending Alexandra (§18)
+//     Model the table, ship it empty. Activating a nullable relation is a
+//     config change. Adding a relation to a live schema is a migration.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// ⚙ THE CARNET PANDO. BAM! = "carnet du manager lucide". POP! = "Manager
+/// stratégique". WOW! = "Cahier de coaching".
+/// If PAPER: only ParcoursParticipant.carnetIssuedAt is used and this stays empty.
+/// If DIGITAL: 🔴 this is the single richest evidence object PANDO has —
+/// participant-authored, timestamped, accreting week by week. The one artefact an
+/// auditor CANNOT suspect of having been written after the fact.
+model CarnetEntry {
+  id                    String              @id @default(uuid())
+  parcoursParticipant   ParcoursParticipant @relation(fields: [parcoursParticipantId], references: [id], onDelete: Cascade)
+  parcoursParticipantId String
+
+  weekNumber Int?
+  prompt     String?
+  content    String /// 🔒 the participant's own words
+
+  confidentiality Confidentiality @default(RESTREINT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parcoursParticipantId])
+}
+
+/// ⚙ PLAN D'ACTION 90 JOURS. If structured, it becomes the BRIDGE from the
+/// parcours to the évaluation à froid — i.e. the actual proof of transfer into
+/// the workplace, which is what the incoming référentiel wants to see.
+model PlanAction {
+  id                    String              @id @default(uuid())
+  parcoursParticipant   ParcoursParticipant @relation(fields: [parcoursParticipantId], references: [id], onDelete: Cascade)
+  parcoursParticipantId String              @unique
+
+  engagements PlanActionEngagement[]
+
+  reviewedAt     DateTime? /// +90 days
+  selfAssessment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlanActionEngagement {
+  id           String     @id @default(uuid())
+  planAction   PlanAction @relation(fields: [planActionId], references: [id], onDelete: Cascade)
+  planActionId String
+  ordre        Int /// 1..3
+  description  String
+  dueDate      DateTime?
+  achieved     Boolean?
+  evidence     String?
+
+  @@unique([planActionId, ordre])
+}
+
+/// ⚙ DÉFIS INTERSESSION. Tracked per participant → "apprentissage dans le flux
+/// du travail", evidenced.
+model DefiSubmission {
+  id                    String              @id @default(uuid())
+  sequence              Sequence            @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId            String
+  parcoursParticipant   ParcoursParticipant @relation(fields: [parcoursParticipantId], references: [id], onDelete: Cascade)
+  parcoursParticipantId String
+
+  submittedAt       DateTime?
+  content           String?
+  formateurFeedback String?
+  feedbackAt        DateTime?
+
+  @@unique([sequenceId, parcoursParticipantId])
+}
+
+/// Coaching session record (WOW!, flash coaching).
+/// 🔴 confidentiality default is the ONE VALUE pending Alexandra: can an ADMIN
+/// read a coaching compte rendu, or only the coach and the beneficiary?
+/// The MECHANISM ships either way. Only the default changes.
+model CompteRendu {
+  id         String   @id @default(uuid())
+  sequence   Sequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId String
+
+  content         String /// 🔒
+  confidentiality Confidentiality @default(CONFIDENTIEL)
+
+  coachConfirmedAt       DateTime?
+  beneficiaryConfirmedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  19 · AUDIT LOG
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Every mutation. Immutable. Append-only.
+/// This is what records the force-start of a parcours whose convention is
+/// unsigned, the rescheduling of a séquence, the acknowledgement of an
+/// impossible J-7 deadline. Deviations are logged, attributed, and SURFACED IN
+/// THE AUDIT VIEW — precisely because they are deviations.
+model AuditLog {
+  id       String  @id @default(uuid())
+  user     User?   @relation(fields: [userId], references: [id])
+  userId   String?
+  action   String
+  entity   String
+  entityId String
+  before   Json?
+  after    Json?
+  ip       String?
+  reason   String? /// required on force-start, cancellation, override
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  [CHECK] — RAW SQL CONSTRAINTS REQUIRED IN A FOLLOW-UP MIGRATION
+//  Prisma cannot express these. They are not optional. Several are the only
+//  thing standing between you and a false audit trail.
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  1. Formateur — the phantom-convention rule
+//     An INTERNAL formateur cannot carry a SIREN or an NDA. In the live sheet
+//     Alexandra (owner of PANDO, acting under PANDO) carries convention
+//     2026-ST100 — a document describing a legal relationship that does not
+//     exist. Make it impossible.
+//     CHECK (contract_type = 'EXTERNE_PRESTATAIRE' OR (siren IS NULL AND nda IS NULL))
+//
+//  2. Parcours — sous-traitance coherence
+//     CHECK (pando_role <> 'SOUS_TRAITANT' OR donneur_ordre_id IS NOT NULL)
+//
+//  3. Parcours — no silent cancellation
+//     CHECK (status <> 'ANNULE' OR cancellation_reason IS NOT NULL)
+//
+//  4. ParcoursParticipant — an abandon is a managed event
+//     CHECK (status <> 'ABANDON' OR abandon_reason IS NOT NULL)
+//
+//  5. Attendance — an absence with no reason reads as sloppiness
+//     CHECK (status NOT IN ('ABSENT_JUSTIFIE','ABSENT_NON_JUSTIFIE')
+//            OR justification IS NOT NULL)
+//
+//  6. Attendance — presence requires proof
+//     CHECK (status <> 'PRESENT' OR signed_at IS NOT NULL OR connected_at IS NOT NULL
+//            OR completed_at IS NOT NULL OR document_id IS NOT NULL)
+//
+//  7. Contractualisation — exactly one payer target
+//     CHECK (num_nonnulls(payer_client_id, payer_participant_id, financeur_id) = 1)
+//
+//  8. Contractualisation — rétractation for self-funding individuals
+//     CHECK (payer_type <> 'INDIVIDU' OR retractation_ends_at IS NOT NULL)
+//
+//  9. Contractualisation — Chorus Pro requires an engagement number
+//     (enforce in app: if client.is_public_sector then numero_engagement required
+//      before an invoice may be issued)
+//
+// 10. EvidenceLink — exactly one artefact
+//     CHECK (num_nonnulls(parcours_id, document_id, attendance_id, evaluation_id,
+//            analyse_besoin_id, livrable_id, reclamation_id, action_id, veille_id) = 1)
+//
+// 11. AccessToken — exactly one scoped target (except AUDITOR_READONLY)
+//
+// 12. Client — SIRET is 14 digits, SIREN is 9. Validate on write.
+//     CHECK (siret IS NULL OR siret ~ '^[0-9]{14}$')
+//     CHECK (siren IS NULL OR siren ~ '^[0-9]{9}$')
+//
+// 13. Parcours — full-cohort programmes
+//     (enforce in app from FormationVersion.snapshot.requiresFullCohort:
+//      min_participants = max_participants)
+//
+// 14. 🔴 RGPD — attestation scoping (enforce in app; no SQL expression)
+//     ATTESTATION_FORMATION, CERTIFICAT_REALISATION and QUESTIONNAIRE_COMMANDITAIRE
+//     are addressed to a CONTRACTUALISATION, never to a PARCOURS. A payer must
+//     never receive a document naming a participant it did not pay for.
+//     The process doc explicitly instructs the opposite. Do not follow it.
+//
+// 15. Parcours — derived totals (enforce in app / trigger)
+//     montant_ht  = Σ contractualisations.montant_ht
+//     date_debut  = MIN(sequences.date)
+//     date_fin    = MAX(sequences.date)
+//     total_hours = Σ sequences.heures
+//     Never entered by hand. Two independent totals means one is a lie.
+//
+// ═══════════════════════════════════════════════════════════════════════════

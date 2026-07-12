@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANDO — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&family=Roboto+Serif:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   PANDO DESIGN SYSTEM — FOUNDATION TOKENS
+   Architecture: Primitive → Semantic → Component (W3C DTCG model)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 1 — PRIMITIVE TOKENS (raw values, never used directly in components)
+     ───────────────────────────────────────────────────────────────────────── */
+
+  /* Brand blue ramp */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+
+  /* Neutral ramp (cool grey, slight blue tint) */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f7f8fa;
+  --neutral-100: #eef0f4;
+  --neutral-200: #dfe3ea;
+  --neutral-300: #c5ccd8;
+  --neutral-400: #9aa3b5;
+  --neutral-500: #6b7385;
+  --neutral-600: #4d5466;
+  --neutral-700: #363c4a;
+  --neutral-800: #23272f;
+  --neutral-850: #1a1d24;
+  --neutral-900: #131519;
+  --neutral-950: #0a0b0e;
+
+  /* Functional ramps */
+  --green-400: #34d399;  --green-500: #10b981;  --green-600: #059669;
+  --amber-400: #fbbf24;  --amber-500: #f59e0b;  --amber-600: #d97706;
+  --red-400:   #fb7185;  --red-500:   #f43f5e;  --red-600:   #e11d48;
+  --teal-500:  #14b8a6;
+  --purple-500:#8b5cf6;
+
+  /* Primitive spacing scale (8pt base grid, 4pt half-steps) */
+  --space-0:   0px;
+  --space-1:   2px;
+  --space-2:   4px;
+  --space-3:   8px;
+  --space-4:   12px;
+  --space-5:   16px;
+  --space-6:   20px;
+  --space-7:   24px;
+  --space-8:   32px;
+  --space-9:   40px;
+  --space-10:  48px;
+  --space-11:  64px;
+  --space-12:  80px;
+  --space-13:  96px;
+  --space-14:  128px;
+
+  /* Section spacing scale — large vertical rhythm between page sections.
+     Distinct from component spacing; this is what makes marketing pages breathe.
+     Modeled on Apple's section padding (responsive — see breakpoint block). */
+  --section-sm: 80px;
+  --section-md: 120px;
+  --section-lg: 160px;
+  --section-xl: 200px;
+
+  /* Materials — translucent surfaces with backdrop blur (sticky nav, overlays).
+     Apple uses these for nav bars and toolbars layered over content. */
+  --material-thin:    blur(10px) saturate(180%);
+  --material-regular: blur(20px) saturate(180%);
+  --material-thick:   blur(40px) saturate(180%);
+  --material-bg-light: rgba(255,255,255,0.72);
+  --material-bg-dark:  rgba(10,11,14,0.72);
+
+  /* Primitive radii */
+  --radius-0:  0px;
+  --radius-1:  4px;
+  --radius-2:  6px;
+  --radius-3:  8px;
+  --radius-4:  10px;
+  --radius-5:  12px;
+  --radius-6:  16px;
+  --radius-7:  20px;
+  --radius-full: 9999px;
+
+  /* Primitive font families */
+  --font-serif: 'Roboto Serif', Georgia, serif;
+  --font-sans:  'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'Roboto Mono', 'SF Mono', monospace;
+
+  /* Primitive font weights */
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-bold:     700;
+  --weight-black:    900;
+
+  /* Primitive type sizes — DESKTOP defaults (≥1069px).
+     Redefined per-breakpoint in the RESPONSIVE TYPE block below, following
+     Apple's exact three-tier system (desktop / tablet ≤1068 / phone ≤734).
+     Per Apple: letter-spacing LOOSENS as size shrinks — large text needs tight
+     tracking, small text needs air. Both size AND tracking respond. */
+  --size-display-1: 96px;   /* hero — marketing only */
+  --size-display-2: 80px;
+  --size-display-3: 64px;
+  --size-title-1:   48px;
+  --size-title-2:   40px;
+  --size-title-3:   32px;
+  --size-title-4:   28px;
+  --size-eyebrow:   24px;
+  --size-intro:     21px;
+  --size-quote:     40px;
+  --size-heading:   17px;
+  --size-body-lg:   19px;
+  --size-body:      17px;
+  --size-body-sm:   15px;
+  --size-callout:   16px;
+  --size-subhead:   15px;
+  --size-footnote:  13px;
+  --size-caption-1: 12px;
+  --size-caption-2: 11px;
+  --size-button-lg: 17px;
+  --size-button:    15px;
+  --size-button-sm: 13px;
+  --size-overline:  12px;
+  /* UI-specific sizes */
+  --size-nav-xl:    21px;
+  --size-nav-l:     17px;
+  --size-nav-m:     14px;
+  --size-nav-s:     12px;
+  --size-footer:    12px;
+  --size-footer-heading: 13px;
+  --size-blog-title:     40px;
+  --size-blog-lead:      21px;
+  --size-blog-body:      19px;
+  --size-blog-h2:        28px;
+  --size-blog-h3:        22px;
+  --size-blog-caption:   14px;
+  /* Stat / figure sizes — big standalone numbers (CA, counts, percentages) */
+  --size-stat-xl:   80px;   /* hero metric */
+  --size-stat-lg:   56px;
+  --size-stat-md:   40px;
+  --size-stat-sm:   28px;   /* inline KPI */
+  --size-stat-label: 13px;  /* the caption under a stat */
+
+  /* Letter-spacing — DESKTOP defaults. Redefined per-breakpoint below. */
+  --ls-display-1:  -0.015em;
+  --ls-display-2:  -0.015em;
+  --ls-display-3:  -0.009em;
+  --ls-title-1:    -0.003em;
+  --ls-title-2:    0em;
+  --ls-title-3:    0.004em;
+  --ls-title-4:    0.007em;
+  --ls-eyebrow:    0.009em;
+  --ls-intro:      0.011em;
+  --ls-body:       -0.003em;
+  --ls-heading:    -0.01em;
+  --ls-wide:       0.02em;
+  --ls-overline:   0.08em;
+  /* Tracking curve for the 17–28px range (SF Pro's tricky middle zone, per WWDC20).
+     Use these for any custom text landing between body and title-4. */
+  --ls-17: -0.003em;
+  --ls-19: 0.004em;
+  --ls-21: 0.011em;
+  --ls-24: 0.009em;
+  --ls-28: 0.007em;
+  /* Stats — large numbers want tight tracking; labels want air */
+  --ls-stat:  -0.02em;
+  --ls-stat-label: 0.04em;
+
+  /* Line-heights (unitless) — Apple's exact ratios */
+  --lh-display-1: 1.0417;
+  --lh-display-2: 1.05;
+  --lh-display-3: 1.0625;
+  --lh-title-1:   1.0834;
+  --lh-title-2:   1.1;
+  --lh-title-3:   1.125;
+  --lh-title-4:   1.1428;
+  --lh-tight:     1.05;
+  --lh-snug:      1.15;
+  --lh-heading:   1.25;
+  --lh-body:      1.47;
+  --lh-relaxed:   1.6;
+  --lh-intro:     1.381;
+
+  /* Primitive shadows */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.20);
+  --shadow-2: 0 2px 8px rgba(0,0,0,0.24);
+  --shadow-3: 0 8px 24px rgba(0,0,0,0.32);
+  --shadow-4: 0 16px 48px rgba(0,0,0,0.40);
+  --shadow-glow: 0 0 0 3px rgba(59,130,246,0.20);
+
+  /* Primitive motion */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:     120ms;
+  --dur-base:     200ms;
+  --dur-slow:     320ms;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 2 — SEMANTIC TOKENS (map primitives to roles — DARK THEME default)
+     ───────────────────────────────────────────────────────────────────────── */
+
+  /* Surfaces */
+  --color-bg-base:        var(--neutral-950);
+  --color-bg-raised:      var(--neutral-900);
+  --color-bg-overlay:     var(--neutral-850);
+  --color-surface:        var(--neutral-900);
+  --color-surface-raised: var(--neutral-850);
+  --color-surface-hover:  var(--neutral-800);
+  --color-surface-sunken: var(--neutral-950);
+
+  /* Text */
+  --color-text-primary:   #f0f1f5;
+  --color-text-secondary: var(--neutral-400);
+  --color-text-tertiary:  var(--neutral-500);
+  --color-text-disabled:  var(--neutral-600);
+  --color-text-inverse:   var(--neutral-950);
+  --color-text-on-accent: #ffffff;
+
+  /* Borders */
+  --color-border-subtle:  rgba(255,255,255,0.06);
+  --color-border-default: rgba(255,255,255,0.10);
+  --color-border-strong:  rgba(255,255,255,0.16);
+  --color-border-focus:   var(--blue-500);
+
+  /* Accent / interactive */
+  --color-accent:         var(--blue-500);
+  --color-accent-hover:   var(--blue-400);
+  --color-accent-active:  var(--blue-600);
+  --color-accent-subtle:  rgba(59,130,246,0.10);
+  --color-accent-muted:   rgba(59,130,246,0.16);
+
+  /* Status */
+  --color-success:        var(--green-500);
+  --color-success-subtle: rgba(16,185,129,0.10);
+  --color-warning:        var(--amber-500);
+  --color-warning-subtle: rgba(245,158,11,0.10);
+  --color-danger:         var(--red-500);
+  --color-danger-subtle:  rgba(244,63,94,0.10);
+  --color-info:           var(--blue-400);
+  --color-info-subtle:    rgba(96,165,250,0.10);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 3 — COMPONENT TOKENS (reference semantic tokens)
+     ───────────────────────────────────────────────────────────────────────── */
+  --button-radius:        var(--radius-3);
+  --button-height-lg:     44px;
+  --button-height:        38px;
+  --button-height-sm:     30px;
+  --card-radius:          var(--radius-6);
+  --card-padding:         var(--space-7);
+  --card-bg:              var(--color-surface);
+  --card-border:          var(--color-border-subtle);
+  --input-radius:         var(--radius-3);
+  --input-height:         38px;
+  --input-bg:             var(--color-surface-raised);
+  --badge-radius:         var(--radius-full);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE TYPE — Apple's exact three-tier breakpoint system
+   Desktop ≥1069px (root defaults above) · Tablet ≤1068px · Phone ≤734px
+   Every type token is redefined here; all utility classes scale automatically.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media only screen and (max-width: 1068px) {
+  :root {
+    --size-display-1: 80px;  --ls-display-1: -0.015em; --lh-display-1: 1.05;
+    --size-display-2: 64px;  --ls-display-2: -0.009em; --lh-display-2: 1.0625;
+    --size-display-3: 48px;  --ls-display-3: -0.003em; --lh-display-3: 1.0834;
+    --size-title-1:   40px;  --ls-title-1:   0em;      --lh-title-1:   1.1;
+    --size-title-2:   32px;  --ls-title-2:   0.004em;  --lh-title-2:   1.125;
+    --size-title-3:   28px;  --ls-title-3:   0.007em;  --lh-title-3:   1.1428;
+    --size-title-4:   24px;  --ls-title-4:   0.009em;  --lh-title-4:   1.1666;
+    --size-eyebrow:   21px;  --ls-eyebrow:   0.011em;
+    --size-intro:     21px;  --ls-intro:     0.011em;  --lh-intro:     1.381;
+    --size-quote:     32px;
+    /* UI */
+    --size-nav-xl:    19px;
+    --size-blog-title: 32px;
+    --size-blog-lead:  21px;
+    --size-blog-h2:    24px;
+    --size-blog-h3:    21px;
+    /* Section spacing + stats step down on tablet */
+    --section-sm: 64px;  --section-md: 96px;  --section-lg: 128px; --section-xl: 160px;
+    --size-stat-xl: 64px; --size-stat-lg: 48px; --size-stat-md: 36px; --size-stat-sm: 24px;
+  }
+}
+@media only screen and (max-width: 734px) {
+  :root {
+    --size-display-1: 48px;  --ls-display-1: -0.003em; --lh-display-1: 1.0834;
+    --size-display-2: 48px;  --ls-display-2: -0.003em; --lh-display-2: 1.0834;
+    --size-display-3: 40px;  --ls-display-3: 0em;      --lh-display-3: 1.1;
+    --size-title-1:   32px;  --ls-title-1:   0.004em;  --lh-title-1:   1.125;
+    --size-title-2:   28px;  --ls-title-2:   0.007em;  --lh-title-2:   1.1428;
+    --size-title-3:   24px;  --ls-title-3:   0.009em;  --lh-title-3:   1.1666;
+    --size-title-4:   21px;  --ls-title-4:   0.011em;  --lh-title-4:   1.1904;
+    --size-eyebrow:   19px;  --ls-eyebrow:   0.012em;
+    --size-intro:     19px;  --ls-intro:     0.012em;  --lh-intro:     1.4211;
+    --size-quote:     28px;
+    /* UI */
+    --size-nav-xl:    17px;
+    --size-blog-title: 28px;
+    --size-blog-lead:  19px;
+    --size-blog-h2:    22px;
+    --size-blog-h3:    19px;
+    --size-body-lg:    18px;
+    /* Section spacing + stats step down further on phone */
+    --section-sm: 48px;  --section-md: 72px;  --section-lg: 96px;  --section-xl: 120px;
+    --size-stat-xl: 48px; --size-stat-lg: 40px; --size-stat-md: 32px; --size-stat-sm: 22px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--color-bg-base);
+  color:var(--color-text-primary);
+  font-family:var(--font-sans);
+  font-size:var(--size-body);
+  line-height:var(--lh-body);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY UTILITY CLASSES — every size/lh/ls references a responsive token,
+   so all of these scale automatically at the tablet & phone breakpoints.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Display — Roboto Serif, marketing & hero */
+.t-display-1{font-family:var(--font-serif);font-size:var(--size-display-1);font-weight:var(--weight-bold);line-height:var(--lh-display-1);letter-spacing:var(--ls-display-1)}
+.t-display-2{font-family:var(--font-serif);font-size:var(--size-display-2);font-weight:var(--weight-bold);line-height:var(--lh-display-2);letter-spacing:var(--ls-display-2)}
+.t-display-3{font-family:var(--font-serif);font-size:var(--size-display-3);font-weight:var(--weight-medium);line-height:var(--lh-display-3);letter-spacing:var(--ls-display-3)}
+/* Titles */
+.t-title-1{font-family:var(--font-serif);font-size:var(--size-title-1);font-weight:var(--weight-medium);line-height:var(--lh-title-1);letter-spacing:var(--ls-title-1)}
+.t-title-2{font-family:var(--font-serif);font-size:var(--size-title-2);font-weight:var(--weight-medium);line-height:var(--lh-title-2);letter-spacing:var(--ls-title-2)}
+.t-title-3{font-family:var(--font-sans);font-size:var(--size-title-3);font-weight:var(--weight-medium);line-height:var(--lh-title-3);letter-spacing:var(--ls-title-3)}
+.t-title-4{font-family:var(--font-sans);font-size:var(--size-title-4);font-weight:var(--weight-medium);line-height:var(--lh-title-4);letter-spacing:var(--ls-title-4)}
+/* Editorial — eyebrow, intro, quote (Apple marketing styles) */
+.t-eyebrow{font-family:var(--font-sans);font-size:var(--size-eyebrow);font-weight:var(--weight-medium);line-height:var(--lh-heading);letter-spacing:var(--ls-eyebrow);color:var(--color-accent-hover)}
+.t-intro{font-family:var(--font-sans);font-size:var(--size-intro);font-weight:var(--weight-regular);line-height:var(--lh-intro);letter-spacing:var(--ls-intro);color:var(--color-text-secondary)}
+.t-quote{font-family:var(--font-serif);font-size:var(--size-quote);font-weight:var(--weight-regular);line-height:1.2;letter-spacing:0em}
+/* Body & supporting — Roboto */
+.t-heading{font-family:var(--font-sans);font-size:var(--size-heading);font-weight:var(--weight-bold);line-height:var(--lh-heading);letter-spacing:var(--ls-heading)}
+.t-body-lg{font-family:var(--font-sans);font-size:var(--size-body-lg);font-weight:var(--weight-regular);line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.t-body{font-family:var(--font-sans);font-size:var(--size-body);font-weight:var(--weight-regular);line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.t-body-sm{font-family:var(--font-sans);font-size:var(--size-body-sm);font-weight:var(--weight-regular);line-height:var(--lh-body)}
+.t-callout{font-family:var(--font-sans);font-size:var(--size-callout);font-weight:var(--weight-regular);line-height:var(--lh-body)}
+.t-subhead{font-family:var(--font-sans);font-size:var(--size-subhead);font-weight:var(--weight-medium);line-height:var(--lh-heading)}
+.t-footnote{font-family:var(--font-sans);font-size:var(--size-footnote);font-weight:var(--weight-regular);line-height:var(--lh-body);color:var(--color-text-secondary)}
+.t-caption-1{font-family:var(--font-sans);font-size:var(--size-caption-1);font-weight:var(--weight-regular);line-height:var(--lh-heading);color:var(--color-text-secondary)}
+.t-caption-2{font-family:var(--font-sans);font-size:var(--size-caption-2);font-weight:var(--weight-regular);line-height:var(--lh-heading);color:var(--color-text-tertiary)}
+.t-overline{font-family:var(--font-sans);font-size:var(--size-overline);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:var(--ls-overline);text-transform:uppercase;color:var(--color-text-tertiary)}
+/* UI — navigation */
+.t-nav-xl{font-family:var(--font-sans);font-size:var(--size-nav-xl);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.01em}
+.t-nav-l{font-family:var(--font-sans);font-size:var(--size-nav-l);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.005em}
+.t-nav-m{font-family:var(--font-sans);font-size:var(--size-nav-m);font-weight:var(--weight-medium);line-height:1.3}
+.t-nav-s{font-family:var(--font-sans);font-size:var(--size-nav-s);font-weight:var(--weight-medium);line-height:1.3}
+/* UI — footer */
+.t-footer-heading{font-family:var(--font-sans);font-size:var(--size-footer-heading);font-weight:var(--weight-medium);line-height:1.3;color:var(--color-text-primary)}
+.t-footer{font-family:var(--font-sans);font-size:var(--size-footer);font-weight:var(--weight-regular);line-height:1.4;color:var(--color-text-tertiary)}
+/* Editorial — blog / long-form content */
+.t-blog-title{font-family:var(--font-serif);font-size:var(--size-blog-title);font-weight:var(--weight-bold);line-height:1.1;letter-spacing:-0.01em}
+.t-blog-lead{font-family:var(--font-sans);font-size:var(--size-blog-lead);font-weight:var(--weight-regular);line-height:1.45;color:var(--color-text-secondary)}
+.t-blog-h2{font-family:var(--font-serif);font-size:var(--size-blog-h2);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.005em}
+.t-blog-h3{font-family:var(--font-sans);font-size:var(--size-blog-h3);font-weight:var(--weight-medium);line-height:1.25}
+.t-blog-body{font-family:var(--font-sans);font-size:var(--size-blog-body);font-weight:var(--weight-regular);line-height:1.6}
+.t-blog-caption{font-family:var(--font-sans);font-size:var(--size-blog-caption);font-weight:var(--weight-regular);line-height:1.4;font-style:italic;color:var(--color-text-tertiary)}
+/* Stats / figures — big standalone numbers */
+.t-stat-xl{font-family:var(--font-serif);font-size:var(--size-stat-xl);font-weight:var(--weight-bold);line-height:1;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-lg{font-family:var(--font-serif);font-size:var(--size-stat-lg);font-weight:var(--weight-bold);line-height:1;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-md{font-family:var(--font-sans);font-size:var(--size-stat-md);font-weight:var(--weight-bold);line-height:1.05;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-sm{font-family:var(--font-sans);font-size:var(--size-stat-sm);font-weight:var(--weight-bold);line-height:1.1;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
+.t-stat-label{font-family:var(--font-sans);font-size:var(--size-stat-label);font-weight:var(--weight-medium);line-height:1.3;letter-spacing:var(--ls-stat-label);text-transform:uppercase;color:var(--color-text-secondary)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DOC LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.doc{display:flex;min-height:100vh}
+
+.doc-nav{
+  width:240px;min-width:240px;
+  border-right:1px solid var(--color-border-subtle);
+  padding:var(--space-7) var(--space-5);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:var(--color-bg-raised);
+}
+
+.doc-brand{display:flex;align-items:center;gap:10px;margin-bottom:var(--space-8)}
+.doc-logo{width:36px;height:36px;border-radius:var(--radius-3);background:var(--color-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-weight:700;color:#fff;font-size:18px}
+.doc-brand-name{font-weight:var(--weight-bold);font-size:15px}
+.doc-brand-sub{font-size:11px;color:var(--color-text-tertiary)}
+
+.doc-nav-section{margin-bottom:var(--space-6)}
+.doc-nav-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-tertiary);margin-bottom:var(--space-3);padding:0 10px}
+.doc-nav-link{display:block;padding:6px 10px;border-radius:var(--radius-2);font-size:13px;color:var(--color-text-secondary);text-decoration:none;transition:all var(--dur-fast) var(--ease-out);cursor:pointer}
+.doc-nav-link:hover{background:var(--color-surface-hover);color:var(--color-text-primary)}
+
+.doc-main{flex:1;padding:var(--space-10) var(--space-12);max-width:1100px}
+
+.section{margin-bottom:var(--space-14);scroll-margin-top:var(--space-8)}
+.section-kicker{margin-bottom:var(--space-3)}
+.section-title{margin-bottom:var(--space-4)}
+.section-intro{color:var(--color-text-secondary);max-width:660px;margin-bottom:var(--space-9)}
+
+.subsection{margin-bottom:var(--space-10)}
+.subsection-title{margin-bottom:var(--space-5);padding-bottom:var(--space-3);border-bottom:1px solid var(--color-border-subtle)}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEMO COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Type specimen rows */
+.type-row{display:flex;align-items:baseline;gap:var(--space-7);padding:var(--space-5) 0;border-bottom:1px solid var(--color-border-subtle)}
+.type-specimen{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.type-spec{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);min-width:230px;text-align:right;line-height:1.6}
+.type-spec b{color:var(--color-text-secondary);font-weight:500}
+.type-name{font-family:var(--font-mono);font-size:11px;color:var(--color-accent);min-width:110px}
+
+/* Color swatches */
+.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--space-4)}
+.swatch{border-radius:var(--radius-4);overflow:hidden;border:1px solid var(--color-border-subtle)}
+.swatch-color{height:64px}
+.swatch-info{padding:10px 12px;background:var(--color-surface)}
+.swatch-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.swatch-value{font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary)}
+
+.ramp{display:flex;border-radius:var(--radius-3);overflow:hidden;border:1px solid var(--color-border-subtle);margin-bottom:var(--space-4)}
+.ramp-step{flex:1;height:56px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.6)}
+
+/* Semantic token table */
+.token-table{width:100%;border-collapse:collapse;font-size:13px}
+.token-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-tertiary);padding:10px 12px;border-bottom:1px solid var(--color-border-default)}
+.token-table td{padding:10px 12px;border-bottom:1px solid var(--color-border-subtle);vertical-align:middle}
+.token-chip{width:20px;height:20px;border-radius:5px;border:1px solid var(--color-border-default);display:inline-block;vertical-align:middle;margin-right:8px}
+.token-mono{font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary)}
+
+/* Spacing scale visual */
+.space-row{display:flex;align-items:center;gap:var(--space-5);padding:8px 0}
+.space-bar{height:16px;background:var(--color-accent);border-radius:2px;opacity:0.7}
+.space-label{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);min-width:120px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-sans);font-weight:var(--weight-medium);border:none;cursor:pointer;transition:all var(--dur-base) var(--ease-out);white-space:nowrap;text-decoration:none}
+.btn-lg{height:var(--button-height-lg);padding:0 var(--space-7);font-size:var(--size-button-lg);border-radius:var(--button-radius)}
+.btn-md{height:var(--button-height);padding:0 var(--space-6);font-size:var(--size-button);border-radius:var(--button-radius)}
+.btn-sm{height:var(--button-height-sm);padding:0 var(--space-4);font-size:var(--size-button-sm);border-radius:var(--radius-2)}
+.btn-primary{background:var(--color-accent);color:var(--color-text-on-accent)}
+.btn-primary:hover{background:var(--color-accent-hover)}
+.btn-primary:active{background:var(--color-accent-active);transform:translateY(1px)}
+.btn-secondary{background:var(--color-surface-hover);color:var(--color-text-primary);border:1px solid var(--color-border-default)}
+.btn-secondary:hover{background:var(--color-surface-raised);border-color:var(--color-border-strong)}
+.btn-ghost{background:transparent;color:var(--color-text-secondary);border:1px solid var(--color-border-default)}
+.btn-ghost:hover{background:var(--color-surface-hover);color:var(--color-text-primary)}
+.btn-danger{background:var(--color-danger);color:#fff}
+.btn-danger:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--badge-radius);font-size:11px;font-weight:600;line-height:1.4}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-accent{background:var(--color-accent-subtle);color:var(--color-accent-hover)}
+.badge-success{background:var(--color-success-subtle);color:var(--color-success)}
+.badge-warning{background:var(--color-warning-subtle);color:var(--color-warning)}
+.badge-danger{background:var(--color-danger-subtle);color:var(--color-danger)}
+.badge-neutral{background:rgba(255,255,255,0.06);color:var(--color-text-secondary)}
+
+/* Cards */
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--card-radius);padding:var(--card-padding)}
+.card-elevated{box-shadow:var(--shadow-3)}
+
+/* Inputs */
+.input{width:100%;height:var(--input-height);background:var(--input-bg);border:1px solid var(--color-border-default);border-radius:var(--input-radius);padding:0 var(--space-4);color:var(--color-text-primary);font-family:var(--font-sans);font-size:var(--size-body-sm);outline:none;transition:border-color var(--dur-base) var(--ease-out)}
+.input:focus{border-color:var(--color-border-focus);box-shadow:var(--shadow-glow)}
+.input::placeholder{color:var(--color-text-tertiary)}
+.input-label{display:block;font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
+
+/* Demo arrangement helpers */
+.demo-box{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-5);padding:var(--space-7);margin-bottom:var(--space-4)}
+.demo-row{display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap}
+.demo-col{display:flex;flex-direction:column;gap:var(--space-4)}
+.demo-label{font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary);margin-bottom:var(--space-3)}
+
+/* Shadow demo */
+.shadow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--space-6)}
+.shadow-box{height:90px;background:var(--color-surface-raised);border-radius:var(--radius-5);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary)}
+
+/* Radii demo */
+.radius-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:var(--space-5)}
+.radius-box{height:80px;background:var(--color-accent-subtle);border:1px solid var(--color-accent-muted);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-family:var(--font-mono);font-size:10px;color:var(--color-accent-hover)}
+
+/* Principle cards */
+.principle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-5)}
+.principle{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-5);padding:var(--space-6)}
+.principle-icon{width:36px;height:36px;border-radius:var(--radius-3);background:var(--color-accent-subtle);display:flex;align-items:center;justify-content:center;margin-bottom:var(--space-4);color:var(--color-accent-hover)}
+.principle-title{font-weight:600;font-size:15px;margin-bottom:var(--space-2)}
+.principle-text{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+
+/* Motion demo */
+.motion-chip{padding:var(--space-5);background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-4);cursor:pointer;text-align:center;transition:transform var(--dur-base) var(--ease-spring)}
+.motion-chip:hover{transform:scale(1.05) translateY(-2px)}
+
+hr.rule{border:none;border-top:1px solid var(--color-border-subtle);margin:var(--space-8) 0}
+
+.callout{background:var(--color-accent-subtle);border:1px solid var(--color-accent-muted);border-radius:var(--radius-4);padding:var(--space-5) var(--space-6);font-size:13px;color:var(--color-text-secondary);margin:var(--space-5) 0}
+.callout b{color:var(--color-text-primary)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--neutral-700);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="doc-nav">
+    <div class="doc-brand">
+      <div class="doc-logo">P</div>
+      <div>
+        <div class="doc-brand-name">PANDO</div>
+        <div class="doc-brand-sub">Design System v1.0</div>
+      </div>
+    </div>
+
+    <div class="doc-nav-section">
+      <div class="doc-nav-label">Foundations</div>
+      <a class="doc-nav-link" href="#principles">Principles</a>
+      <a class="doc-nav-link" href="#architecture">Token architecture</a>
+      <a class="doc-nav-link" href="#typography">Typography</a>
+      <a class="doc-nav-link" href="#color">Color</a>
+      <a class="doc-nav-link" href="#spacing">Spacing & grid</a>
+      <a class="doc-nav-link" href="#section-rhythm">Section rhythm</a>
+      <a class="doc-nav-link" href="#stats">Stats & figures</a>
+      <a class="doc-nav-link" href="#radii">Radii</a>
+      <a class="doc-nav-link" href="#elevation">Elevation</a>
+      <a class="doc-nav-link" href="#materials">Materials</a>
+      <a class="doc-nav-link" href="#motion">Motion</a>
+      <a class="doc-nav-link" href="#section-pattern">Composition</a>
+    </div>
+
+    <div class="doc-nav-section">
+      <div class="doc-nav-label">Components</div>
+      <a class="doc-nav-link" href="#buttons">Buttons</a>
+      <a class="doc-nav-link" href="#badges">Badges</a>
+      <a class="doc-nav-link" href="#inputs">Inputs</a>
+      <a class="doc-nav-link" href="#cards">Cards</a>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="doc-main">
+
+    <!-- HEADER -->
+    <div class="section" style="margin-bottom:var(--space-11)">
+      <div class="t-overline section-kicker">PANDO · Design System</div>
+      <h1 class="t-display-2 section-title">Foundations for everything<br>we build.</h1>
+      <p class="t-body-lg section-intro">A single source of truth for PANDO's visual language. Built on a layered token architecture, a precise type scale, and Apple-grade attention to rhythm, contrast, and restraint. Every value here is a decision, not a default.</p>
+    </div>
+
+    <!-- PRINCIPLES -->
+    <section class="section" id="principles">
+      <div class="t-overline section-kicker">01 — Foundations</div>
+      <h2 class="t-title-1 section-title">Principles</h2>
+      <p class="t-body section-intro">Five rules that govern every decision in this system. When in doubt, return here.</p>
+
+      <div class="principle-grid">
+        <div class="principle">
+          <div class="principle-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div class="principle-title">Clarity first</div>
+          <div class="principle-text">Content is the interface. Typography and spacing carry hierarchy — not decoration. Remove anything that competes with meaning.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <div class="principle-title">Whitespace is structure</div>
+          <div class="principle-text">Generous, consistent spacing groups what belongs together and separates what doesn't. Space is an active design tool, never filler.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
+          <div class="principle-title">Color means action</div>
+          <div class="principle-text">Blue is reserved for what's interactive. When everything is colored, nothing reads as clickable. Restraint trains the eye.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/></svg></div>
+          <div class="principle-title">Depth with restraint</div>
+          <div class="principle-text">Elevation and translucency convey relationships between layers. Used sparingly, they orient. Overused, they create noise.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div class="principle-title">Consistency through tokens</div>
+          <div class="principle-text">No magic numbers. Every color, size, and space references a token. Change the token, change the system — everywhere, at once.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="architecture">
+      <div class="t-overline section-kicker">02 — Foundations</div>
+      <h2 class="t-title-1 section-title">Token architecture</h2>
+      <p class="t-body section-intro">Three layers, following the W3C Design Tokens standard. Components only ever reference the top layer — never raw values. This is what lets the entire system re-theme by changing a handful of mappings.</p>
+
+      <div class="demo-col">
+        <div class="card" style="border-left:3px solid var(--neutral-500)">
+          <div class="t-overline" style="margin-bottom:8px">Layer 1</div>
+          <div class="t-title-4" style="margin-bottom:6px">Primitive tokens</div>
+          <p class="t-body-sm" style="color:var(--color-text-secondary);margin-bottom:12px">Raw, context-free values. The complete palette of what's possible. Never used directly in a component.</p>
+          <code class="token-mono">--blue-500: #3b82f6 · --space-5: 16px · --size-title-1: 34px</code>
+        </div>
+        <div style="text-align:center;color:var(--color-text-tertiary);font-size:18px">↓</div>
+        <div class="card" style="border-left:3px solid var(--blue-500)">
+          <div class="t-overline" style="margin-bottom:8px">Layer 2</div>
+          <div class="t-title-4" style="margin-bottom:6px">Semantic tokens</div>
+          <p class="t-body-sm" style="color:var(--color-text-secondary);margin-bottom:12px">Map primitives to roles by intent. This is where theming lives — light/dark just remap these.</p>
+          <code class="token-mono">--color-accent: var(--blue-500) · --color-text-primary · --color-bg-base</code>
+        </div>
+        <div style="text-align:center;color:var(--color-text-tertiary);font-size:18px">↓</div>
+        <div class="card" style="border-left:3px solid var(--green-500)">
+          <div class="t-overline" style="margin-bottom:8px">Layer 3</div>
+          <div class="t-title-4" style="margin-bottom:6px">Component tokens</div>
+          <p class="t-body-sm" style="color:var(--color-text-secondary);margin-bottom:12px">Per-component values that reference semantic tokens. The only layer components read from.</p>
+          <code class="token-mono">--button-radius: var(--radius-3) · --card-bg: var(--color-surface)</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- TYPOGRAPHY -->
+    <section class="section" id="typography">
+      <div class="t-overline section-kicker">03 — Foundations</div>
+      <h2 class="t-title-1 section-title">Typography</h2>
+      <p class="t-body section-intro">Two families. <b style="color:var(--color-text-primary)">Roboto Serif</b> carries displays and titles — it gives PANDO an editorial, human, considered voice. <b style="color:var(--color-text-primary)">Roboto</b> handles all UI and body text for clarity at small sizes. The full scale spans display through buttons, plus dedicated UI and editorial styles, and responds across three breakpoints exactly as Apple's system does.</p>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Display — Roboto Serif</h3>
+        <div class="type-row">
+          <div class="type-specimen t-display-1">Cultiver l'écosystème</div>
+          <div class="type-name">display-1</div>
+          <div class="type-spec"><b>Serif</b> · 96→80→48px<br>Bold 700 · lh 1.04 · ls −0.015em</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-display-2">Cultiver l'écosystème</div>
+          <div class="type-name">display-2</div>
+          <div class="type-spec"><b>Serif</b> · 80→64→48px<br>Bold 700 · lh 1.05 · ls −0.015em</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-display-3">Cultiver l'écosystème</div>
+          <div class="type-name">display-3</div>
+          <div class="type-spec"><b>Serif</b> · 64→48→40px<br>Medium 500 · lh 1.06 · ls −0.009em</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Titles</h3>
+        <div class="type-row">
+          <div class="type-specimen t-title-1">Faire grandir le système</div>
+          <div class="type-name">title-1</div>
+          <div class="type-spec"><b>Serif</b> · 48→40→32px<br>Medium 500 · lh 1.08 · ls −0.003em</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-title-2">Faire grandir le système</div>
+          <div class="type-name">title-2</div>
+          <div class="type-spec"><b>Serif</b> · 40→32→28px<br>Medium 500 · lh 1.1</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-title-3">Faire grandir le système</div>
+          <div class="type-name">title-3</div>
+          <div class="type-spec"><b>Sans</b> · 32→28→24px<br>Medium 500 · lh 1.13</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-title-4">Faire grandir le système</div>
+          <div class="type-name">title-4</div>
+          <div class="type-spec"><b>Sans</b> · 28→24→21px<br>Medium 500 · lh 1.14</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Body & supporting — Roboto</h3>
+        <div class="type-row">
+          <div class="type-specimen t-heading">Heading — emphasis within content</div>
+          <div class="type-name">heading</div>
+          <div class="type-spec"><b>Sans</b> · 17px · Bold 700 · lh 1.25</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-body-lg">Body large — lead paragraphs and intros that need a little more presence.</div>
+          <div class="type-name">body-lg</div>
+          <div class="type-spec"><b>Sans</b> · 19px · Regular · lh 1.47</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-body">Body — the default reading size for most interface text and paragraphs.</div>
+          <div class="type-name">body</div>
+          <div class="type-spec"><b>Sans</b> · 17px · Regular · lh 1.47</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-callout">Callout — slightly emphasized inline text.</div>
+          <div class="type-name">callout</div>
+          <div class="type-spec"><b>Sans</b> · 16px · Regular · lh 1.47</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-subhead">Subhead — labels and secondary headers</div>
+          <div class="type-name">subhead</div>
+          <div class="type-spec"><b>Sans</b> · 15px · Medium · lh 1.25</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-footnote">Footnote — supplementary detail and metadata.</div>
+          <div class="type-name">footnote</div>
+          <div class="type-spec"><b>Sans</b> · 13px · Regular</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-caption-1">Caption — timestamps, helper text, fine print.</div>
+          <div class="type-name">caption-1</div>
+          <div class="type-spec"><b>Sans</b> · 12px · Regular</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-caption-2">Caption 2 — the smallest legible label.</div>
+          <div class="type-name">caption-2</div>
+          <div class="type-spec"><b>Sans</b> · 11px · Regular</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-overline">Overline — section eyebrow</div>
+          <div class="type-name">overline</div>
+          <div class="type-spec"><b>Sans</b> · 11px · Medium · ls 0.08em · uppercase</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Editorial styles</h3>
+        <p class="t-body" style="color:var(--color-text-secondary);margin-bottom:var(--space-6);max-width:620px">Used on marketing pages and the blog. Modeled on Apple's eyebrow / intro / quote roles. The eyebrow sits above a headline; the intro is the lead paragraph; the quote is for pull-quotes and testimonials.</p>
+        <div class="type-row">
+          <div class="type-specimen t-eyebrow">Management écosystème</div>
+          <div class="type-name">eyebrow</div>
+          <div class="type-spec"><b>Sans</b> · 24→21→19px<br>Medium · accent color</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-intro">L'intelligence humaine demeure inchangée, quel que soit le contexte.</div>
+          <div class="type-name">intro</div>
+          <div class="type-spec"><b>Sans</b> · 21→21→19px<br>Regular · lh 1.38</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-quote">« Cultiver l'écosystème. »</div>
+          <div class="type-name">quote</div>
+          <div class="type-spec"><b>Serif</b> · 40→32→28px<br>Regular · lh 1.2</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Navigation</h3>
+        <p class="t-body" style="color:var(--color-text-secondary);margin-bottom:var(--space-6);max-width:620px">Four sizes for different nav contexts. <b style="color:var(--color-text-primary)">XL</b> for primary top-nav on marketing, <b style="color:var(--color-text-primary)">L</b> for app top-bar, <b style="color:var(--color-text-primary)">M</b> for sidebar items, <b style="color:var(--color-text-primary)">S</b> for sub-nav and breadcrumbs.</p>
+        <div class="type-row">
+          <div class="type-specimen t-nav-xl">Programmes</div>
+          <div class="type-name">nav-xl</div>
+          <div class="type-spec"><b>Sans</b> · 21→19→17px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-nav-l">Sessions</div>
+          <div class="type-name">nav-l</div>
+          <div class="type-spec"><b>Sans</b> · 17px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-nav-m">Audit Qualiopi</div>
+          <div class="type-name">nav-m</div>
+          <div class="type-spec"><b>Sans</b> · 14px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-nav-s">Accueil / Sessions / BAM!</div>
+          <div class="type-name">nav-s</div>
+          <div class="type-spec"><b>Sans</b> · 12px · Medium</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Footer</h3>
+        <div class="type-row">
+          <div class="type-specimen t-footer-heading">Produits</div>
+          <div class="type-name">footer-heading</div>
+          <div class="type-spec"><b>Sans</b> · 13px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-footer">© 2025 PANDO — Tous droits réservés. Organisme certifié Qualiopi.</div>
+          <div class="type-name">footer</div>
+          <div class="type-spec"><b>Sans</b> · 12px · Regular · tertiary</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Blog & long-form</h3>
+        <p class="t-body" style="color:var(--color-text-secondary);margin-bottom:var(--space-6);max-width:620px">A dedicated editorial scale for articles. Body runs at 19px with a generous 1.6 line-height for comfortable long-form reading — larger and airier than UI body text.</p>
+        <div class="type-row">
+          <div class="type-specimen t-blog-title">Le management comme pratique vivante</div>
+          <div class="type-name">blog-title</div>
+          <div class="type-spec"><b>Serif</b> · 40→32→28px · Bold</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-blog-lead">Pourquoi les meilleurs managers ne cherchent pas la bonne réponse, mais la bonne lecture du système.</div>
+          <div class="type-name">blog-lead</div>
+          <div class="type-spec"><b>Sans</b> · 21→21→19px · lh 1.45</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-blog-h2">Lire le système</div>
+          <div class="type-name">blog-h2</div>
+          <div class="type-spec"><b>Serif</b> · 28→24→22px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-blog-h3">Les signaux faibles</div>
+          <div class="type-name">blog-h3</div>
+          <div class="type-spec"><b>Sans</b> · 22→21→19px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-blog-body">Le management ne fonctionne pas par recettes toutes faites. Chaque situation appelle une réponse différente.</div>
+          <div class="type-name">blog-body</div>
+          <div class="type-spec"><b>Sans</b> · 19→19→18px · lh 1.6</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen t-blog-caption">Illustration — l'écosystème managérial PANDO</div>
+          <div class="type-name">blog-caption</div>
+          <div class="type-spec"><b>Sans</b> · 14px · italic</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Button text</h3>
+        <div class="type-row">
+          <div class="type-specimen" style="font-family:var(--font-sans);font-size:17px;font-weight:500">Button large · 17px Medium</div>
+          <div class="type-name">button-lg</div>
+          <div class="type-spec"><b>Sans</b> · 17px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen" style="font-family:var(--font-sans);font-size:15px;font-weight:500">Button · 15px Medium</div>
+          <div class="type-name">button</div>
+          <div class="type-spec"><b>Sans</b> · 15px · Medium</div>
+        </div>
+        <div class="type-row">
+          <div class="type-specimen" style="font-family:var(--font-sans);font-size:13px;font-weight:500">Button small · 13px Medium</div>
+          <div class="type-name">button-sm</div>
+          <div class="type-spec"><b>Sans</b> · 13px · Medium</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Responsive scale</h3>
+        <p class="t-body" style="color:var(--color-text-secondary);margin-bottom:var(--space-6);max-width:620px">Three breakpoints, following Apple's exact system. Type doesn't scale fluidly — it steps down at each breakpoint, and letter-spacing <b style="color:var(--color-text-primary)">loosens</b> as size shrinks so small text keeps its air. Resize this window to watch the specimens above respond live.</p>
+
+        <div class="demo-row" style="gap:var(--space-4);margin-bottom:var(--space-6)">
+          <span class="badge badge-accent">Desktop ≥ 1069px</span>
+          <span class="badge badge-neutral">Tablet ≤ 1068px</span>
+          <span class="badge badge-neutral">Phone ≤ 734px</span>
+        </div>
+
+        <table class="token-table">
+          <thead><tr><th>Style</th><th>Desktop</th><th>Tablet</th><th>Phone</th></tr></thead>
+          <tbody>
+            <tr><td class="token-mono">display-1</td><td class="token-mono">96px</td><td class="token-mono">80px</td><td class="token-mono">48px</td></tr>
+            <tr><td class="token-mono">display-2</td><td class="token-mono">80px</td><td class="token-mono">64px</td><td class="token-mono">48px</td></tr>
+            <tr><td class="token-mono">display-3</td><td class="token-mono">64px</td><td class="token-mono">48px</td><td class="token-mono">40px</td></tr>
+            <tr><td class="token-mono">title-1</td><td class="token-mono">48px</td><td class="token-mono">40px</td><td class="token-mono">32px</td></tr>
+            <tr><td class="token-mono">title-2</td><td class="token-mono">40px</td><td class="token-mono">32px</td><td class="token-mono">28px</td></tr>
+            <tr><td class="token-mono">title-3</td><td class="token-mono">32px</td><td class="token-mono">28px</td><td class="token-mono">24px</td></tr>
+            <tr><td class="token-mono">title-4</td><td class="token-mono">28px</td><td class="token-mono">24px</td><td class="token-mono">21px</td></tr>
+            <tr><td class="token-mono">eyebrow</td><td class="token-mono">24px</td><td class="token-mono">21px</td><td class="token-mono">19px</td></tr>
+            <tr><td class="token-mono">intro</td><td class="token-mono">21px</td><td class="token-mono">21px</td><td class="token-mono">19px</td></tr>
+            <tr><td class="token-mono">quote</td><td class="token-mono">40px</td><td class="token-mono">32px</td><td class="token-mono">28px</td></tr>
+            <tr><td class="token-mono">blog-title</td><td class="token-mono">40px</td><td class="token-mono">32px</td><td class="token-mono">28px</td></tr>
+            <tr><td class="token-mono">body / heading</td><td class="token-mono">17px</td><td class="token-mono">17px</td><td class="token-mono">17px</td></tr>
+          </tbody>
+        </table>
+        <p class="t-footnote" style="margin-top:var(--space-4)">Body and UI text stay fixed across breakpoints — only display and title sizes step down. This keeps reading text legible while letting headlines breathe on large screens and tighten on small ones.</p>
+      </div>
+
+      <div class="callout"><b>The Apple letter-spacing rule, applied exactly:</b> tracking and size move in opposite directions. At 96px, display-1 uses −0.015em (tight). At 48px on phone, it relaxes to −0.003em. Small text gets positive tracking for air. This inverse relationship — not the sizes themselves — is what makes type feel professionally set rather than merely scaled.</div>
+    </section>
+
+    <!-- COLOR -->
+    <section class="section" id="color">
+      <div class="t-overline section-kicker">04 — Foundations</div>
+      <h2 class="t-title-1 section-title">Color</h2>
+      <p class="t-body section-intro">A disciplined palette. One brand blue, one neutral ramp doing most of the work, and functional colors reserved strictly for status. The system is dark-first, with semantic tokens that would remap cleanly to a light theme.</p>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Brand — Blue</h3>
+        <div class="ramp">
+          <div class="ramp-step" style="background:var(--blue-50);color:#000">50</div>
+          <div class="ramp-step" style="background:var(--blue-100);color:#000">100</div>
+          <div class="ramp-step" style="background:var(--blue-200);color:#000">200</div>
+          <div class="ramp-step" style="background:var(--blue-300);color:#000">300</div>
+          <div class="ramp-step" style="background:var(--blue-400)">400</div>
+          <div class="ramp-step" style="background:var(--blue-500)">500</div>
+          <div class="ramp-step" style="background:var(--blue-600)">600</div>
+          <div class="ramp-step" style="background:var(--blue-700)">700</div>
+          <div class="ramp-step" style="background:var(--blue-800)">800</div>
+          <div class="ramp-step" style="background:var(--blue-900)">900</div>
+          <div class="ramp-step" style="background:var(--blue-950)">950</div>
+        </div>
+        <p class="t-footnote"><b style="color:var(--color-accent-hover)">500</b> is the primary action color. <b style="color:var(--color-text-secondary)">400</b> for hover, <b style="color:var(--color-text-secondary)">600</b> for active/pressed.</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Neutral</h3>
+        <div class="ramp">
+          <div class="ramp-step" style="background:var(--neutral-0);color:#000">0</div>
+          <div class="ramp-step" style="background:var(--neutral-50);color:#000">50</div>
+          <div class="ramp-step" style="background:var(--neutral-100);color:#000">100</div>
+          <div class="ramp-step" style="background:var(--neutral-200);color:#000">200</div>
+          <div class="ramp-step" style="background:var(--neutral-300);color:#000">300</div>
+          <div class="ramp-step" style="background:var(--neutral-400);color:#000">400</div>
+          <div class="ramp-step" style="background:var(--neutral-500)">500</div>
+          <div class="ramp-step" style="background:var(--neutral-600)">600</div>
+          <div class="ramp-step" style="background:var(--neutral-700)">700</div>
+          <div class="ramp-step" style="background:var(--neutral-800)">800</div>
+          <div class="ramp-step" style="background:var(--neutral-900)">900</div>
+          <div class="ramp-step" style="background:var(--neutral-950)">950</div>
+        </div>
+        <p class="t-footnote">A cool grey with a faint blue undertone, so neutrals feel related to the brand rather than clinical.</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Functional</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-color" style="background:var(--green-500)"></div><div class="swatch-info"><div class="swatch-name">Success</div><div class="swatch-value">--green-500</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:var(--amber-500)"></div><div class="swatch-info"><div class="swatch-name">Warning</div><div class="swatch-value">--amber-500</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:var(--red-500)"></div><div class="swatch-info"><div class="swatch-name">Danger</div><div class="swatch-value">--red-500</div></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:var(--blue-400)"></div><div class="swatch-info"><div class="swatch-name">Info</div><div class="swatch-value">--blue-400</div></div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="t-title-4 subsection-title">Semantic tokens (dark theme)</h3>
+        <table class="token-table">
+          <thead><tr><th>Token</th><th>Role</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><span class="token-chip" style="background:var(--color-bg-base)"></span><span class="token-mono">--color-bg-base</span></td><td>App background</td><td class="token-mono">neutral-950</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-surface)"></span><span class="token-mono">--color-surface</span></td><td>Card / panel surface</td><td class="token-mono">neutral-900</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-surface-hover)"></span><span class="token-mono">--color-surface-hover</span></td><td>Hover state surface</td><td class="token-mono">neutral-800</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-text-primary)"></span><span class="token-mono">--color-text-primary</span></td><td>Primary text</td><td class="token-mono">#f0f1f5</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-text-secondary)"></span><span class="token-mono">--color-text-secondary</span></td><td>Secondary text</td><td class="token-mono">neutral-400</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-accent)"></span><span class="token-mono">--color-accent</span></td><td>Interactive / action</td><td class="token-mono">blue-500</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-success)"></span><span class="token-mono">--color-success</span></td><td>Positive status</td><td class="token-mono">green-500</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-warning)"></span><span class="token-mono">--color-warning</span></td><td>Caution status</td><td class="token-mono">amber-500</td></tr>
+            <tr><td><span class="token-chip" style="background:var(--color-danger)"></span><span class="token-mono">--color-danger</span></td><td>Error / destructive</td><td class="token-mono">red-500</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SPACING -->
+    <section class="section" id="spacing">
+      <div class="t-overline section-kicker">05 — Foundations</div>
+      <h2 class="t-title-1 section-title">Spacing & grid</h2>
+      <p class="t-body section-intro">An 8-point base grid with 4-point half-steps for fine control. Consistent spacing is the single biggest driver of a polished, "expensive" feel. Minimum interactive target is 44×44px.</p>
+
+      <div class="demo-box">
+        <div class="space-row"><div class="space-label">space-1 · 2px</div><div class="space-bar" style="width:2px"></div></div>
+        <div class="space-row"><div class="space-label">space-2 · 4px</div><div class="space-bar" style="width:4px"></div></div>
+        <div class="space-row"><div class="space-label">space-3 · 8px</div><div class="space-bar" style="width:8px"></div></div>
+        <div class="space-row"><div class="space-label">space-4 · 12px</div><div class="space-bar" style="width:12px"></div></div>
+        <div class="space-row"><div class="space-label">space-5 · 16px</div><div class="space-bar" style="width:16px"></div></div>
+        <div class="space-row"><div class="space-label">space-6 · 20px</div><div class="space-bar" style="width:20px"></div></div>
+        <div class="space-row"><div class="space-label">space-7 · 24px</div><div class="space-bar" style="width:24px"></div></div>
+        <div class="space-row"><div class="space-label">space-8 · 32px</div><div class="space-bar" style="width:32px"></div></div>
+        <div class="space-row"><div class="space-label">space-9 · 40px</div><div class="space-bar" style="width:40px"></div></div>
+        <div class="space-row"><div class="space-label">space-10 · 48px</div><div class="space-bar" style="width:48px"></div></div>
+        <div class="space-row"><div class="space-label">space-11 · 64px</div><div class="space-bar" style="width:64px"></div></div>
+        <div class="space-row"><div class="space-label">space-12 · 80px</div><div class="space-bar" style="width:80px"></div></div>
+      </div>
+    </section>
+
+    <!-- SECTION RHYTHM -->
+    <section class="section" id="section-rhythm">
+      <div class="t-overline section-kicker">06 — Foundations</div>
+      <h2 class="t-title-1 section-title">Section rhythm</h2>
+      <p class="t-body section-intro">Component spacing tops out at 80px. Page <em>sections</em> need far more room to breathe — this is what makes Apple's pages feel calm and premium rather than cramped. A separate scale governs the vertical gaps between major sections, and it steps down responsively.</p>
+
+      <div class="demo-box">
+        <div class="demo-label">SECTION SPACING SCALE — desktop → phone</div>
+        <table class="token-table">
+          <thead><tr><th>Token</th><th>Desktop</th><th>Tablet</th><th>Phone</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td class="token-mono">section-sm</td><td class="token-mono">80px</td><td class="token-mono">64px</td><td class="token-mono">48px</td><td>Between subsections</td></tr>
+            <tr><td class="token-mono">section-md</td><td class="token-mono">120px</td><td class="token-mono">96px</td><td class="token-mono">72px</td><td>Default between sections</td></tr>
+            <tr><td class="token-mono">section-lg</td><td class="token-mono">160px</td><td class="token-mono">128px</td><td class="token-mono">96px</td><td>Major section breaks</td></tr>
+            <tr><td class="token-mono">section-xl</td><td class="token-mono">200px</td><td class="token-mono">160px</td><td class="token-mono">120px</td><td>Hero / dramatic pauses</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><b>Rule of thumb:</b> if two blocks belong to the same idea, use component spacing (≤80px). If they're separate ideas the reader should mentally file apart, use a section token. The gap itself communicates structure.</div>
+    </section>
+
+    <!-- STATS -->
+    <section class="section" id="stats">
+      <div class="t-overline section-kicker">07 — Foundations</div>
+      <h2 class="t-title-1 section-title">Stats & figures</h2>
+      <p class="t-body section-intro">Big standalone numbers are how both Apple and PANDO communicate impact — "8x," "33 hours," or for us "211 000 €," "12 sessions," "84%." The pattern is always the same: an oversized tight-tracked number paired with a small uppercase label. Numbers use tabular figures so they align in columns.</p>
+
+      <div class="demo-row" style="gap:var(--space-10);align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <div class="t-stat-xl" style="color:var(--color-accent-hover)">211k€</div>
+          <div class="t-stat-label" style="margin-top:8px">CA 2025 · stat-xl</div>
+        </div>
+        <div>
+          <div class="t-stat-lg">84<span style="font-size:0.5em;color:var(--color-text-tertiary)">%</span></div>
+          <div class="t-stat-label" style="margin-top:8px">Objectif · stat-lg</div>
+        </div>
+        <div>
+          <div class="t-stat-md">12</div>
+          <div class="t-stat-label" style="margin-top:6px">Sessions · stat-md</div>
+        </div>
+        <div>
+          <div class="t-stat-sm">43</div>
+          <div class="t-stat-label" style="margin-top:4px">Participants · stat-sm</div>
+        </div>
+      </div>
+
+      <div class="callout"><b>Tracking detail:</b> stat numbers use −0.02em (tight, so big digits feel solid) while their labels use +0.04em uppercase (open, so small text stays legible). Same inverse-tracking principle as the type scale, applied to data.</div>
+    </section>
+
+    <!-- RADII -->
+    <section class="section" id="radii">
+      <div class="t-overline section-kicker">06 — Foundations</div>
+      <h2 class="t-title-1 section-title">Radii</h2>
+      <p class="t-body section-intro">Corner radius scales with element size — small controls get tight corners, large surfaces get soft ones. This keeps the curvature optically consistent.</p>
+      <div class="radius-grid">
+        <div class="radius-box" style="border-radius:var(--radius-1)">4px</div>
+        <div class="radius-box" style="border-radius:var(--radius-2)">6px</div>
+        <div class="radius-box" style="border-radius:var(--radius-3)">8px</div>
+        <div class="radius-box" style="border-radius:var(--radius-4)">10px</div>
+        <div class="radius-box" style="border-radius:var(--radius-5)">12px</div>
+        <div class="radius-box" style="border-radius:var(--radius-6)">16px</div>
+        <div class="radius-box" style="border-radius:var(--radius-7)">20px</div>
+        <div class="radius-box" style="border-radius:var(--radius-full)">full</div>
+      </div>
+    </section>
+
+    <!-- ELEVATION -->
+    <section class="section" id="elevation">
+      <div class="t-overline section-kicker">08 — Foundations</div>
+      <h2 class="t-title-1 section-title">Elevation</h2>
+      <p class="t-body section-intro">Four shadow levels express how far an element floats above the surface. Dialogs and popovers sit highest; cards rest low. Shadows are soft and diffuse, never hard.</p>
+      <div class="shadow-grid">
+        <div class="shadow-box" style="box-shadow:var(--shadow-1)">shadow-1</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-2)">shadow-2</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-3)">shadow-3</div>
+        <div class="shadow-box" style="box-shadow:var(--shadow-4)">shadow-4</div>
+      </div>
+    </section>
+
+    <!-- MATERIALS -->
+    <section class="section" id="materials">
+      <div class="t-overline section-kicker">09 — Foundations</div>
+      <h2 class="t-title-1 section-title">Materials</h2>
+      <p class="t-body section-intro">Translucent surfaces with backdrop blur — for sticky nav bars, toolbars, and overlays that float over scrolling content. The blur lets the layer beneath show through softly, so the reader keeps their sense of place. Three thicknesses for different contexts.</p>
+
+      <div style="position:relative;border-radius:var(--radius-6);overflow:hidden;border:1px solid var(--color-border-subtle)">
+        <div style="background:linear-gradient(120deg,var(--blue-700),var(--teal-500),var(--blue-500));height:220px;display:flex;align-items:center;justify-content:center">
+          <div class="t-title-3" style="color:rgba(255,255,255,0.5)">content behind the material</div>
+        </div>
+        <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;gap:12px">
+          <div style="flex:1;padding:16px;border-radius:var(--radius-4);background:var(--material-bg-dark);-webkit-backdrop-filter:var(--material-thin);backdrop-filter:var(--material-thin);border:1px solid var(--color-border-default)">
+            <div class="t-subhead">material-thin</div><div class="t-caption-1">blur 10px</div>
+          </div>
+          <div style="flex:1;padding:16px;border-radius:var(--radius-4);background:var(--material-bg-dark);-webkit-backdrop-filter:var(--material-regular);backdrop-filter:var(--material-regular);border:1px solid var(--color-border-default)">
+            <div class="t-subhead">material-regular</div><div class="t-caption-1">blur 20px</div>
+          </div>
+          <div style="flex:1;padding:16px;border-radius:var(--radius-4);background:var(--material-bg-dark);-webkit-backdrop-filter:var(--material-thick);backdrop-filter:var(--material-thick);border:1px solid var(--color-border-default)">
+            <div class="t-subhead">material-thick</div><div class="t-caption-1">blur 40px</div>
+          </div>
+        </div>
+      </div>
+      <div class="callout"><b>Use sparingly.</b> Materials are for elements that genuinely float over other content — a sticky top-bar, a command palette, a modal scrim. A regular card on a static background should use a solid surface, not a material.</div>
+    </section>
+
+    <!-- MOTION -->
+    <section class="section" id="motion">
+      <div class="t-overline section-kicker">10 — Foundations</div>
+      <h2 class="t-title-1 section-title">Motion</h2>
+      <p class="t-body section-intro">Motion confirms actions and guides attention — it never decorates. Three durations, three easing curves. Hover any chip to feel the spring.</p>
+      <div class="demo-row">
+        <div class="motion-chip" style="flex:1"><div class="t-subhead">fast · 120ms</div><div class="t-caption-1">taps, toggles, hovers</div></div>
+        <div class="motion-chip" style="flex:1"><div class="t-subhead">base · 200ms</div><div class="t-caption-1">most transitions</div></div>
+        <div class="motion-chip" style="flex:1"><div class="t-subhead">slow · 320ms</div><div class="t-caption-1">overlays, page moves</div></div>
+      </div>
+      <div class="callout"><b>Easing:</b> <span class="token-mono">ease-out</span> (0.16, 1, 0.3, 1) for entrances · <span class="token-mono">ease-in-out</span> for moves · <span class="token-mono">ease-spring</span> for playful, tactile feedback.</div>
+    </section>
+
+    <!-- SECTION PATTERN -->
+    <section class="section" id="section-pattern">
+      <div class="t-overline section-kicker">11 — Foundations</div>
+      <h2 class="t-title-1 section-title">Composition</h2>
+      <p class="t-body section-intro">The recurring rhythm that opens almost every Apple section — and should open ours. <b style="color:var(--color-text-primary)">Eyebrow → headline → intro</b>, with defined spacing between each. Memorizing this one pattern means every page already has a consistent, premium opening.</p>
+
+      <div class="demo-box" style="padding:var(--space-9)">
+        <div class="t-eyebrow" style="margin-bottom:var(--space-3)">Management écosystème</div>
+        <div class="t-title-1" style="font-family:var(--font-serif);margin-bottom:var(--space-5)">Faire grandir le système qui fait grandir tout le reste.</div>
+        <div class="t-intro" style="max-width:560px">PANDO transforme le management d'un modèle de contrôle en un système vivant qui cultive la confiance, l'autonomie et l'intelligence collective.</div>
+      </div>
+
+      <div class="demo-box">
+        <div class="demo-label">THE SPACING RECIPE</div>
+        <table class="token-table">
+          <thead><tr><th>Step</th><th>Style</th><th>Gap below</th></tr></thead>
+          <tbody>
+            <tr><td>Eyebrow</td><td class="token-mono">t-eyebrow (accent color)</td><td class="token-mono">space-3 · 8px</td></tr>
+            <tr><td>Headline</td><td class="token-mono">t-title-1 / display</td><td class="token-mono">space-5 · 16px</td></tr>
+            <tr><td>Intro</td><td class="token-mono">t-intro (max-width ~560px)</td><td class="token-mono">space-7 · 24px → content</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><b>Why max-width on the intro:</b> lead paragraphs that run the full page width are hard to read. Capping the intro around 560px keeps line length in the comfortable 60–75 character range, while the headline above can run wider for impact.</div>
+    </section>
+
+    <!-- BUTTONS -->
+    <section class="section" id="buttons">
+      <div class="t-overline section-kicker">Components</div>
+      <h2 class="t-title-1 section-title">Buttons</h2>
+      <p class="t-body section-intro">Four variants, three sizes. Primary is reserved for the single most important action in any view. Minimum height of 44px on large for comfortable touch targets.</p>
+
+      <div class="demo-box">
+        <div class="demo-label">VARIANTS — medium</div>
+        <div class="demo-row">
+          <button class="btn btn-md btn-primary">Primary action</button>
+          <button class="btn btn-md btn-secondary">Secondary</button>
+          <button class="btn btn-md btn-ghost">Ghost</button>
+          <button class="btn btn-md btn-danger">Danger</button>
+          <button class="btn btn-md btn-primary" disabled>Disabled</button>
+        </div>
+      </div>
+
+      <div class="demo-box">
+        <div class="demo-label">SIZES</div>
+        <div class="demo-row" style="align-items:center">
+          <button class="btn btn-lg btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Large · 44px
+          </button>
+          <button class="btn btn-md btn-primary">Medium · 38px</button>
+          <button class="btn btn-sm btn-primary">Small · 30px</button>
+        </div>
+      </div>
+
+      <div class="demo-box">
+        <div class="demo-label">WITH ICONS</div>
+        <div class="demo-row">
+          <button class="btn btn-md btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+            Envoyer
+          </button>
+          <button class="btn btn-md btn-secondary">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exporter
+          </button>
+          <button class="btn btn-md btn-ghost">
+            <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Paramètres
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BADGES -->
+    <section class="section" id="badges">
+      <div class="t-overline section-kicker">Components</div>
+      <h2 class="t-title-1 section-title">Badges</h2>
+      <p class="t-body section-intro">Compact status indicators. The optional dot reinforces state at a glance. Used for Qualiopi states, session status, payment status.</p>
+      <div class="demo-box">
+        <div class="demo-row">
+          <span class="badge badge-accent"><span class="badge-dot"></span>Intra</span>
+          <span class="badge badge-success"><span class="badge-dot"></span>Confirmée</span>
+          <span class="badge badge-warning"><span class="badge-dot"></span>En attente</span>
+          <span class="badge badge-danger"><span class="badge-dot"></span>Non signée</span>
+          <span class="badge badge-neutral">Brouillon</span>
+        </div>
+        <div style="height:16px"></div>
+        <div class="demo-row">
+          <span class="badge badge-success">✓ Complet</span>
+          <span class="badge badge-warning">⚠ Convention</span>
+          <span class="badge badge-accent">8 participants</span>
+          <span class="badge badge-neutral">Inter</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- INPUTS -->
+    <section class="section" id="inputs">
+      <div class="t-overline section-kicker">Components</div>
+      <h2 class="t-title-1 section-title">Inputs</h2>
+      <p class="t-body section-intro">Form controls with a clear focus state — the blue ring is the same accent used for actions, reinforcing that focus means "this is where you are."</p>
+      <div class="demo-box" style="max-width:420px">
+        <div class="demo-col">
+          <div>
+            <label class="input-label">Nom de l'organisation</label>
+            <input class="input" type="text" placeholder="Crédit Agricole SA">
+          </div>
+          <div>
+            <label class="input-label">Programme</label>
+            <input class="input" type="text" placeholder="Sélectionner…" value="BAM! — Bien Ancrer son Management">
+          </div>
+          <div>
+            <label class="input-label">Focus state (click to see ring)</label>
+            <input class="input" type="text" placeholder="Click here">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section class="section" id="cards">
+      <div class="t-overline section-kicker">Components</div>
+      <h2 class="t-title-1 section-title">Cards</h2>
+      <p class="t-body section-intro">The primary container. Subtle border, generous internal padding, soft radius. Elevation is added only when a card needs to float above others.</p>
+      <div class="demo-row" style="align-items:stretch">
+        <div class="card" style="flex:1">
+          <div class="t-overline" style="margin-bottom:8px">Standard card</div>
+          <div class="t-title-3" style="margin-bottom:8px;font-family:var(--font-serif)">211 000 €</div>
+          <p class="t-body-sm" style="color:var(--color-text-secondary)">CA réalisé en 2025, 84% de l'objectif annuel de 250 000 €.</p>
+          <div style="margin-top:16px"><span class="badge badge-success">↑ +18%</span></div>
+        </div>
+        <div class="card card-elevated" style="flex:1">
+          <div class="t-overline" style="margin-bottom:8px">Elevated card</div>
+          <div class="t-title-3" style="margin-bottom:8px;font-family:var(--font-serif)">12 sessions</div>
+          <p class="t-body-sm" style="color:var(--color-text-secondary)">Sessions actives ce mois, réparties sur les quatre programmes PANDO.</p>
+          <div style="margin-top:16px;display:flex;gap:6px"><span class="badge badge-accent">BAM!</span><span class="badge badge-neutral">POP!</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div style="padding:var(--space-9) 0;border-top:1px solid var(--color-border-subtle);color:var(--color-text-tertiary);font-size:12px">
+      PANDO Design System v1.0 — Foundations. Built on Roboto Serif + Roboto, layered token architecture, Apple-grade rhythm.
+    </div>
+
+  </main>
+</div>
+
+<script>
+  document.querySelectorAll('.doc-nav-link').forEach(link=>{
+    link.addEventListener('click',e=>{
+      e.preventDefault()
+      const target=document.querySelector(link.getAttribute('href'))
+      if(target)target.scrollIntoView({behavior:'smooth',block:'start'})
+    })
+  })
+</script>
+</body>
+</html>

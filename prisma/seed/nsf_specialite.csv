@@ -1,0 +1,390 @@
+code,groupe_code,champs_code,titre,groupe,champs
+110f,110,f,Spécialités pluri-scientifiques (application aux technologie de production),Spécialités pluriscientifiques,Application à une technologie ou à une activité de production
+111f,111,f,"Sciences des matériaux, physique-chimie des procédés industriels",Physique-chimie,Application à une technologie ou à une activité de production
+111g,111,g,Physique-chimie de l'environnement,Physique-chimie,Application à une activité des services
+112f,112,f,Biochimie des produits alimentaires ; Biochimie appliquée aux procédés industriels,"Chimie-biologie, biochimie",Application à une technologie ou à une activité de production
+112g,112,g,Biochimie de l'eau et de l'environnement,"Chimie-biologie, biochimie",Application à une activité des services
+113c,113,c,"Sciences naturelles (biologie, géologie) - Applications scientifiques",Sciences naturelles (biologie-géologie),Application à une discipline scientifique
+113f,113,f,Sciences des ressources agro-alimentaires,Sciences naturelles (biologie-géologie),Application à une technologie ou à une activité de production
+113g,113,g,"Sciences (biologie-géologie) de l'environnement, des écosystèmes",Sciences naturelles (biologie-géologie),Application à une activité des services
+114b,114,b,Modèles mathématiques ; Informatique mathématique,Mathématiques,"Outils, méthodes et modèles"
+114c,114,c,"Mathématiques de la physique, de la chimie, de la biologie",Mathématiques,Application à une discipline scientifique
+114d,114,d,"Mathématiques de l'économie, statistique démographique, mathématiques des sciences",Mathématiques,Application à une discipline du droit et des sciences humaines
+114g,114,g,"Mathématiques de l'informatique, mathématiques financières, statistique de la santé",Mathématiques,Application à une activité des services
+115b,115,b,Méthodes et modèles en sciences physiques ; Méthodes de mesures physiques,Physique,"Outils, méthodes et modèles"
+115f,115,f,Physique appliquée aux processus industriels ; Physique des matériaux ; Mesures,Physique,Application à une technologie ou à une activité de production
+116b,116,b,"Méthodes de mesure, d'analyse chimique ; Informatique de la chimie",Chimie,"Outils, méthodes et modèles"
+116f,116,f,Chimie des matériaux et des métaux ; Chimie des processus industriels ; Chimie des,Chimie,Application à une technologie ou à une activité de production
+116g,116,g,"Chimie de l'eau et de l'environnement, chimie de la santé",Chimie,Application à une activité des services
+117b,117,b,"Méthodes, mesures, modèles en sciences de la terre",Sciences de la Terre,"Outils, méthodes et modèles"
+117f,117,f,Sciences des ressources minérales et des matières premières,Sciences de la Terre,Application à une technologie ou à une activité de production
+117g,117,g,Géologie de l'environnement ; Météorologie,Sciences de la Terre,Application à une activité des services
+118b,118,b,Modèles d'analyse biologique ; Informatique en biologie,Sciences de la vie,"Outils, méthodes et modèles"
+118f,118,f,Biologie de l'agronomie et de l'agriculture ; Biologie des produits et des contrôles,Sciences de la vie,Application à une technologie ou à une activité de production
+118g,118,g,Biologie de l'eau et de l'environnement ; Biologie médicale,Sciences de la vie,Application à une activité des services
+120b,120,b,Méthodes comparatives en sciences humaines,Spécialités pluridisciplinaires Sciences humaines et droit,"Outils, méthodes et modèles"
+120g,120,g,"Sciences économiques et sociales appliquées à l'aménagement et au développement, à l'administration territoriale, au commerce, aux relations sociales et aux ressources humaines, aux finances",Spécialités pluridisciplinaires Sciences humaines et droit,Application à une activité des services
+121b,121,b,"Géographie (outils, méthodes et modèles)",Géographie,"Outils, méthodes et modèles"
+121g,121,g,Géographie de l'aménagement et du développement,Géographie,Application à une activité des services
+122b,122,b,Modèles économétriques ; Méthodes d'analyse économique,Economie,"Outils, méthodes et modèles"
+122g,122,g,Economie monétaire et financière,Economie,Application à une activité des services
+123g,123,g,Sociologie et travail social ; Sociologie et santé,"Sciences (y compris démographie, anthropologie)",Application à une activité des services
+124g,124,g,Psychologie de la santé ; Psychologie clinique ; Psychopédagogie ; Psychologie de l'environnement,Psychologie,Application à une activité des services
+125g,125,g,Langages artificiels et informatique ; Linguistique et didactique des langues,Linguistique,Application à une activité des services
+126b,126,b,"Sources historiques, méthodes en archéologie",Histoire,"Outils, méthodes et modèles"
+126f,126,f,Histoire application technologique,Histoire,Application à une technologie ou à une activité de production
+127c,127,c,Epistémologie des sciences expérimentales,"Philosophie, éthique et théologie",Application à une discipline scientifique
+127d,127,d,Epistémologie des sciences humaines ; Philosophie du droit,"Philosophie, éthique et théologie",Application à une discipline du droit et des sciences humaines
+127e,127,e,Esthétique ; Philosophie du langage,"Philosophie, éthique et théologie","Application à une discipline des lettres, arts et langues"
+128f,128,f,Droit des produits alimentaires ; Normes industrielles,"Droit, sciences politiques",Application à une technologie ou à une activité de production
+128g,128,g,Droit fiscal ; Droit des affaires ; Droit pénal ; Droit de l'environnement ; Droit de la santé ; Droit de la sécurité et de la défense ; Droit du transport etc,"Droit, sciences politiques",Application à une activité des services
+131b,131,b,Sémiotique de la littérature,"Français, littérature et civilisation française","Outils, méthodes et modèles"
+131d,131,d,Littérature et philosophie,"Français, littérature et civilisation française",Application à une discipline du droit et des sciences humaines
+131g,131,g,"Littérature appliquée à la documentation, communication, lettres et enseignement","Français, littérature et civilisation française",Application à une activité des services
+132f,132,f,Dessin d'art appliqué au stylisme et au design,Arts plastiques,Application à une technologie ou à une activité de production
+132g,132,g,Arts appliqués à la communication et à l'audiovisuel,Arts plastiques,Application à une activité des services
+132v,132,v,Arts plastiques (production à caractère artistique),Arts plastiques,Production à caractère artistique (métiers d'art)
+133f,133,f,Musique application à une technologie,"Musique, arts du spectacle",Application à une technologie ou à une activité de production
+133g,133,g,Connaissances artistiques appliquées à la documentation,"Musique, arts du spectacle",Application à une activité des services
+134f,134,f,Art et design,Autres disciplines artistiques et spécialités artistiques plurivalentes,Application à une technologie ou à une activité de production
+134g,134,g,Art et patrimoine ; Art et communication,Autres disciplines artistiques et spécialités artistiques plurivalentes,Application à une activité des services
+136d,136,d,"Langues étrangères appliquées aux sciences juridiques, aux sciences économiques","Langues vivantes, civilisations étrangères et régionales",Application à une discipline du droit et des sciences humaines
+136f,136,f,"Langue anglaise, allemande, etc ; appliquée à l'électronique, à la chimie etc","Langues vivantes, civilisations étrangères et régionales",Application à une technologie ou à une activité de production
+136g,136,g,"Langues étrangères appliquées au tourisme, au commerce international, aux affaires, à la documentation ; Interprétariat et traduction","Langues vivantes, civilisations étrangères et régionales",Application à une activité des services
+200n,200,n,Conception de produits (sans autre indication); design industriel,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)",Conception
+200p,200,p,Méthodes industrielles,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)","Organisation, gestion"
+200r,200,r,Contrôle qualité de produits et procédés industriels,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)","Contrôle, prévention, entretien"
+200s,200,s,Montage industriel s.a.i.,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)",Production
+200t,200,t,"Technologies industrielles fondamentales, réalisation du service","Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)",Réalisation du service
+200u,200,u,Conduite de machines s.a.i.,"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)","Conduite, surveillance de machine"
+200w,200,w,Technologies industrielles fondamentales (commercialisation),"Technologies industrielles fondamentales (génie industriel et procédés de transformation, spécialités à dominante fonctionnelle)",Commercialisation
+201m,201,m,Technologies de commandes des transformations industrielles,"Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)",Fonction non indiquée ou plurifonctionnelle
+201n,201,n,"Conception en automatismes et robotique industriels, en informatique industrielle","Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)",Conception
+201p,201,p,Technologie de commandes et transformation organisation/gestion,"Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)","Organisation, gestion"
+201r,201,r,"Technologie de commandes des transformations industrielles (contrôle, prévention, entretien)","Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)","Contrôle, prévention, entretien"
+201s,201,s,Technologies de commandes des transformations industrielles (production),"Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)",Production
+201u,201,u,"Technologies de commandes des transformations industrielles : conduite, surveillance de machines","Technologies de commandes des transformations industrielles (automatismes et robotique industriels, informatique industrielle)","Conduite, surveillance de machine"
+210n,210,n,Conseil et développement agricole ; Recherche agronomique,Spécialités plurivalentes de l'agronomie et de l'agriculture,Conception
+210p,210,p,Organisation-gestion de l'exploitation agricole ; Gestion des équipements,Spécialités plurivalentes de l'agronomie et de l'agriculture,"Organisation, gestion"
+210r,210,r,"Spécialites plurivalentes de l'agronomie et de l'agriculture : contrôle, prévention, entretien",Spécialités plurivalentes de l'agronomie et de l'agriculture,"Contrôle, prévention, entretien"
+210s,210,s,Polyculture-élevage,Spécialités plurivalentes de l'agronomie et de l'agriculture,Production
+210u,210,u,Conduite d'équipements agricoles,Spécialités plurivalentes de l'agronomie et de l'agriculture,"Conduite, surveillance de machine"
+210w,210,w,Commercialisation,Spécialités plurivalentes de l'agronomie et de l'agriculture,Commercialisation
+211p,211,p,Organisation gestion des ateliers de productions végétales,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)","Organisation, gestion"
+211r,211,r,Protection des cultures,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)","Contrôle, prévention, entretien"
+211s,211,s,Productions végétales,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)",Production
+211t,211,t,Application de produits phytosanitaires,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)",Réalisation du service
+211u,211,u,Conduite d' équipements de production agricole,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)","Conduite, surveillance de machine"
+211w,211,w,Commercialisation des productions végétales,"Productions végétales, cultures spécialisées et protection des cultures (horticulture, viticulture, arboriculture fruitière)",Commercialisation
+212p,212,p,Organisation-gestion des ateliers de production animale,"Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)","Organisation, gestion"
+212r,212,r,Contrôle sanitaire des ateliers de production animale,"Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)","Contrôle, prévention, entretien"
+212s,212,s,Productions animales,"Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)",Production
+212t,212,t,"Soins des animaux, soins vétérinaires","Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)",Réalisation du service
+212w,212,w,"Commercialisation des productions animales, vente d'animaux","Productions animales, élevage spécialisé, aquaculture, soins aux animaux (y compris vétérinaire)",Commercialisation
+213p,213,p,"Gestion de la forêt, des espaces naturels, des exploitations forestières et des activités de pêche","Forêts, espaces naturels, faune sauvage, pêche","Organisation, gestion"
+213r,213,r,"Surveillance et protection de la forêt, de la faune sauvage et des espaces naturels","Forêts, espaces naturels, faune sauvage, pêche","Contrôle, prévention, entretien"
+213s,213,s,"Pêche, exploitation forestière","Forêts, espaces naturels, faune sauvage, pêche",Production
+213t,213,t,"Forets, espaces naturels, faune sauvage, pêche (réalisation du service)","Forêts, espaces naturels, faune sauvage, pêche",Réalisation du service
+213u,213,u,Conduite d'engins d'exploitation forestière,"Forêts, espaces naturels, faune sauvage, pêche","Conduite, surveillance de machine"
+213v,213,v,"Forêts, espaces naturels, faune sauvage, pêche (production à caractère artistique)","Forêts, espaces naturels, faune sauvage, pêche",Production à caractère artistique (métiers d'art)
+213w,213,w,Vente technico-commerciale des produits de la forêt et de la pêche,"Forêts, espaces naturels, faune sauvage, pêche",Commercialisation
+214n,214,n,"Etudes paysagères, conseil en paysage","Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)",Conception
+214p,214,p,Gestion des aménagements paysagers et des terrains de sport,"Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)","Organisation, gestion"
+214r,214,r,"Entretien des espaces verts, des parcs et jardins, des terrains de sport","Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)","Contrôle, prévention, entretien"
+214s,214,s,Aménagement paysager (production),"Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)",Production
+214v,214,v,Aménagement paysager-production artistique,"Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)",Production à caractère artistique (métiers d'art)
+214w,214,w,Aménagement paysager commercialisation,"Aménagement paysager (parcs, jardins, espaces verts, terrains de sport)",Commercialisation
+220m,220,m,Spécialités pluritechnologiques des transformations,Spécialités pluritechnologiques des transformations,Fonction non indiquée ou plurifonctionnelle
+220n,220,n,Spécialités pluritechnologiques des transformations,Spécialités pluritechnologiques des transformations,Conception
+220p,220,p,"Spécialités pluritechnologiques des transformations (organisation, gestion)",Spécialités pluritechnologiques des transformations,"Organisation, gestion"
+220r,220,r,Contrôle des matériaux,Spécialités pluritechnologiques des transformations,"Contrôle, prévention, entretien"
+220s,220,s,Mise en oeuvre des matériaux,Spécialités pluritechnologiques des transformations,Production
+220u,220,u,"Conduite, surveillance d'installations lourdes de transformation",Spécialités pluritechnologiques des transformations,"Conduite, surveillance de machine"
+221p,221,p,Gestion de production dans les industries agro-alimentaires,"Agro-alimentaire, alimentation, cuisine","Organisation, gestion"
+221r,221,r,Contrôle de qualité alimentaire,"Agro-alimentaire, alimentation, cuisine","Contrôle, prévention, entretien"
+221s,221,s,"Abattage des animaux, fabrication artisanale de produits alimentaires","Agro-alimentaire, alimentation, cuisine",Production
+221t,221,t,Cuisine,"Agro-alimentaire, alimentation, cuisine",Réalisation du service
+221u,221,u,Conduite d'installations des industries agro-alimentaires et de machines de conditonnement,"Agro-alimentaire, alimentation, cuisine","Conduite, surveillance de machine"
+221w,221,w,Commercialisation de produits alimentaires,"Agro-alimentaire, alimentation, cuisine",Commercialisation
+222m,222,m,Transformations chimiques et apparentées,Transformations chimiques et apparentées (y compris industrie pharmaceutique),Fonction non indiquée ou plurifonctionnelle
+222n,222,n,Transformations chimiques- conception,Transformations chimiques et apparentées (y compris industrie pharmaceutique),Conception
+222p,222,p,"Transformations chimiques et apparentées (organisation, gestion)",Transformations chimiques et apparentées (y compris industrie pharmaceutique),"Organisation, gestion"
+222r,222,r,"analyse chimique, contrôle de laboratoire des industries chimiques, contrôle industriel des médicaments",Transformations chimiques et apparentées (y compris industrie pharmaceutique),"Contrôle, prévention, entretien"
+222s,222,s,Transformations chimiques et apparentées (production),Transformations chimiques et apparentées (y compris industrie pharmaceutique),Production
+222u,222,u,"conduite, surveillance d'appareils des industries chimiques",Transformations chimiques et apparentées (y compris industrie pharmaceutique),"Conduite, surveillance de machine"
+222w,222,w,Transformations chimiques et apparentées (commercialisation),Transformations chimiques et apparentées (y compris industrie pharmaceutique),Commercialisation
+223n,223,n,études d'outillages et de procédés métallurgiques,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)",Conception
+223r,223,r,contrôle de qualité des produits métallurgiques,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)","Contrôle, prévention, entretien"
+223s,223,s,traitement thermique,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)",Production
+223u,223,u,"conduite, surveillance de machines et installations métallurgiques","Métallurgie (y compris sidérurgie, fonderie, non-ferreux)","Conduite, surveillance de machine"
+223v,223,v,métiers d'art des métaux précieux,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)",Production à caractère artistique (métiers d'art)
+223w,223,w,Métallurgie : commercialisation,"Métallurgie (y compris sidérurgie, fonderie, non-ferreux)",Commercialisation
+224m,224,m,"Matériaux de construction, verre, céramique","Matériaux de construction, verre, céramique",Fonction non indiquée ou plurifonctionnelle
+224p,224,p,"Matériaux de construction, verre, céramique (production)","Matériaux de construction, verre, céramique","Organisation, gestion"
+224r,224,r,"contrôle qualité, contrôle des matériaux","Matériaux de construction, verre, céramique","Contrôle, prévention, entretien"
+224s,224,s,"Matériaux de construction, verre, céramique (production)","Matériaux de construction, verre, céramique",Production
+224t,224,t,"Matériaux de construction, verre, céramique (réalisation du service)","Matériaux de construction, verre, céramique",Réalisation du service
+224u,224,u,conduite d'installations et de fours industriels du verre et de la céramique,"Matériaux de construction, verre, céramique","Conduite, surveillance de machine"
+224v,224,v,"verrerie d'art, cristallerie d'art, céramique d'art, vitrail..","Matériaux de construction, verre, céramique",Production à caractère artistique (métiers d'art)
+224w,224,w,"Matériaux de construction, verre, céramique (commercialisation)","Matériaux de construction, verre, céramique",Commercialisation
+225p,225,p,"Plasturgie, matériaux composites (organisation, gestion)","Plasturgie, matériaux composites","Organisation, gestion"
+225r,225,r,"Plasturgie, matériaux composites (contrôle, prévention, entretien)","Plasturgie, matériaux composites","Contrôle, prévention, entretien"
+225s,225,s,mise en oeuvre des plastiques et des matériaux composites,"Plasturgie, matériaux composites",Production
+225t,225,t,"Plasturgie, matériaux composites (réalisation du service)","Plasturgie, matériaux composites",Réalisation du service
+225u,225,u,conduite de machines de la plasturgie,"Plasturgie, matériaux composites","Conduite, surveillance de machine"
+225v,225,v,"Plasturgie, matériaux composites (production à caractère artistique)","Plasturgie, matériaux composites",Production à caractère artistique (métiers d'art)
+226s,226,s,"Papier, carton (production)","Papier, carton",Production
+226u,226,u,Conduite d'installations papier-carton,"Papier, carton","Conduite, surveillance de machine"
+226w,226,w,Papier - Carton (commercialisation),"Papier, carton",Commercialisation
+227n,227,n,"Etudes et dessin d'installations de génie climatique, d'installations sanitaires et de chauffage du bâtiment","Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)",Conception
+227p,227,p,Gestion de l'énergie,"Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)","Organisation, gestion"
+227r,227,r,Contrôle qualité des services énergétiques,"Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)","Contrôle, prévention, entretien"
+227s,227,s,"Montage d'installations de génie climatique, sanitaires et de chauffage","Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)",Production
+227t,227,t,"Energie, génie climatique (réalisation du service)","Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)",Réalisation du service
+227u,227,u,"Surveillance d'installations de production d'énergie, de climatisation","Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)","Conduite, surveillance de machine"
+227w,227,w,"Energie, génie climatique (commercialisation)","Energie, génie climatique (y compris énergie nucléaire, thermique, hydraulique ; utilités ; froid, climatisation, chauffage)",Commercialisation
+230m,230,m,"Spécialités pluritechnologiques, génie-civil, construction, bois","Spécialités pluritechnologiques Génie civil, construction, bois",Fonction non indiquée ou plurifonctionnelle
+230n,230,n,Etudes et projets d'architecture et de décors,"Spécialités pluritechnologiques Génie civil, construction, bois",Conception
+230p,230,p,Coordination de chantiers tous corps d'état,"Spécialités pluritechnologiques Génie civil, construction, bois","Organisation, gestion"
+230r,230,r,Entretien général des bâtiments,"Spécialités pluritechnologiques Génie civil, construction, bois","Contrôle, prévention, entretien"
+230s,230,s,Construction de décors de spectacle,"Spécialités pluritechnologiques Génie civil, construction, bois",Production
+230t,230,t,"Spécialités pluritechnologiques génie-civil, construction, bois (réalisation du service)","Spécialités pluritechnologiques Génie civil, construction, bois",Réalisation du service
+230u,230,u,Conduite d'engins de chantier,"Spécialités pluritechnologiques Génie civil, construction, bois","Conduite, surveillance de machine"
+230v,230,v,"Spécialités pluritechnologiques génie civil, construction bois (production à caractère artistique)","Spécialités pluritechnologiques Génie civil, construction, bois",Production à caractère artistique (métiers d'art)
+230w,230,w,"Spécialités pluritechnologiques génie-civil, construction, bois (commercialisation)","Spécialités pluritechnologiques Génie civil, construction, bois",Commercialisation
+231m,231,m,"Mines et carrières, génie civil, topographie (plurifonctionnelle)","Mines et carrières, génie civil, topographie",Fonction non indiquée ou plurifonctionnelle
+231n,231,n,"Etudes, projets et dessins en génie civil et topographie","Mines et carrières, génie civil, topographie",Conception
+231p,231,p,Conduite de travaux et métré en génie civil,"Mines et carrières, génie civil, topographie","Organisation, gestion"
+231s,231,s,Exécution des ouvrages VRD et des relevés topographiques,"Mines et carrières, génie civil, topographie",Production
+231t,231,t,"Mines et carrières, génie civil, topographie (réalisation du service)","Mines et carrières, génie civil, topographie",Réalisation du service
+231u,231,u,"Mines et carrières, génie civil, topographie (conduite surveillance de machines)","Mines et carrières, génie civil, topographie","Conduite, surveillance de machine"
+231v,231,v,"Mines et carrières, génie civil, topographie (production à caractère artistique)","Mines et carrières, génie civil, topographie",Production à caractère artistique (métiers d'art)
+232n,232,n,Bâtiment : construction et couverture (conception),Bâtiment : construction et couverture,Conception
+232p,232,p,"Conduite des travaux, encadrement de chantier, métré, dans le gros-oeuvre",Bâtiment : construction et couverture,"Organisation, gestion"
+232r,232,r,Contrôle des normes de construction et de sécurité,Bâtiment : construction et couverture,"Contrôle, prévention, entretien"
+232s,232,s,Exécution des ouvrages,Bâtiment : construction et couverture,Production
+232v,232,v,Arts de la pierre,Bâtiment : construction et couverture,Production à caractère artistique (métiers d'art)
+232w,232,w,Bâtiment : construction et couverture (commercialisation),Bâtiment : construction et couverture,Commercialisation
+233n,233,n,"Etudes et projets d'agencement intérieur, architecture d'intérieur",Bâtiment : finitions,Conception
+233p,233,p,"Conduite des travaux, métré encadrement de chantiers de finition",Bâtiment : finitions,"Organisation, gestion"
+233s,233,s,"Exécution des travaux de finition : platrerie, peinture, carrelage, sols plastiques..",Bâtiment : finitions,Production
+233v,233,v,"Réalisation de décor d'intérieur, finitions à caractère artistique",Bâtiment : finitions,Production à caractère artistique (métiers d'art)
+233w,233,w,Bâtiment : finitions (commercialisation),Bâtiment : finitions,Commercialisation
+234n,234,n,"Etudes et projets de charpente, d'agencement et d'objets en bois",Travail du bois et de l'ameublement,Conception
+234p,234,p,Conduite des travaux et de chantiers de menuiserie et de charpente ; Gestion de production dans l'ameublement,Travail du bois et de l'ameublement,"Organisation, gestion"
+234r,234,r,"Travail du bois et de l'ameublement (contrôle, prévention, entretien)",Travail du bois et de l'ameublement,"Contrôle, prévention, entretien"
+234s,234,s,"Fabrication, pose en menuiserie et charpente ; Fabrication de meubles",Travail du bois et de l'ameublement,Production
+234u,234,u,Conduite de machines à bois,Travail du bois et de l'ameublement,"Conduite, surveillance de machine"
+234v,234,v,"Décoration, marquetterie et sculpture",Travail du bois et de l'ameublement,Production à caractère artistique (métiers d'art)
+234w,234,w,Travail du bois et de l'ameublement (commercialisation),Travail du bois et de l'ameublement,Commercialisation
+240p,240,p,"Spécialités pluritechnologiques matériaux souples : organisation, gestion",Spécialités pluritechnologiques Matériaux souples,"Organisation, gestion"
+240r,240,r,"Spécialités pluritechnologiques matériaux souples (contrôle, prévention, entretien)",Spécialités pluritechnologiques Matériaux souples,"Contrôle, prévention, entretien"
+240s,240,s,Spécialités pluritechnologiques matériaux souples (production),Spécialités pluritechnologiques Matériaux souples,Production
+240t,240,t,Entretien-nettoyage textile et habillement,Spécialités pluritechnologiques Matériaux souples,Réalisation du service
+240u,240,u,"Spécialités pluritechnologiques matériaux souples (conduite, surveillance de machines)",Spécialités pluritechnologiques Matériaux souples,"Conduite, surveillance de machine"
+240v,240,v,Spécialites pluritechnologiques matériaux souples (production à caractère artistique),Spécialités pluritechnologiques Matériaux souples,Production à caractère artistique (métiers d'art)
+240w,240,w,Spécialites pluritechnologiques matériaux souples :production à caractère artistique,Spécialités pluritechnologiques Matériaux souples,Commercialisation
+241m,241,m,Textiles,Textile,Fonction non indiquée ou plurifonctionnelle
+241n,241,n,Création textile,Textile,Conception
+241p,241,p,Textile (organisation-gestion),Textile,"Organisation, gestion"
+241r,241,r,"Textile (contrôle, prévention, entretien)",Textile,"Contrôle, prévention, entretien"
+241s,241,s,Fabrication textile,Textile,Production
+241u,241,u,Conduite et réglage de machines de fabrication textile,Textile,"Conduite, surveillance de machine"
+241v,241,v,"Dentellerie, broderie",Textile,Production à caractère artistique (métiers d'art)
+241w,241,w,Textile (commercialisation),Textile,Commercialisation
+242n,242,n,"Stylisme, patron, gradation","Habillement (y compris mode, couture)",Conception
+242p,242,p,"Habillement : organisation, gestion","Habillement (y compris mode, couture)","Organisation, gestion"
+242r,242,r,"Habillement (contrôle, prévention, entretien)","Habillement (y compris mode, couture)","Contrôle, prévention, entretien"
+242s,242,s,"Coupe, confection des vêtements","Habillement (y compris mode, couture)",Production
+242u,242,u,"Habillement (conduite, surveillance de machines)","Habillement (y compris mode, couture)","Conduite, surveillance de machine"
+242v,242,v,"Couture, flou","Habillement (y compris mode, couture)",Production à caractère artistique (métiers d'art)
+243n,243,n,"Conception, stylisme, en cuirs et peaux",Cuirs et peaux,Conception
+243p,243,p,"Cuirs et peaux (organisation, gestion)",Cuirs et peaux,"Organisation, gestion"
+243r,243,r,"Cuirs et peaux (contrôle, prévention, entretien)",Cuirs et peaux,"Contrôle, prévention, entretien"
+243s,243,s,"Tannage des peaux, fabrication de chaussures, articles de vêtements en peau",Cuirs et peaux,Production
+243t,243,t,Cuirs et peaux (réalisation du service),Cuirs et peaux,Réalisation du service
+243u,243,u,Conduite de machines de travail des cuirs et peaux,Cuirs et peaux,"Conduite, surveillance de machine"
+243v,243,v,Cuirs et peaux (production à caractère artistique),Cuirs et peaux,Production à caractère artistique (métiers d'art)
+243w,243,w,Vente technico-commerciale des produits de cuirs et peaux,Cuirs et peaux,Commercialisation
+250m,250,m,"Spécialités pluritechnologiques mécanique-électricité (organisation, gestion)",Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),Fonction non indiquée ou plurifonctionnelle
+250n,250,n,Spécialités pluritechnologiques (conception),Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),Conception
+250p,250,p,"Spécialités pluritechnologiques mécanique-électricité (organisation, gestion)",Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),"Organisation, gestion"
+250r,250,r,"Maintenance d'équipements, dépannage de matériel électroménager",Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),"Contrôle, prévention, entretien"
+250s,250,s,Spécialités pluritechnologiques mécanique-électricité (production),Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),Production
+250w,250,w,Spécialités pluritechnologiques commercialisation,Spécialités pluritechnologiques Mécanique-électricité(y compris maintenance mécano-électrique),Commercialisation
+251m,251,m,"Etudes, projets, dessin en construction mécanique","Mécanique générale et de précision, usinage",Fonction non indiquée ou plurifonctionnelle
+251n,251,n,"Etudes, projets, dessin en construction mécanique","Mécanique générale et de précision, usinage",Conception
+251p,251,p,"Méthodes, organisation, gestion de production en construction mécanique","Mécanique générale et de précision, usinage","Organisation, gestion"
+251r,251,r,"Contrôle essais, maintenance en mécanique","Mécanique générale et de précision, usinage","Contrôle, prévention, entretien"
+251s,251,s,Montage mécanique,"Mécanique générale et de précision, usinage",Production
+251u,251,u,Conduite d'équipements d'usinage,"Mécanique générale et de précision, usinage","Conduite, surveillance de machine"
+251w,251,w,Mécanique générale et de précision (commercialisation),"Mécanique générale et de précision, usinage",Commercialisation
+252n,252,n,Moteur et mécanique auto (conception),Moteurs et mécanique auto,Conception
+252p,252,p,"Moteurs et mécanique auto : organisation, gestion",Moteurs et mécanique auto,"Organisation, gestion"
+252r,252,r,"Entretien et réparation des automobiles, cycles et motocycles, véhicules industriels, engins agricoles et de chantiers; Entretien, maintenance, réparation de moteurs thermiques et de machineries de navire",Moteurs et mécanique auto,"Contrôle, prévention, entretien"
+252s,252,s,"Moteurs, mécanique-auto (production)",Moteurs et mécanique auto,Production
+252w,252,w,"Vente, prospection et négociation commerciales d'automobiles et produits connexes, et d'accessoires",Moteurs et mécanique auto,Commercialisation
+253n,253,n,Mécanique aéronautique et spatiale (conception),Mécanique aéronautique et spatiale,Conception
+253r,253,r,Maintenance mécanique des engins spatiaux et aéronautiques,Mécanique aéronautique et spatiale,"Contrôle, prévention, entretien"
+253s,253,s,Mécanique aéronautique et spatiale (production),Mécanique aéronautique et spatiale,Production
+254m,254,m,Structure métallique,"Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",Fonction non indiquée ou plurifonctionnelle
+254n,254,n,"Dessin en chaudronnerie, en structures métalliques","Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",Conception
+254p,254,p,Méthodes et gestion de production en chaudronnerie et métallerie ; Métré en métallerie,"Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)","Organisation, gestion"
+254r,254,r,Contrôle des structures et soudures,"Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)","Contrôle, prévention, entretien"
+254s,254,s,"Soudage, assemblage, pose, d'ensembles métalliques et de chaudronnerie","Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",Production
+254u,254,u,"Conduite d'équipements de forge, soudure, formage des métaux","Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)","Conduite, surveillance de machine"
+254v,254,v,"Ferronerie et dinanderie, facture d'instruments à vent","Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",Production à caractère artistique (métiers d'art)
+254w,254,w,Structures métalliques (commercialisation),"Structures métalliques (y compris soudure, carrosserie, coque de bateau, cellule d'avion)",Commercialisation
+255m,255,m,"Electricité, électronique","Electricité, électronique (non compris automatismes, productique)",Fonction non indiquée ou plurifonctionnelle
+255n,255,n,"Etudes, dessin et projets en circuits, composants et machines électriques, électronique","Electricité, électronique (non compris automatismes, productique)",Conception
+255p,255,p,"Méthodes, organisation, gestion de production en électricité, électronique","Electricité, électronique (non compris automatismes, productique)","Organisation, gestion"
+255r,255,r,"Contrôle, essais, maintenance en électricité, électronique","Electricité, électronique (non compris automatismes, productique)","Contrôle, prévention, entretien"
+255s,255,s,"Bobinage, cablâge et assemblage de circuits et d'ensembles électriques-électroniques ; Installation et pose de circuits et ensembles électriques","Electricité, électronique (non compris automatismes, productique)",Production
+255t,255,t,Electricité Electronique : réalisation du service,"Electricité, électronique (non compris automatismes, productique)",Réalisation du service
+255u,255,u,Conduite de machines de fabrication de composants électriques électroniques,"Electricité, électronique (non compris automatismes, productique)","Conduite, surveillance de machine"
+255w,255,w,Vente de matériels électriques et électroniques,"Electricité, électronique (non compris automatismes, productique)",Commercialisation
+310m,310,m,Spécialités plurivalentes des échanges et de la gestion,Spécialités plurivalentes des échanges et de la gestion (y compris administration générale des entreprises et des collectivités),Fonction non indiquée ou plurifonctionnelle
+310n,310,n,Spécialités plurivalentes des échanges et de la gestion (conception),Spécialités plurivalentes des échanges et de la gestion (y compris administration générale des entreprises et des collectivités),Conception
+310p,310,p,"Spécialités plurivalentes des échanges et de la gestion (organisation , gestion)",Spécialités plurivalentes des échanges et de la gestion (y compris administration générale des entreprises et des collectivités),"Organisation, gestion"
+310t,310,t,Spécialités plurivalentes des échanges et de la gestion (réalisation du service),Spécialités plurivalentes des échanges et de la gestion (y compris administration générale des entreprises et des collectivités),Réalisation du service
+311m,311,m,"Transport, manutention, magasinage","Transport, manutention, magasinage",Fonction non indiquée ou plurifonctionnelle
+311n,311,n,Etudes et projets d'organisation de transit de biens ou de personnes,"Transport, manutention, magasinage",Conception
+311p,311,p,Gestion des flux et des stocks de marchandises,"Transport, manutention, magasinage","Organisation, gestion"
+311r,311,r,Contrôle et régulation du trafic,"Transport, manutention, magasinage","Contrôle, prévention, entretien"
+311t,311,t,"Tri, préparation des commandes , magasinage","Transport, manutention, magasinage",Réalisation du service
+311u,311,u,"Conduite des véhicules, conduite des engins de manutention et de levage","Transport, manutention, magasinage","Conduite, surveillance de machine"
+311w,311,w,Vente des services de transport et de magasinage,"Transport, manutention, magasinage",Commercialisation
+312m,312,m,"Commerce, vente","Commerce, vente",Fonction non indiquée ou plurifonctionnelle
+312n,312,n,Etudes de marchés et projets commerciaux,"Commerce, vente",Conception
+312p,312,p,Gestion des échanges commerciaux,"Commerce, vente","Organisation, gestion"
+312t,312,t,Négociation et vente,"Commerce, vente",Réalisation du service
+312v,312,v,"Commerce, vente (production à caractère artistique)","Commerce, vente",Production à caractère artistique (métiers d'art)
+313m,313,m,"Finances, banques, assurances (non indiquée ou autre)","Finance, banques, assurances",Fonction non indiquée ou plurifonctionnelle
+313n,313,n,Etudes économiques et financières,"Finance, banques, assurances",Conception
+313p,313,p,Organisation des services financiers,"Finance, banques, assurances","Organisation, gestion"
+313r,313,r,"Finances, banques, assurances (contrôle, prévention, entretien)","Finance, banques, assurances","Contrôle, prévention, entretien"
+313t,313,t,"Instruction de dossiers, traitements de flux et de produits financiers","Finance, banques, assurances",Réalisation du service
+313w,313,w,Vente de produits financiers,"Finance, banques, assurances",Commercialisation
+314p,314,p,Organisation des services comptables et de gestion,"Comptabilité, gestion","Organisation, gestion"
+314r,314,r,"Analyse financière, contrôle de gestion, expertise comptable","Comptabilité, gestion","Contrôle, prévention, entretien"
+314t,314,t,Etablissement des documents comptables et de gestion,"Comptabilité, gestion",Réalisation du service
+315m,315,m,"Ressources humaines, gestion de l'emploi","Ressources humaines, gestion du personnel, gestion de l'emploi",Fonction non indiquée ou plurifonctionnelle
+315n,315,n,"Etudes et prévisions, établissement de stratégies","Ressources humaines, gestion du personnel, gestion de l'emploi",Conception
+315p,315,p,"Spécialités plurivalentes des échanges et de la gestion (organisation, gestion)","Ressources humaines, gestion du personnel, gestion de l'emploi","Organisation, gestion"
+315r,315,r,"Ressources humaines, gestion du personnel, organisation du travail (contrôleprévention)","Ressources humaines, gestion du personnel, gestion de l'emploi","Contrôle, prévention, entretien"
+315t,315,t,"Etablissement de la paie, recrutement du personnel et relations sociales","Ressources humaines, gestion du personnel, gestion de l'emploi",Réalisation du service
+315w,315,w,"Ressources humaines, gestion de l'emploi (commercialisation)","Ressources humaines, gestion du personnel, gestion de l'emploi",Commercialisation
+320m,320,m,Spécialités plurivalentes de la communication et de l'information,Spécialités plurivalentes de la communication,Fonction non indiquée ou plurifonctionnelle
+320n,320,n,Conception : Etablissement de stratégies de relations publiques et de communication,Spécialités plurivalentes de la communication,Conception
+320p,320,p,Organisation et gestion : Organisation et gestion des campagnes de relations publiques et de communication,Spécialités plurivalentes de la communication,"Organisation, gestion"
+320t,320,t,Réalisation du service : Utilisation de logiciels appliqués à l'image,Spécialités plurivalentes de la communication,Réalisation du service
+320v,320,v,Spécialités plurivalentes de la communication : production à caractère artistique,Spécialités plurivalentes de la communication,Production à caractère artistique (métiers d'art)
+321n,321,n,"Conception : Définition des politiques journalistiques, conception des stratégies et campagnes publicitaires",Journalisme et communication (y compris communication graphique et publicité),Conception
+321p,321,p,Journalisme et communication : organisation-gestion,Journalisme et communication (y compris communication graphique et publicité),"Organisation, gestion"
+321t,321,t,Réalisation du service : Rédaction et production de projets,Journalisme et communication (y compris communication graphique et publicité),Réalisation du service
+321v,321,v,Production à caractère artistique : Réalisation et scénario de cinéma et télévision (sauf création artistique),Journalisme et communication (y compris communication graphique et publicité),Production à caractère artistique (métiers d'art)
+322n,322,n,Techniques de l'imprimerie et de l'édition : conception,Techniques de l'imprimerie et de l'édition,Conception
+322p,322,p,"Organisation, gestion : édition",Techniques de l'imprimerie et de l'édition,"Organisation, gestion"
+322r,322,r,"Techniques de l'imprimerie et de l'édition : contrôle, prévention, entretien",Techniques de l'imprimerie et de l'édition,"Contrôle, prévention, entretien"
+322s,322,s,"Production : reliure, brochure industrielle",Techniques de l'imprimerie et de l'édition,Production
+322t,322,t,"Réalisation du service : élaboration de maquettes, mise en page",Techniques de l'imprimerie et de l'édition,Réalisation du service
+322u,322,u,"Conduite, surveillance de machines : impression",Techniques de l'imprimerie et de l'édition,"Conduite, surveillance de machine"
+322v,322,v,"Production à caractère artistique : impression artistique (gravure, lithographie...)",Techniques de l'imprimerie et de l'édition,Production à caractère artistique (métiers d'art)
+322w,322,w,"Commercialisation : vente de livres et produits imprimés, librairie",Techniques de l'imprimerie et de l'édition,Commercialisation
+323m,323,m,"Techniques de l'image et du son, métiers connexes du spectacle : plurifonctionnelle ou non indiquée","Techniques de l'image et du son, métiers connexes du spectacle",Fonction non indiquée ou plurifonctionnelle
+323n,323,n,"Techniques de l'image et du son, métiers connexes du spectacle : conception","Techniques de l'image et du son, métiers connexes du spectacle",Conception
+323p,323,p,"Organisation, gestion : Production et régie","Techniques de l'image et du son, métiers connexes du spectacle","Organisation, gestion"
+323r,323,r,"Techniques de l'image et du son, métiers connexes du spectacle : contrôle, prévention, entretien","Techniques de l'image et du son, métiers connexes du spectacle","Contrôle, prévention, entretien"
+323s,323,s,"Techniques de l'image et du son, métiers connexes du spectacle : production","Techniques de l'image et du son, métiers connexes du spectacle",Production
+323t,323,t,"Réalisation du service : montage, éclairage, prise de vue et prise de son","Techniques de l'image et du son, métiers connexes du spectacle",Réalisation du service
+323u,323,u,"Conduite, surveillance de machines :projection","Techniques de l'image et du son, métiers connexes du spectacle","Conduite, surveillance de machine"
+323v,323,v,Production à caractère artistique : mise en scène,"Techniques de l'image et du son, métiers connexes du spectacle",Production à caractère artistique (métiers d'art)
+323w,323,w,Commercialisation : Distribution cinéma et spectacles,"Techniques de l'image et du son, métiers connexes du spectacle",Commercialisation
+324p,324,p,"Organisation du travail de bureau, organisation -bureautique","Secrétariat, bureautique","Organisation, gestion"
+324t,324,t,"Saisie, mise en forme et communication des données","Secrétariat, bureautique",Réalisation du service
+325n,325,n,Conception et mise en place de fonds documentaires,"Documentation, bibliothèques, administration des données",Conception
+325t,325,t,"Gestion et mise à disposition de ressources documentaires, conservation des archives","Documentation, bibliothèques, administration des données",Réalisation du service
+326m,326,m,"Informatique, traitement de l'information","Informatique, traitement de l'information, réseau de transmission des données",Fonction non indiquée ou plurifonctionnelle
+326n,326,n,"Analyse informatique, conception d'architecture de réseaux","Informatique, traitement de l'information, réseau de transmission des données",Conception
+326p,326,p,"Informatique, traitement de l'information (organisation, gestion)","Informatique, traitement de l'information, réseau de transmission des données","Organisation, gestion"
+326r,326,r,"Assistance informatique, maintenance de logiciels et réseaux","Informatique, traitement de l'information, réseau de transmission des données","Contrôle, prévention, entretien"
+326t,326,t,"Programmation, mise en place de logiciels","Informatique, traitement de l'information, réseau de transmission des données",Réalisation du service
+326u,326,u,Exploitation informatique,"Informatique, traitement de l'information, réseau de transmission des données","Conduite, surveillance de machine"
+326w,326,w,Informatique commercialisation,"Informatique, traitement de l'information, réseau de transmission des données",Commercialisation
+330p,330,p,"Spécialités plurivalentes des services aux personnes (organisation, conception)",Spécialités plurivalentes sanitaires et sociales,"Organisation, gestion"
+330s,330,s,Spécialités plurivalentes des services aux personnes (production),Spécialités plurivalentes sanitaires et sociales,Production
+330t,330,t,Spécialités plurivalentes des services aux personnes (réalisation du service),Spécialités plurivalentes sanitaires et sociales,Réalisation du service
+330v,330,v,Spécialités plurivalentes des services aux personnes (production à caractère artistique),Spécialités plurivalentes sanitaires et sociales,Production à caractère artistique (métiers d'art)
+331n,331,n,Etude et recherche médicale,Santé,Conception
+331p,331,p,Organisation et gestion des services médicaux,Santé,"Organisation, gestion"
+331r,331,r,"Prévention, contrôle sanitaire, diététique",Santé,"Contrôle, prévention, entretien"
+331s,331,s,"préparation, analyse médicale, appareillage",Santé,Production
+331t,331,t,"Diagnostic, prescription, application des soins",Santé,Réalisation du service
+331u,331,u,"Santé (Conduite, surveillance de machines)",Santé,"Conduite, surveillance de machine"
+331w,331,w,Commercialisation des produits médicaux,Santé,Commercialisation
+332n,332,n,Expertise sociale et projets sociaux,Travail social,Conception
+332p,332,p,Direction de centres et de services sociaux,Travail social,"Organisation, gestion"
+332t,332,t,"Aide, conseil, orientation, soutien socio-éducatif",Travail social,Réalisation du service
+333n,333,n,Etudes et projets de cursus de formation et de méthodologies éducatives,Enseignement formation,Conception
+333p,333,p,Organisation et administration de services et de centres de formation,Enseignement formation,"Organisation, gestion"
+333r,333,r,"Inspection, évaluation",Enseignement formation,"Contrôle, prévention, entretien"
+333t,333,t,Education et transfert de connaissances,Enseignement formation,Réalisation du service
+333v,333,v,Enseignement formation : production à caractère artistique,Enseignement formation,Production à caractère artistique (métiers d'art)
+334m,334,m,"Accueil, hôtellerie, tourisme","Accueil, hôtellerie, tourisme",Fonction non indiquée ou plurifonctionnelle
+334p,334,p,Gestion touristique et hôtelière,"Accueil, hôtellerie, tourisme","Organisation, gestion"
+334s,334,s,"Accueil, hôtellerie, tourisme (production)","Accueil, hôtellerie, tourisme",Production
+334t,334,t,"Réception, hébergement, service de restauration, accompagnement","Accueil, hôtellerie, tourisme",Réalisation du service
+334w,334,w,"Accueil, hotellerie, tourisme (commercialisation)","Accueil, hôtellerie, tourisme",Commercialisation
+335p,335,p,Direction des centres de loisirs ou culturels,"Animation culturelle, sportive et de loisirs","Organisation, gestion"
+335t,335,t,Animation touristique et culturelle,"Animation culturelle, sportive et de loisirs",Réalisation du service
+335w,335,w,"Animation sportive, culturelle et de loisirs (commercialisation)","Animation culturelle, sportive et de loisirs",Commercialisation
+336t,336,t,Soins esthétiques du corps,"Coiffure, esthétique et autres spécialités des services aux personnes",Réalisation du service
+336v,336,v,Maquillage de scène,"Coiffure, esthétique et autres spécialités des services aux personnes",Production à caractère artistique (métiers d'art)
+336w,336,w,Commercialisation,"Coiffure, esthétique et autres spécialités des services aux personnes",Commercialisation
+340m,340,m,"Spécialités plurivalentes des services à la collectivité (y compris action politique, action syndicale et diplomatie)    ",Spécialités plurivalentes des services à la collectivité,Fonction non indiquée ou plurifonctionnelle
+340n,340,n,Spécialités plurivalentes des services à la collectivité (conception),Spécialités plurivalentes des services à la collectivité,Conception
+340p,340,p,"Services à la collectivité (organisation, gestion)",Spécialités plurivalentes des services à la collectivité,"Organisation, gestion"
+340r,340,r,Spécialites plurivalentes des services a la collectivité (contrôle-prévention),Spécialités plurivalentes des services à la collectivité,"Contrôle, prévention, entretien"
+340t,340,t,Spécialités plurivalentes des services à la collectivité (réalisation du service),Spécialités plurivalentes des services à la collectivité,Réalisation du service
+341m,341,m,"Aménagement du territoire, urbanisme","Aménagement du territoire, développement, urbanisme",Fonction non indiquée ou plurifonctionnelle
+341n,341,n,Etudes en urbanisme et aménagement,"Aménagement du territoire, développement, urbanisme",Conception
+341p,341,p,Gestion de l'espace et mise en oeuvre des projets,"Aménagement du territoire, développement, urbanisme","Organisation, gestion"
+341v,341,v,Restauration des oeuvres d'art,"Aménagement du territoire, développement, urbanisme",Production à caractère artistique (métiers d'art)
+342n,342,n,Etudes et projets d'expositions et de musées,Protection et développement du patrimoine,Conception
+342p,342,p,"Gestion et mise en valeur des sites, des monuments historiques, des musées",Protection et développement du patrimoine,"Organisation, gestion"
+342r,342,r,"Développement et protection du patrimoine culturel (contrôle, prévention, entretien)",Protection et développement du patrimoine,"Contrôle, prévention, entretien"
+342v,342,v,Restauration des oeuvres d'art,Protection et développement du patrimoine,Production à caractère artistique (métiers d'art)
+343n,343,n,"Nettoyage, assainissement, protection de L'environnement (conception)","Nettoyage, assainissement, protection de l'environnement",Conception
+343p,343,p,"Nettoyage, assainissement, protection de L'environnement (organisation, gestion)","Nettoyage, assainissement, protection de l'environnement","Organisation, gestion"
+343r,343,r,"Mesure de la pollution atmosphérique, contrôle de la qualité de l'eau, mesure de la radio-activité","Nettoyage, assainissement, protection de l'environnement","Contrôle, prévention, entretien"
+343t,343,t,"Nettoyage de locaux, décontamination des locaux hospitaliers et industriels, assainissement urbain","Nettoyage, assainissement, protection de l'environnement",Réalisation du service
+343u,343,u,Surveillance et exploitation d'installations de traitement des eaux,"Nettoyage, assainissement, protection de l'environnement","Conduite, surveillance de machine"
+344n,344,n,"Sécurite des biens et des personnes, police, surveillance (conception)","Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)",Conception
+344p,344,p,"Sécurité des biens et des personnes, police, surveillance (organisation, gestion)","Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)","Organisation, gestion"
+344r,344,r,Mise en oeuvre des règles d'hygiène et sécurité,"Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)","Contrôle, prévention, entretien"
+344t,344,t,"Surveillance, lutte contre la fraude, protection et sauvegarde des biens et des personnes","Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)",Réalisation du service
+344w,344,w,"Sécurité des biens et des personnes, police, surveillance (vente)","Sécurité des biens et des personnes, police, surveillance (y compris hygiène et sécurité)",Commercialisation
+345t,345,t,"Instruction, plaidoirie, élaboration des documents juridiques et notariaux",Application des droits et statuts des personnes,Réalisation du service
+346n,346,n,Etudes et recherches dans le domaine militaire,Spécialités militaires,Conception
+346p,346,p,Organisation et coordination d'activités opérationnelles ; travaux d'état-major,Spécialités militaires,"Organisation, gestion"
+346r,346,r,"Spécialités militaires (contrôle, prévention, entretien)",Spécialités militaires,"Contrôle, prévention, entretien"
+346t,346,t,"Activités spécifiques des corps de défense, activités de combat",Spécialités militaires,Réalisation du service
+346u,346,u,Mise en oeuvre des matériels de combat,Spécialités militaires,"Conduite, surveillance de machine"
+410z,410,z,Spécialités concernant plusieurs capacités,Spécialités concernant plusieurs capacités,"Développement personnel
+"
+411z,411,z,Pratiques sportives (y compris: arts martiaux),Pratiques sportives (y compris arts martiaux),"Développement personnel
+"
+412z,412,z,"Développement des capacités mentales, apprentissage de base",Développement des capacités mentales et apprentissage de base,"Développement personnel
+"
+413z,413,z,Développement des capacités comportementales et relationnelles,Développement des capacités comportementales et relationnelles,"Développement personnel
+"
+414z,414,z,Développement des capacités individuelles d'organisation,Développement des capacités individuelles d'organisation,"Développement personnel
+"
+415z,415,z,"Développement des capacités d'orientation, d'insertion ou de réinsertion sociales et professionnelles","Développement des capacités d'orientation, d'insertion ou de réinsertion sociales et professionnelles","Développement personnel
+"
+421z,421,z,Jeux et activités spécifiques de loisirs,Jeux et activités spécifiques de loisirs,"Développement personnel
+"
+422z,422,z,Economie et activités domestiques,Economie et activités domestiques,"Développement personnel
+"
+423z,423,z,"Vie familiale, vie sociale et autres formations au développement personnel","Vie familiale, vie sociale et autres formations au développement personnel","Développement personnel
+"

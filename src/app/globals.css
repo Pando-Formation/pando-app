@@ -1,0 +1,394 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PANDO — DESIGN TOKENS
+   Extracted verbatim from docs/PANDO_design_system.html (v1.0).
+
+   🔴 DO NOT FORK THESE. DO NOT INVENT NEW ONES. FONTS ARE ROBOTO — NOT INTER.
+
+   The dashboard mockup built a parallel token set (--bg, --text2, --r) and it
+   drifted immediately: --bg #0a0a0f vs --neutral-950 #0a0b0e; --text2 #8888aa
+   vs --color-text-secondary #9aa3b5. Two token sets means the dashboard and
+   the website become two different brands.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Serif:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&family=Roboto+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 1 — PRIMITIVE TOKENS (raw values, never used directly in components)
+     ───────────────────────────────────────────────────────────────────────── */
+
+  /* Brand blue ramp */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+
+  /* Neutral ramp (cool grey, slight blue tint) */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f7f8fa;
+  --neutral-100: #eef0f4;
+  --neutral-200: #dfe3ea;
+  --neutral-300: #c5ccd8;
+  --neutral-400: #9aa3b5;
+  --neutral-500: #6b7385;
+  --neutral-600: #4d5466;
+  --neutral-700: #363c4a;
+  --neutral-800: #23272f;
+  --neutral-850: #1a1d24;
+  --neutral-900: #131519;
+  --neutral-950: #0a0b0e;
+
+  /* Functional ramps */
+  --green-400: #34d399;  --green-500: #10b981;  --green-600: #059669;
+  --amber-400: #fbbf24;  --amber-500: #f59e0b;  --amber-600: #d97706;
+  --red-400:   #fb7185;  --red-500:   #f43f5e;  --red-600:   #e11d48;
+  --teal-500:  #14b8a6;
+  --purple-500:#8b5cf6;
+
+  /* Primitive spacing scale (8pt base grid, 4pt half-steps) */
+  --space-0:   0px;
+  --space-1:   2px;
+  --space-2:   4px;
+  --space-3:   8px;
+  --space-4:   12px;
+  --space-5:   16px;
+  --space-6:   20px;
+  --space-7:   24px;
+  --space-8:   32px;
+  --space-9:   40px;
+  --space-10:  48px;
+  --space-11:  64px;
+  --space-12:  80px;
+  --space-13:  96px;
+  --space-14:  128px;
+
+  /* Section spacing scale — large vertical rhythm between page sections.
+     Distinct from component spacing; this is what makes marketing pages breathe.
+     Modeled on Apple's section padding (responsive — see breakpoint block). */
+  --section-sm: 80px;
+  --section-md: 120px;
+  --section-lg: 160px;
+  --section-xl: 200px;
+
+  /* Materials — translucent surfaces with backdrop blur (sticky nav, overlays).
+     Apple uses these for nav bars and toolbars layered over content. */
+  --material-thin:    blur(10px) saturate(180%);
+  --material-regular: blur(20px) saturate(180%);
+  --material-thick:   blur(40px) saturate(180%);
+  --material-bg-light: rgba(255,255,255,0.72);
+  --material-bg-dark:  rgba(10,11,14,0.72);
+
+  /* Primitive radii */
+  --radius-0:  0px;
+  --radius-1:  4px;
+  --radius-2:  6px;
+  --radius-3:  8px;
+  --radius-4:  10px;
+  --radius-5:  12px;
+  --radius-6:  16px;
+  --radius-7:  20px;
+  --radius-full: 9999px;
+
+  /* Primitive font families */
+  --font-serif: 'Roboto Serif', Georgia, serif;
+  --font-sans:  'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'Roboto Mono', 'SF Mono', monospace;
+
+  /* Primitive font weights */
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-bold:     700;
+  --weight-black:    900;
+
+  /* Primitive type sizes — DESKTOP defaults (≥1069px).
+     Redefined per-breakpoint in the RESPONSIVE TYPE block below, following
+     Apple's exact three-tier system (desktop / tablet ≤1068 / phone ≤734).
+     Per Apple: letter-spacing LOOSENS as size shrinks — large text needs tight
+     tracking, small text needs air. Both size AND tracking respond. */
+  --size-display-1: 96px;   /* hero — marketing only */
+  --size-display-2: 80px;
+  --size-display-3: 64px;
+  --size-title-1:   48px;
+  --size-title-2:   40px;
+  --size-title-3:   32px;
+  --size-title-4:   28px;
+  --size-eyebrow:   24px;
+  --size-intro:     21px;
+  --size-quote:     40px;
+  --size-heading:   17px;
+  --size-body-lg:   19px;
+  --size-body:      17px;
+  --size-body-sm:   15px;
+  --size-callout:   16px;
+  --size-subhead:   15px;
+  --size-footnote:  13px;
+  --size-caption-1: 12px;
+  --size-caption-2: 11px;
+  --size-button-lg: 17px;
+  --size-button:    15px;
+  --size-button-sm: 13px;
+  --size-overline:  12px;
+  /* UI-specific sizes */
+  --size-nav-xl:    21px;
+  --size-nav-l:     17px;
+  --size-nav-m:     14px;
+  --size-nav-s:     12px;
+  --size-footer:    12px;
+  --size-footer-heading: 13px;
+  --size-blog-title:     40px;
+  --size-blog-lead:      21px;
+  --size-blog-body:      19px;
+  --size-blog-h2:        28px;
+  --size-blog-h3:        22px;
+  --size-blog-caption:   14px;
+  /* Stat / figure sizes — big standalone numbers (CA, counts, percentages) */
+  --size-stat-xl:   80px;   /* hero metric */
+  --size-stat-lg:   56px;
+  --size-stat-md:   40px;
+  --size-stat-sm:   28px;   /* inline KPI */
+  --size-stat-label: 13px;  /* the caption under a stat */
+
+  /* Letter-spacing — DESKTOP defaults. Redefined per-breakpoint below. */
+  --ls-display-1:  -0.015em;
+  --ls-display-2:  -0.015em;
+  --ls-display-3:  -0.009em;
+  --ls-title-1:    -0.003em;
+  --ls-title-2:    0em;
+  --ls-title-3:    0.004em;
+  --ls-title-4:    0.007em;
+  --ls-eyebrow:    0.009em;
+  --ls-intro:      0.011em;
+  --ls-body:       -0.003em;
+  --ls-heading:    -0.01em;
+  --ls-wide:       0.02em;
+  --ls-overline:   0.08em;
+  /* Tracking curve for the 17–28px range (SF Pro's tricky middle zone, per WWDC20).
+     Use these for any custom text landing between body and title-4. */
+  --ls-17: -0.003em;
+  --ls-19: 0.004em;
+  --ls-21: 0.011em;
+  --ls-24: 0.009em;
+  --ls-28: 0.007em;
+  /* Stats — large numbers want tight tracking; labels want air */
+  --ls-stat:  -0.02em;
+  --ls-stat-label: 0.04em;
+
+  /* Line-heights (unitless) — Apple's exact ratios */
+  --lh-display-1: 1.0417;
+  --lh-display-2: 1.05;
+  --lh-display-3: 1.0625;
+  --lh-title-1:   1.0834;
+  --lh-title-2:   1.1;
+  --lh-title-3:   1.125;
+  --lh-title-4:   1.1428;
+  --lh-tight:     1.05;
+  --lh-snug:      1.15;
+  --lh-heading:   1.25;
+  --lh-body:      1.47;
+  --lh-relaxed:   1.6;
+  --lh-intro:     1.381;
+
+  /* Primitive shadows */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.20);
+  --shadow-2: 0 2px 8px rgba(0,0,0,0.24);
+  --shadow-3: 0 8px 24px rgba(0,0,0,0.32);
+  --shadow-4: 0 16px 48px rgba(0,0,0,0.40);
+  --shadow-glow: 0 0 0 3px rgba(59,130,246,0.20);
+
+  /* Primitive motion */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:     120ms;
+  --dur-base:     200ms;
+  --dur-slow:     320ms;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 2 — SEMANTIC TOKENS (map primitives to roles — DARK THEME default)
+     ───────────────────────────────────────────────────────────────────────── */
+
+  /* Surfaces */
+  --color-bg-base:        var(--neutral-950);
+  --color-bg-raised:      var(--neutral-900);
+  --color-bg-overlay:     var(--neutral-850);
+  --color-surface:        var(--neutral-900);
+  --color-surface-raised: var(--neutral-850);
+  --color-surface-hover:  var(--neutral-800);
+  --color-surface-sunken: var(--neutral-950);
+
+  /* Text */
+  --color-text-primary:   #f0f1f5;
+  --color-text-secondary: var(--neutral-400);
+  --color-text-tertiary:  var(--neutral-500);
+  --color-text-disabled:  var(--neutral-600);
+  --color-text-inverse:   var(--neutral-950);
+  --color-text-on-accent: #ffffff;
+
+  /* Borders */
+  --color-border-subtle:  rgba(255,255,255,0.06);
+  --color-border-default: rgba(255,255,255,0.10);
+  --color-border-strong:  rgba(255,255,255,0.16);
+  --color-border-focus:   var(--blue-500);
+
+  /* Accent / interactive */
+  --color-accent:         var(--blue-500);
+  --color-accent-hover:   var(--blue-400);
+  --color-accent-active:  var(--blue-600);
+  --color-accent-subtle:  rgba(59,130,246,0.10);
+  --color-accent-muted:   rgba(59,130,246,0.16);
+
+  /* Status */
+  --color-success:        var(--green-500);
+  --color-success-subtle: rgba(16,185,129,0.10);
+  --color-warning:        var(--amber-500);
+  --color-warning-subtle: rgba(245,158,11,0.10);
+  --color-danger:         var(--red-500);
+  --color-danger-subtle:  rgba(244,63,94,0.10);
+  --color-info:           var(--blue-400);
+  --color-info-subtle:    rgba(96,165,250,0.10);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYER 3 — COMPONENT TOKENS (reference semantic tokens)
+     ───────────────────────────────────────────────────────────────────────── */
+  --button-radius:        var(--radius-3);
+  --button-height-lg:     44px;
+  --button-height:        38px;
+  --button-height-sm:     30px;
+  --card-radius:          var(--radius-6);
+  --card-padding:         var(--space-7);
+  --card-bg:              var(--color-surface);
+  --card-border:          var(--color-border-subtle);
+  --input-radius:         var(--radius-3);
+  --input-height:         38px;
+  --input-bg:             var(--color-surface-raised);
+  --badge-radius:         var(--radius-full);
+}
+
+@media only screen and (max-width: 1068px) {
+  :root {
+    --size-display-1: 80px;  --ls-display-1: -0.015em; --lh-display-1: 1.05;
+    --size-display-2: 64px;  --ls-display-2: -0.009em; --lh-display-2: 1.0625;
+    --size-display-3: 48px;  --ls-display-3: -0.003em; --lh-display-3: 1.0834;
+    --size-title-1:   40px;  --ls-title-1:   0em;      --lh-title-1:   1.1;
+    --size-title-2:   32px;  --ls-title-2:   0.004em;  --lh-title-2:   1.125;
+    --size-title-3:   28px;  --ls-title-3:   0.007em;  --lh-title-3:   1.1428;
+    --size-title-4:   24px;  --ls-title-4:   0.009em;  --lh-title-4:   1.1666;
+    --size-eyebrow:   21px;  --ls-eyebrow:   0.011em;
+    --size-intro:     21px;  --ls-intro:     0.011em;  --lh-intro:     1.381;
+    --size-quote:     32px;
+    /* UI */
+    --size-nav-xl:    19px;
+    --size-blog-title: 32px;
+    --size-blog-lead:  21px;
+    --size-blog-h2:    24px;
+    --size-blog-h3:    21px;
+    /* Section spacing + stats step down on tablet */
+    --section-sm: 64px;  --section-md: 96px;  --section-lg: 128px; --section-xl: 160px;
+    --size-stat-xl: 64px; --size-stat-lg: 48px; --size-stat-md: 36px; --size-stat-sm: 24px;
+  }
+}
+
+@media only screen and (max-width: 734px) {
+  :root {
+    --size-display-1: 48px;  --ls-display-1: -0.003em; --lh-display-1: 1.0834;
+    --size-display-2: 48px;  --ls-display-2: -0.003em; --lh-display-2: 1.0834;
+    --size-display-3: 40px;  --ls-display-3: 0em;      --lh-display-3: 1.1;
+    --size-title-1:   32px;  --ls-title-1:   0.004em;  --lh-title-1:   1.125;
+    --size-title-2:   28px;  --ls-title-2:   0.007em;  --lh-title-2:   1.1428;
+    --size-title-3:   24px;  --ls-title-3:   0.009em;  --lh-title-3:   1.1666;
+    --size-title-4:   21px;  --ls-title-4:   0.011em;  --lh-title-4:   1.1904;
+    --size-eyebrow:   19px;  --ls-eyebrow:   0.012em;
+    --size-intro:     19px;  --ls-intro:     0.012em;  --lh-intro:     1.4211;
+    --size-quote:     28px;
+    /* UI */
+    --size-nav-xl:    17px;
+    --size-blog-title: 28px;
+    --size-blog-lead:  19px;
+    --size-blog-h2:    22px;
+    --size-blog-h3:    19px;
+    --size-body-lg:    18px;
+    /* Section spacing + stats step down further on phone */
+    --section-sm: 48px;  --section-md: 72px;  --section-lg: 96px;  --section-xl: 120px;
+    --size-stat-xl: 48px; --size-stat-lg: 40px; --size-stat-md: 32px; --size-stat-sm: 22px;
+  }
+}
+
+/* ── APP DENSITY ─────────────────────────────────────────────────────────────
+   The design system's 17px body is tuned for the marketing site. An operational
+   dashboard wants a denser scale — a legitimate choice, but it belongs HERE, as
+   a documented layer over the tokens, never invented ad hoc in a component.
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  --app-body:      14px;
+  --app-body-sm:   13px;
+  --app-caption:   12px;
+  --app-lh:        1.5;
+  --app-nav-width: 220px;
+}
+
+/* ── BASE ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--app-body);
+  line-height: var(--app-lh);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── TYPOGRAPHY UTILITIES ────────────────────────────────────────────────────
+   Every size / line-height / letter-spacing references a responsive token, so
+   these scale automatically at the tablet and phone breakpoints.
+
+   Stats (t-stat-*) are Roboto SERIF with tabular figures. `211 000 €` is what
+   t-stat-xl was built for — do not render it in a sans.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.t-display-1{font-family:var(--font-serif);font-size:var(--size-display-1);font-weight:var(--weight-bold);line-height:var(--lh-display-1);letter-spacing:var(--ls-display-1)}
+.t-display-2{font-family:var(--font-serif);font-size:var(--size-display-2);font-weight:var(--weight-bold);line-height:var(--lh-display-2);letter-spacing:var(--ls-display-2)}
+.t-display-3{font-family:var(--font-serif);font-size:var(--size-display-3);font-weight:var(--weight-medium);line-height:var(--lh-display-3);letter-spacing:var(--ls-display-3)}
+.t-title-1{font-family:var(--font-serif);font-size:var(--size-title-1);font-weight:var(--weight-medium);line-height:var(--lh-title-1);letter-spacing:var(--ls-title-1)}
+.t-title-2{font-family:var(--font-serif);font-size:var(--size-title-2);font-weight:var(--weight-medium);line-height:var(--lh-title-2);letter-spacing:var(--ls-title-2)}
+.t-title-3{font-family:var(--font-sans);font-size:var(--size-title-3);font-weight:var(--weight-medium);line-height:var(--lh-title-3);letter-spacing:var(--ls-title-3)}
+.t-title-4{font-family:var(--font-sans);font-size:var(--size-title-4);font-weight:var(--weight-medium);line-height:var(--lh-title-4);letter-spacing:var(--ls-title-4)}
+.t-eyebrow{font-family:var(--font-sans);font-size:var(--size-eyebrow);font-weight:var(--weight-medium);line-height:var(--lh-heading);letter-spacing:var(--ls-eyebrow);color:var(--color-accent-hover)}
+.t-intro{font-family:var(--font-sans);font-size:var(--size-intro);font-weight:var(--weight-regular);line-height:var(--lh-intro);letter-spacing:var(--ls-intro);color:var(--color-text-secondary)}
+.t-quote{font-family:var(--font-serif);font-size:var(--size-quote);font-weight:var(--weight-regular);line-height:1.2;letter-spacing:0em}
+.t-heading{font-family:var(--font-sans);font-size:var(--size-heading);font-weight:var(--weight-bold);line-height:var(--lh-heading);letter-spacing:var(--ls-heading)}
+.t-body-lg{font-family:var(--font-sans);font-size:var(--size-body-lg);font-weight:var(--weight-regular);line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.t-body{font-family:var(--font-sans);font-size:var(--size-body);font-weight:var(--weight-regular);line-height:var(--lh-body);letter-spacing:var(--ls-body)}
+.t-body-sm{font-family:var(--font-sans);font-size:var(--size-body-sm);font-weight:var(--weight-regular);line-height:var(--lh-body)}
+.t-callout{font-family:var(--font-sans);font-size:var(--size-callout);font-weight:var(--weight-regular);line-height:var(--lh-body)}
+.t-subhead{font-family:var(--font-sans);font-size:var(--size-subhead);font-weight:var(--weight-medium);line-height:var(--lh-heading)}
+.t-footnote{font-family:var(--font-sans);font-size:var(--size-footnote);font-weight:var(--weight-regular);line-height:var(--lh-body);color:var(--color-text-secondary)}
+.t-caption-1{font-family:var(--font-sans);font-size:var(--size-caption-1);font-weight:var(--weight-regular);line-height:var(--lh-heading);color:var(--color-text-secondary)}
+.t-caption-2{font-family:var(--font-sans);font-size:var(--size-caption-2);font-weight:var(--weight-regular);line-height:var(--lh-heading);color:var(--color-text-tertiary)}
+.t-overline{font-family:var(--font-sans);font-size:var(--size-overline);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:var(--ls-overline);text-transform:uppercase;color:var(--color-text-tertiary)}
+.t-nav-xl{font-family:var(--font-sans);font-size:var(--size-nav-xl);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.01em}
+.t-nav-l{font-family:var(--font-sans);font-size:var(--size-nav-l);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.005em}
+.t-nav-m{font-family:var(--font-sans);font-size:var(--size-nav-m);font-weight:var(--weight-medium);line-height:1.3}
+.t-nav-s{font-family:var(--font-sans);font-size:var(--size-nav-s);font-weight:var(--weight-medium);line-height:1.3}
+.t-footer-heading{font-family:var(--font-sans);font-size:var(--size-footer-heading);font-weight:var(--weight-medium);line-height:1.3;color:var(--color-text-primary)}
+.t-footer{font-family:var(--font-sans);font-size:var(--size-footer);font-weight:var(--weight-regular);line-height:1.4;color:var(--color-text-tertiary)}
+.t-blog-title{font-family:var(--font-serif);font-size:var(--size-blog-title);font-weight:var(--weight-bold);line-height:1.1;letter-spacing:-0.01em}
+.t-blog-lead{font-family:var(--font-sans);font-size:var(--size-blog-lead);font-weight:var(--weight-regular);line-height:1.45;color:var(--color-text-secondary)}
+.t-blog-h2{font-family:var(--font-serif);font-size:var(--size-blog-h2);font-weight:var(--weight-medium);line-height:1.2;letter-spacing:-0.005em}
+.t-blog-h3{font-family:var(--font-sans);font-size:var(--size-blog-h3);font-weight:var(--weight-medium);line-height:1.25}
+.t-blog-body{font-family:var(--font-sans);font-size:var(--size-blog-body);font-weight:var(--weight-regular);line-height:1.6}
+.t-blog-caption{font-family:var(--font-sans);font-size:var(--size-blog-caption);font-weight:var(--weight-regular);line-height:1.4;font-style:italic;color:var(--color-text-tertiary)}
+.t-stat-xl{font-family:var(--font-serif);font-size:var(--size-stat-xl);font-weight:var(--weight-bold);line-height:1;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-lg{font-family:var(--font-serif);font-size:var(--size-stat-lg);font-weight:var(--weight-bold);line-height:1;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-md{font-family:var(--font-sans);font-size:var(--size-stat-md);font-weight:var(--weight-bold);line-height:1.05;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
+.t-stat-sm{font-family:var(--font-sans);font-size:var(--size-stat-sm);font-weight:var(--weight-bold);line-height:1.1;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
+.t-stat-label{font-family:var(--font-sans);font-size:var(--size-stat-label);font-weight:var(--weight-medium);line-height:1.3;letter-spacing:var(--ls-stat-label);text-transform:uppercase;color:var(--color-text-secondary)}

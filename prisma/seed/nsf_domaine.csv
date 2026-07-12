@@ -1,0 +1,18 @@
+code,titre,grand_domaine_code,grand_domaine_titre
+10,Formations générales,1,Domaines disciplinaires
+11,Mathématiques et sciences,1,Domaines disciplinaires
+12,Sciences humaines et droit,1,Domaines disciplinaires
+13,Lettres et arts,1,Domaines disciplinaires
+20,Spécialités pluritechnologiques de la production,2,Domaines technico-professionnels de la production
+21,"Agriculture, pêche, forêt et espaces verts",2,Domaines technico-professionnels de la production
+22,Transformations,2,Domaines technico-professionnels de la production
+23,"Génie civil, construction, bois",2,Domaines technico-professionnels de la production
+24,Matériaux souples,2,Domaines technico-professionnels de la production
+25,"Mécanique, électricité, électronique",2,Domaines technico-professionnels de la production
+30,Spécialités plurivalentes des services,3,Domaines technico-professionnels des services
+31,Echanges et gestion,3,Domaines technico-professionnels des services
+32,Communication et information,3,Domaines technico-professionnels des services
+33,Services aux personnes,3,Domaines technico-professionnels des services
+34,Services à la collectivité,3,Domaines technico-professionnels des services
+41,Domaines des capacités individuelles,4,Domaines du développement personnel
+42,Domaines des activités quotidiennes et de loisirs,4,Domaines du développement personnel
