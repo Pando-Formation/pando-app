@@ -161,11 +161,54 @@ async function seedReferentiel() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+//  4 · Alexandra — SUPER_ADMIN *and* FORMATEUR
+//
+//  🔴 Roles are a SET, not a field. Alexandra owns PANDO (Google OAuth,
+//     @pando-formation.fr) and also delivers parcours herself (magic link
+//     works for her too — she's a FORMATEUR like Sophie and Anthony).
+//     Slice 0 acceptance: "alexandra@pando-formation.fr holds both
+//     SUPER_ADMIN and FORMATEUR." Idempotent — safe after db:fixture resets
+//     the Formateur table (which SET NULLs User.formateurId; re-running this
+//     restores the link).
+// ─────────────────────────────────────────────────────────────────────────
+async function seedAlexandra() {
+  const formateur = await db.formateur.upsert({
+    where: { email: 'alexandra@pando-formation.fr' },
+    update: {},
+    create: {
+      firstName: 'Alexandra',
+      lastName: 'GENTIL',
+      email: 'alexandra@pando-formation.fr',
+      contractType: 'INTERNE_DIRIGEANT', // 🔴 no SIREN, no NDA, no ST convention
+      tarifJour: 70_000,
+      address: '30 Av Jean Jaurès',
+      postalCode: '95230',
+      city: 'SOISY-SOUS-MONTMORENCY',
+    },
+  })
+
+  await db.user.upsert({
+    where: { email: 'alexandra@pando-formation.fr' },
+    update: { roles: ['SUPER_ADMIN', 'FORMATEUR'], formateurId: formateur.id, isActive: true },
+    create: {
+      email: 'alexandra@pando-formation.fr',
+      name: 'Alexandra Gentil',
+      roles: ['SUPER_ADMIN', 'FORMATEUR'],
+      authMethod: 'GOOGLE_OAUTH',
+      formateurId: formateur.id,
+    },
+  })
+
+  console.log('  ✓ Alexandra — SUPER_ADMIN + FORMATEUR (alexandra@pando-formation.fr)')
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('\n─── SEED ───\n')
   await seedOrganisation()
   await seedNsf()
   await seedReferentiel()
+  await seedAlexandra()
   console.log('\n─── done ───\n')
   console.log('Next:  npm run db:fixture   → 8/8 corruption paths must close\n')
 }

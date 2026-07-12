@@ -21,6 +21,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { buildSnapshot, formationWithSpecialite } from '@/lib/formation'
 
 const db = new PrismaClient()
 
@@ -55,7 +56,15 @@ async function reset() {
 async function seedCatalogue() {
   const mk = async (data: Parameters<typeof db.formation.create>[0]['data']) => {
     const f = await db.formation.create({ data })
-    return db.formationVersion.create({ data: { formationId: f.id, version: 1, snapshot: {} } })
+    // 🔴 A real snapshot, not a `{}` stub — the programme PDF (Slice 1) reads
+    // straight from this and must never crash on fixture-seeded formations.
+    const withSpecialite = await db.formation.findUniqueOrThrow({
+      where: { id: f.id },
+      ...formationWithSpecialite,
+    })
+    return db.formationVersion.create({
+      data: { formationId: f.id, version: 1, snapshot: buildSnapshot(withSpecialite) },
+    })
   }
 
   const bam = await mk({

@@ -1,12 +1,10 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+import { requireSession } from '@/lib/authz'
 
 export default async function Home() {
-  const session = await auth()
-  if (!session) redirect('/login')
+  const session = await requireSession()
 
   return (
-    <main style={{ padding: 'var(--space-10)' }}>
+    <>
       <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
         PANDO
       </div>
@@ -14,9 +12,8 @@ export default async function Home() {
         Bonjour {session.user.name?.split(' ')[0]}.
       </h1>
       <p className="t-intro" style={{ maxWidth: 560 }}>
-        Slice 0 — foundation. Le socle est en place&nbsp;: base de données,
-        contraintes, authentification, design system.
+        Slice 1 — catalogue. Formations, versionnées, avec programme généré.
       </p>
-    </main>
+    </>
   )
 }

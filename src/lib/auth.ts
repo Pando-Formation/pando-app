@@ -37,13 +37,14 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Nodemailer from 'next-auth/providers/nodemailer'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+import { pandoAdapter } from '@/lib/auth-adapter'
 import { db } from '@/lib/db'
 
 const PANDO_DOMAIN = process.env.PANDO_DOMAIN ?? 'pando-formation.fr'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  // 🔴 NOT @auth/prisma-adapter — see src/lib/auth-adapter.ts for why.
+  adapter: pandoAdapter(db),
   session: { strategy: 'database', maxAge: 30 * 24 * 60 * 60 }, // 30 days
 
   providers: [

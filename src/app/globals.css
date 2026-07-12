@@ -392,3 +392,45 @@ body {
 .t-stat-md{font-family:var(--font-sans);font-size:var(--size-stat-md);font-weight:var(--weight-bold);line-height:1.05;letter-spacing:var(--ls-stat);font-variant-numeric:tabular-nums}
 .t-stat-sm{font-family:var(--font-sans);font-size:var(--size-stat-sm);font-weight:var(--weight-bold);line-height:1.1;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
 .t-stat-label{font-family:var(--font-sans);font-size:var(--size-stat-label);font-weight:var(--weight-medium);line-height:1.3;letter-spacing:var(--ls-stat-label);text-transform:uppercase;color:var(--color-text-secondary)}
+
+/* ── COMPONENTS ────────────────────────────────────────────────────────────
+   Extracted verbatim from docs/PANDO_design_system.html — buttons, badges,
+   cards, inputs. Do not fork; every value references an existing token.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-sans);font-weight:var(--weight-medium);border:none;cursor:pointer;transition:all var(--dur-base) var(--ease-out);white-space:nowrap;text-decoration:none}
+.btn-lg{height:var(--button-height-lg);padding:0 var(--space-7);font-size:var(--size-button-lg);border-radius:var(--button-radius)}
+.btn-md{height:var(--button-height);padding:0 var(--space-6);font-size:var(--size-button);border-radius:var(--button-radius)}
+.btn-sm{height:var(--button-height-sm);padding:0 var(--space-4);font-size:var(--size-button-sm);border-radius:var(--radius-2)}
+.btn-primary{background:var(--color-accent);color:var(--color-text-on-accent)}
+.btn-primary:hover{background:var(--color-accent-hover)}
+.btn-primary:active{background:var(--color-accent-active);transform:translateY(1px)}
+.btn-secondary{background:var(--color-surface-hover);color:var(--color-text-primary);border:1px solid var(--color-border-default)}
+.btn-secondary:hover{background:var(--color-surface-raised);border-color:var(--color-border-strong)}
+.btn-ghost{background:transparent;color:var(--color-text-secondary);border:1px solid var(--color-border-default)}
+.btn-ghost:hover{background:var(--color-surface-hover);color:var(--color-text-primary)}
+.btn-danger{background:var(--color-danger);color:#fff}
+.btn-danger:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--badge-radius);font-size:11px;font-weight:600;line-height:1.4}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-accent{background:var(--color-accent-subtle);color:var(--color-accent-hover)}
+.badge-success{background:var(--color-success-subtle);color:var(--color-success)}
+.badge-warning{background:var(--color-warning-subtle);color:var(--color-warning)}
+.badge-danger{background:var(--color-danger-subtle);color:var(--color-danger)}
+.badge-neutral{background:rgba(255,255,255,0.06);color:var(--color-text-secondary)}
+
+/* Cards */
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--card-radius);padding:var(--card-padding)}
+.card-elevated{box-shadow:var(--shadow-3)}
+
+/* Inputs */
+.input{width:100%;height:var(--input-height);background:var(--input-bg);border:1px solid var(--color-border-default);border-radius:var(--input-radius);padding:0 var(--space-4);color:var(--color-text-primary);font-family:var(--font-sans);font-size:var(--size-body-sm);outline:none;transition:border-color var(--dur-base) var(--ease-out)}
+.input:focus{border-color:var(--color-border-focus);box-shadow:var(--shadow-glow)}
+.input::placeholder{color:var(--color-text-tertiary)}
+.input-label{display:block;font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
+textarea.input{height:auto;padding:var(--space-4);line-height:var(--app-lh);resize:vertical}

@@ -8,6 +8,10 @@ export const euros = (cents: number): string =>
 
 export const toCents = (euros: number): number => Math.round(euros * 100)
 
+/** Cents → plain decimal string for a form input's defaultValue (e.g. "150.5"). */
+export const centsToEuroInput = (cents: number | null): string =>
+  cents === null ? '' : (cents / 100).toString()
+
 /**
  * 🔴 THE TRUE COST OF A FORMATEUR DAY.
  *
