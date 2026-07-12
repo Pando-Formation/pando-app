@@ -137,7 +137,7 @@ export async function addSequenceAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=sequences`)
 }
 
 export async function updateSequenceAction(
@@ -159,7 +159,7 @@ export async function updateSequenceAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=sequences`)
 }
 
 export async function deleteSequenceAction(formData: FormData) {
@@ -208,7 +208,7 @@ export async function createContractualisationAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=contractualisations`)
 }
 
 export async function updateContractualisationAction(
@@ -230,7 +230,7 @@ export async function updateContractualisationAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=contractualisations`)
 }
 
 export async function addFinancementAction(formData: FormData) {
@@ -277,7 +277,7 @@ export async function enrollParticipantAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=participants`)
 }
 
 export type ParcoursParticipantActionState = {
@@ -311,5 +311,5 @@ export async function updateParcoursParticipantAction(
   }
 
   revalidatePath(`/parcours/${parcoursId}`)
-  redirect(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=participants`)
 }
