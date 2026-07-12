@@ -1,0 +1,31 @@
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  PROPOSITION: 'Proposition',
+  DEVIS: 'Devis',
+  BON_DE_COMMANDE: 'Bon de commande',
+  CONVENTION_DE_FORMATION: 'Convention de formation',
+  CONTRAT_DE_FORMATION_PRO: 'Contrat de formation pro',
+  ANNEXE_CONVENTION: 'Annexe convention',
+  AVENANT_CONVENTION: 'Avenant convention',
+  CONVENTION_SOUS_TRAITANCE: 'Convention sous-traitance',
+  PROGRAMME: 'Programme',
+  CONVOCATION: 'Convocation',
+  FEUILLE_EMARGEMENT: "Feuille d'émargement",
+  ATTESTATION_FORMATION: 'Attestation de formation',
+  CERTIFICAT_REALISATION: 'Certificat de réalisation',
+  FACTURE: 'Facture',
+  AVOIR: 'Avoir',
+  SUPPORT_FORMATION: 'Support de formation',
+  ANALYSE_BESOIN: 'Analyse du besoin',
+  CV_FORMATEUR: 'CV formateur',
+  DIPLOME_FORMATEUR: 'Diplôme formateur',
+  AUTRE: 'Autre',
+}
+
+export const SIGNATURE_STATUS_LABELS: Record<string, string> = {
+  NOT_REQUIRED: 'Signature non requise',
+  PENDING: 'En attente de signature',
+  SENT: 'Envoyé pour signature',
+  SIGNED: 'Signé',
+  EXPIRED: 'Expiré',
+  REFUSED: 'Refusé',
+}

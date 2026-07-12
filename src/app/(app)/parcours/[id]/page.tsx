@@ -12,8 +12,21 @@ import {
   DEMI_JOURNEE_LABELS,
 } from '@/lib/parcours-labels'
 import { PAYER_TYPE_LABELS, CONTRACTUALISATION_STATUS_LABELS, PARTICIPANT_STATUS_LABELS } from '@/lib/participant-labels'
+import { DOCUMENT_TYPE_LABELS, SIGNATURE_STATUS_LABELS } from '@/lib/document-labels'
 import { computePaymentTriggerDate } from '@/lib/participant'
 import { deleteSequenceAction, addFinancementAction } from '@/app/(app)/parcours/actions'
+import {
+  generateDevisAction,
+  generateConventionAction,
+  generateFactureAction,
+  generateAttestationPackAction,
+  generateCertificatPackAction,
+  generateConvocationAction,
+  markChorusProSentAction,
+  markDocumentSentAction,
+  markDocumentSignedAction,
+} from '@/app/(app)/parcours/document-actions'
+import { GenerateDocumentButton } from '@/components/participants/GenerateDocumentButton'
 import type { FormationSnapshot } from '@/lib/formation'
 
 export default async function ParcoursDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,14 +41,18 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
       client: { select: { companyName: true } },
       beneficiaire: { select: { companyName: true } },
       donneurOrdre: { select: { companyName: true } },
-      sequences: { orderBy: { ordre: 'asc' }, include: { formateur: { select: { firstName: true, lastName: true } } } },
+      sequences: {
+        orderBy: { ordre: 'asc' },
+        include: { formateur: { select: { firstName: true, lastName: true } }, documents: true },
+      },
       contractualisations: {
         orderBy: { createdAt: 'asc' },
         include: {
-          payerClient: { select: { companyName: true } },
+          payerClient: { select: { companyName: true, isPublicSector: true } },
           payerParticipant: { select: { firstName: true, lastName: true } },
           financeur: { select: { name: true } },
           financements: true,
+          documents: { orderBy: { createdAt: 'desc' } },
           _count: { select: { participants: true } },
         },
       },
@@ -142,40 +159,67 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {parcours.sequences.map((s) => (
-            <div key={s.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <span className="t-caption-1">#{s.ordre}</span>
-                  <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
-                    {s.titre}
-                  </span>
-                  <span className="badge badge-neutral">{SEQUENCE_TYPE_LABELS[s.type] ?? s.type}</span>
+            <div key={s.id} className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <span className="t-caption-1">#{s.ordre}</span>
+                    <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
+                      {s.titre}
+                    </span>
+                    <span className="badge badge-neutral">{SEQUENCE_TYPE_LABELS[s.type] ?? s.type}</span>
+                  </div>
+                  <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                    {new Date(s.date).toLocaleDateString('fr-FR')} ·{' '}
+                    {s.demiJournees.map((dj) => DEMI_JOURNEE_LABELS[dj] ?? dj).join(' + ')} · {s.heures.toString()}h ·{' '}
+                    preuve : {PREUVE_TYPE_LABELS[s.preuveType] ?? s.preuveType}
+                    {s.lieu && <> · {s.lieu}</>}
+                    {s.formateur && (
+                      <>
+                        {' '}
+                        · {s.formateur.firstName} {s.formateur.lastName}
+                      </>
+                    )}
+                  </p>
                 </div>
-                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                  {new Date(s.date).toLocaleDateString('fr-FR')} ·{' '}
-                  {s.demiJournees.map((dj) => DEMI_JOURNEE_LABELS[dj] ?? dj).join(' + ')} · {s.heures.toString()}h ·{' '}
-                  preuve : {PREUVE_TYPE_LABELS[s.preuveType] ?? s.preuveType}
-                  {s.lieu && <> · {s.lieu}</>}
-                  {s.formateur && (
-                    <>
-                      {' '}
-                      · {s.formateur.firstName} {s.formateur.lastName}
-                    </>
-                  )}
-                </p>
+                {canWrite && (
+                  <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                    <Link href={`/parcours/${parcours.id}/sequences/${s.id}/modifier`} className="btn btn-sm btn-ghost">
+                      Modifier
+                    </Link>
+                    <form action={deleteSequenceAction}>
+                      <input type="hidden" name="id" value={s.id} />
+                      <input type="hidden" name="parcoursId" value={parcours.id} />
+                      <button type="submit" className="btn btn-sm btn-ghost">
+                        Retirer
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
-              {canWrite && (
-                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-                  <Link href={`/parcours/${parcours.id}/sequences/${s.id}/modifier`} className="btn btn-sm btn-ghost">
-                    Modifier
-                  </Link>
-                  <form action={deleteSequenceAction}>
-                    <input type="hidden" name="id" value={s.id} />
-                    <input type="hidden" name="parcoursId" value={parcours.id} />
-                    <button type="submit" className="btn btn-sm btn-ghost">
-                      Retirer
-                    </button>
-                  </form>
+
+              {(s.documents.length > 0 || canWrite) && (
+                <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
+                  {s.documents.map((d) => (
+                    <a
+                      key={d.id}
+                      href={`/api/documents/${d.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="badge badge-neutral"
+                      style={{ marginRight: 'var(--space-3)', textDecoration: 'none' }}
+                    >
+                      {DOCUMENT_TYPE_LABELS[d.type] ?? d.type} ↗
+                    </a>
+                  ))}
+                  {canWrite && (
+                    <GenerateDocumentButton
+                      action={generateConvocationAction}
+                      parcoursId={parcours.id}
+                      hiddenFields={{ sequenceId: s.id }}
+                      label="Générer la convocation"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -282,6 +326,96 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
                     </button>
                   </form>
                 )}
+
+                <div style={{ marginTop: 'var(--space-5)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
+                  <h3 className="t-caption-1" style={{ marginBottom: 'var(--space-3)' }}>
+                    Documents ({c.documents.length})
+                  </h3>
+
+                  {c.documents.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+                      {c.documents.map((d) => (
+                        <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                          <a href={`/api/documents/${d.id}`} target="_blank" rel="noreferrer" className="t-body-sm">
+                            {DOCUMENT_TYPE_LABELS[d.type] ?? d.type} ↗
+                          </a>
+                          <span className={`badge ${d.signatureStatus === 'SIGNED' ? 'badge-accent' : 'badge-neutral'}`}>
+                            {SIGNATURE_STATUS_LABELS[d.signatureStatus] ?? d.signatureStatus}
+                          </span>
+                          {d.isVoid && <span className="badge badge-danger">Annulé</span>}
+                          {canWrite && !d.isVoid && d.signatureStatus === 'PENDING' && (
+                            <form action={markDocumentSentAction}>
+                              <input type="hidden" name="documentId" value={d.id} />
+                              <input type="hidden" name="parcoursId" value={parcours.id} />
+                              <button type="submit" className="btn btn-sm btn-ghost">
+                                Marquer envoyé
+                              </button>
+                            </form>
+                          )}
+                          {canWrite && !d.isVoid && (d.signatureStatus === 'SENT' || d.signatureStatus === 'PENDING') && (
+                            <form action={markDocumentSignedAction}>
+                              <input type="hidden" name="documentId" value={d.id} />
+                              <input type="hidden" name="parcoursId" value={parcours.id} />
+                              <button type="submit" className="btn btn-sm btn-ghost">
+                                Marquer signé (simulation — pas de YouSign réel)
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {canWrite && (
+                    <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                      <GenerateDocumentButton action={generateDevisAction} parcoursId={parcours.id} hiddenFields={{ contractualisationId: c.id }} label="Générer le devis" />
+                      <GenerateDocumentButton
+                        action={generateConventionAction}
+                        parcoursId={parcours.id}
+                        hiddenFields={{ contractualisationId: c.id }}
+                        label={c.payerType === 'INDIVIDU' ? 'Générer le contrat' : 'Générer la convention'}
+                      />
+                      <GenerateDocumentButton action={generateFactureAction} parcoursId={parcours.id} hiddenFields={{ contractualisationId: c.id }} label="Générer la facture" />
+                      <GenerateDocumentButton
+                        action={generateAttestationPackAction}
+                        parcoursId={parcours.id}
+                        hiddenFields={{ contractualisationId: c.id }}
+                        label="Attestations (ce payeur uniquement)"
+                      />
+                      <GenerateDocumentButton
+                        action={generateCertificatPackAction}
+                        parcoursId={parcours.id}
+                        hiddenFields={{ contractualisationId: c.id }}
+                        label="Certificats de réalisation"
+                      />
+                    </div>
+                  )}
+
+                  {c.payerClient?.isPublicSector && (
+                    <div style={{ marginTop: 'var(--space-4)' }}>
+                      {c.chorusProSentAt ? (
+                        <span className="badge badge-accent">
+                          Envoyé sur Chorus Pro le {new Date(c.chorusProSentAt).toLocaleDateString('fr-FR')}
+                        </span>
+                      ) : (
+                        canWrite && (
+                          <form action={markChorusProSentAction}>
+                            <input type="hidden" name="contractualisationId" value={c.id} />
+                            <input type="hidden" name="parcoursId" value={parcours.id} />
+                            <button type="submit" className="btn btn-sm btn-secondary" disabled={!c.numeroEngagement || !c.codeService}>
+                              Marquer envoyé sur Chorus Pro (upload manuel)
+                            </button>
+                          </form>
+                        )
+                      )}
+                      {!c.numeroEngagement || !c.codeService ? (
+                        <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                          N° d&apos;engagement et code service requis avant facturation — voir Modifier.
+                        </p>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
