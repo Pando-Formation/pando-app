@@ -39,6 +39,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             Clients
           </Link>
+          <Link
+            href="/formateurs"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Formateurs
+          </Link>
         </nav>
 
         <div style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-5)' }}>

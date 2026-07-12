@@ -37,3 +37,14 @@ export async function requireOperational(): Promise<Session> {
   if (!['SUPER_ADMIN', 'ADMIN', 'COMMERCIAL'].some((r) => hasRole(session, r as Role))) redirect('/')
   return session
 }
+
+/**
+ * SUPER_ADMIN + ADMIN — Formateur records hold 🔒 RGPD personal data (address,
+ * phone, email, true cost) and are not part of COMMERCIAL's stated scope
+ * (clients/demandes/devis) or FORMATEUR's (their own assigned parcours only).
+ */
+export async function requireAdmin(): Promise<Session> {
+  const session = await requireSession()
+  if (!['SUPER_ADMIN', 'ADMIN'].some((r) => hasRole(session, r as Role))) redirect('/')
+  return session
+}

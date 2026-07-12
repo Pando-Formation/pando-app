@@ -17,6 +17,7 @@
     "verify": "prisma validate && tsc --noEmit && npm run db:fixture",
     "verify:slice1": "tsx prisma/fixtures/slice1-catalogue.ts",
     "verify:slice2": "tsx prisma/fixtures/slice2-clients.ts",
+    "verify:slice3": "tsx prisma/fixtures/slice3-formateurs.ts",
     "mail:dev": "maildev"
   },
   "prisma": {
