@@ -189,20 +189,25 @@ export default async function ParcoursDetailPage({ params }: { params: Promise<{
                     )}
                   </p>
                 </div>
-                {canWrite && (
-                  <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-                    <Link href={`/parcours/${parcours.id}/sequences/${s.id}/modifier`} className="btn btn-sm btn-ghost">
-                      Modifier
-                    </Link>
-                    <form action={deleteSequenceAction}>
-                      <input type="hidden" name="id" value={s.id} />
-                      <input type="hidden" name="parcoursId" value={parcours.id} />
-                      <button type="submit" className="btn btn-sm btn-ghost">
-                        Retirer
-                      </button>
-                    </form>
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                  <Link href={`/parcours/${parcours.id}/sequences/${s.id}/emargement`} className="btn btn-sm btn-secondary">
+                    Émargement
+                  </Link>
+                  {canWrite && (
+                    <>
+                      <Link href={`/parcours/${parcours.id}/sequences/${s.id}/modifier`} className="btn btn-sm btn-ghost">
+                        Modifier
+                      </Link>
+                      <form action={deleteSequenceAction}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <input type="hidden" name="parcoursId" value={parcours.id} />
+                        <button type="submit" className="btn btn-sm btn-ghost">
+                          Retirer
+                        </button>
+                      </form>
+                    </>
+                  )}
+                </div>
               </div>
 
               {(s.documents.length > 0 || canWrite) && (
