@@ -8,6 +8,14 @@ export const euros = (cents: number): string =>
 
 export const toCents = (euros: number): number => Math.round(euros * 100)
 
+/** Compact chart-label form — no cents, k/M abbreviated. Never used for a ledger value, only a direct chart label. */
+export const compactEuros = (cents: number): string => {
+  const value = cents / 100
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M€`
+  if (Math.abs(value) >= 1_000) return `${(value / 1_000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k€`
+  return `${Math.round(value).toLocaleString('fr-FR')} €`
+}
+
 /** Cents → plain decimal string for a form input's defaultValue (e.g. "150.5"). */
 export const centsToEuroInput = (cents: number | null): string =>
   cents === null ? '' : (cents / 100).toString()

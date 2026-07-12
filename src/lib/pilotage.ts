@@ -110,6 +110,23 @@ export async function getAlerts(): Promise<Alert[]> {
   return alerts.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'danger' ? -1 : 1))
 }
 
+export type AlertGroup = { category: string; severity: 'danger' | 'warning'; alerts: Alert[] }
+
+/** One card per category — severity shown once (the worst present in the group), not repeated per row. */
+export function groupAlertsByCategory(alerts: Alert[]): AlertGroup[] {
+  const byCategory = new Map<string, AlertGroup>()
+  for (const alert of alerts) {
+    const existing = byCategory.get(alert.category)
+    if (existing) {
+      existing.alerts.push(alert)
+      if (alert.severity === 'danger') existing.severity = 'danger'
+    } else {
+      byCategory.set(alert.category, { category: alert.category, severity: alert.severity, alerts: [alert] })
+    }
+  }
+  return Array.from(byCategory.values()).sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'danger' ? -1 : 1))
+}
+
 export type ParcoursRisk = { id: string; reference: string; score: number; reasons: string[] }
 
 /** Parcours ranked by how many distinct alert categories touch them — the ones that need attention first. */
@@ -174,4 +191,47 @@ export async function getMargin(): Promise<{ revenue: number; formateurCost: num
   }, 0)
 
   return { revenue, formateurCost, margin: revenue - formateurCost }
+}
+
+export type MonthlyPoint = { label: string; value: number }
+
+/** The last `count` calendar months, oldest first, as [start, end) boundaries — the shared clock for every monthly series below. */
+function trailingMonths(count: number): { start: Date; end: Date; label: string }[] {
+  const now = new Date()
+  const months: { start: Date; end: Date; label: string }[] = []
+  for (let i = count - 1; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
+    months.push({ start, end, label: start.toLocaleDateString('fr-FR', { month: 'short' }) })
+  }
+  return months
+}
+
+/**
+ * CA contractualisé par mois — bucketed by Contractualisation.createdAt (when
+ * the deal entered the system), NOT a revenue-recognition date. No accounting
+ * policy is asserted here; this is "when contracted," clearly labeled as such
+ * wherever it renders, not "recognized revenue" (that's an accountant's call,
+ * same caution as formateurDayCost's VAT-deductibility note above).
+ */
+export async function getMonthlyCaSeries(months = 5): Promise<MonthlyPoint[]> {
+  const buckets = trailingMonths(months)
+  const results = await Promise.all(
+    buckets.map(({ start, end }) =>
+      db.contractualisation.aggregate({
+        where: { status: { not: 'ANNULEE' }, createdAt: { gte: start, lt: end } },
+        _sum: { montantHT: true },
+      }),
+    ),
+  )
+  return buckets.map((b, i) => ({ label: b.label, value: results[i]!._sum.montantHT ?? 0 }))
+}
+
+/** Participants inscrits par mois — bucketed by ParcoursParticipant.createdAt (enrollment date), an activity/growth view, not a "who's training this month" capacity view. */
+export async function getMonthlyParticipantsSeries(months = 5): Promise<MonthlyPoint[]> {
+  const buckets = trailingMonths(months)
+  const results = await Promise.all(
+    buckets.map(({ start, end }) => db.parcoursParticipant.count({ where: { createdAt: { gte: start, lt: end } } })),
+  )
+  return buckets.map((b, i) => ({ label: b.label, value: results[i]! }))
 }

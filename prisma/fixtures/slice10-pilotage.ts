@@ -27,7 +27,7 @@ import { createParcours, addSequence } from '@/lib/parcours'
 import { contractualisationInputSchema, participantInputSchema } from '@/lib/validation/participant'
 import { createContractualisation, createParticipant, enrollParticipant } from '@/lib/participant'
 import { createAction } from '@/lib/amelioration'
-import { getAlerts, getParcoursAtRisk, getCaTotal, getMargin } from '@/lib/pilotage'
+import { getAlerts, groupAlertsByCategory, getParcoursAtRisk, getCaTotal, getMargin, getMonthlyCaSeries, getMonthlyParticipantsSeries } from '@/lib/pilotage'
 import { formateurDayCost } from '@/lib/money'
 
 const log = {
@@ -180,6 +180,15 @@ async function main() {
     'An expiring certification (< 60 days) surfaces and links to the formateur',
   )
 
+  // ── 1b. Alerts group into one card per category, worst severity wins ─────
+  const groups = groupAlertsByCategory(alertsWithCert)
+  const unsignedGroup = groups.find((g) => g.category === 'Convention non signée')
+  assert(unsignedGroup !== undefined && unsignedGroup.alerts.length >= 1, 'Each category collapses into one group carrying all its alerts')
+  const missingParticipantsGroup = groups.find((g) => g.category === 'Liste de participants manquante')
+  assert(missingParticipantsGroup?.severity === 'danger', 'A danger-only category groups as danger')
+  const categorySet = new Set(groups.map((g) => g.category))
+  assert(categorySet.size === groups.length, 'No category appears in two separate groups — grouping is a true partition')
+
   // ── 2. Parcours-at-risk ranks by distinct alert categories ───────────────
   const atRisk = await getParcoursAtRisk(alertsWithCert)
   const riskA = atRisk.find((p) => p.id === parcoursA.id)
@@ -209,6 +218,22 @@ async function main() {
     `formateurCost increases by exactly the external formateur's TTC day cost (${expectedExternalCost} cents = 860€), not the notional 700€ rate`,
   )
   assert(marginAfter.margin === marginAfter.revenue - marginAfter.formateurCost, 'margin = revenue − formateurCost, always')
+
+  // ── 5. Monthly series — bucketed by the current calendar month ───────────
+  const caSeries = await getMonthlyCaSeries(5)
+  assert(caSeries.length === 5, 'getMonthlyCaSeries(5) always returns exactly 5 points, even for months with zero activity')
+  const currentMonthCa = caSeries[caSeries.length - 1]!
+  assert(currentMonthCa.value >= 178_500, "This fixture's contractualisation (created just now) is counted in the CURRENT month's bucket")
+
+  const participantsSeries = await getMonthlyParticipantsSeries(5)
+  assert(participantsSeries.length === 5, 'getMonthlyParticipantsSeries(5) always returns exactly 5 points')
+  const currentMonthParticipants = participantsSeries[participantsSeries.length - 1]!
+  assert(currentMonthParticipants.value >= 1, "This fixture's enrollment (created just now) is counted in the CURRENT month's bucket")
+  assert(
+    caSeries.every((p) => typeof p.label === 'string' && p.label.length > 0) &&
+      participantsSeries.every((p) => typeof p.label === 'string' && p.label.length > 0),
+    'Every bucket carries a non-empty month label — a chart axis with a blank tick is a bug',
+  )
 
   await cleanup()
 
