@@ -1,8 +1,16 @@
 import { z } from 'zod'
 
+/** YYYY-MM-DD from `<input type="date">`, checked for real calendar validity. */
+const isoDateString = (message = 'Date invalide') =>
+  z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, message)
+    .refine((s) => !Number.isNaN(new Date(s).getTime()), message)
+
 export const reclamationInputSchema = z.object({
   source: z.enum(['PARTICIPANT', 'CLIENT', 'FORMATEUR', 'FINANCEUR', 'AUTRE']),
-  receivedAt: z.string().trim().min(1, 'Date requise'),
+  receivedAt: isoDateString('Date requise'),
   receivedVia: z.string().trim().optional().nullable(),
   description: z.string().trim().min(1, 'Description requise'),
   qualification: z.string().trim().optional().nullable(),
@@ -20,7 +28,7 @@ export const actionInputSchema = z.object({
   origin: z.enum(['RECLAMATION', 'EVALUATION', 'AUDIT', 'VEILLE', 'INTERNE']),
   description: z.string().trim().min(1, 'Description requise'),
   ownerId: z.string().trim().min(1, 'Un responsable nommé est requis'),
-  dueDate: z.string().trim().min(1, 'Échéance requise'),
+  dueDate: isoDateString('Échéance requise'),
 })
 export type ActionInput = z.infer<typeof actionInputSchema>
 
@@ -35,6 +43,6 @@ export const veilleInputSchema = z.object({
   source: z.string().trim().min(1, 'Source requise'),
   summary: z.string().trim().min(1, 'Résumé requis'),
   soWhat: z.string().trim().min(1, 'Ce qui change chez PANDO est requis'),
-  date: z.string().trim().min(1, 'Date requise'),
+  date: isoDateString('Date requise'),
 })
 export type VeilleInput = z.infer<typeof veilleInputSchema>

@@ -72,7 +72,8 @@ export function ContractualisationForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--space-5)' }}>
         <div>
           <label className="input-label">Type de payeur</label>
-          <select className="input" name="payerType" value={payerType} onChange={(e) => setPayerType(e.target.value)}>
+          <input type="hidden" name="payerType" value={payerType} />
+          <select className="input" id="payer-type-select" value={payerType} onChange={(e) => setPayerType(e.target.value)}>
             {Object.entries(PAYER_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}

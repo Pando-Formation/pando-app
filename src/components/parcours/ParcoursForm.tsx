@@ -107,7 +107,8 @@ export function ParcoursForm({ mode, action, parcoursId, defaultValues, formatio
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-5)' }}>
           <div>
             <label className="input-label">Track</label>
-            <select className="input" name="track" value={track} onChange={(e) => setTrack(e.target.value)}>
+            <input type="hidden" name="track" value={track} />
+            <select className="input" id="track-select" value={track} onChange={(e) => setTrack(e.target.value)}>
               {Object.entries(TRACK_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -117,12 +118,8 @@ export function ParcoursForm({ mode, action, parcoursId, defaultValues, formatio
           </div>
           <div>
             <label className="input-label">Rôle PANDO</label>
-            <select
-              className="input"
-              name="pandoRole"
-              value={pandoRole}
-              onChange={(e) => setPandoRole(e.target.value)}
-            >
+            <input type="hidden" name="pandoRole" value={pandoRole} />
+            <select className="input" value={pandoRole} onChange={(e) => setPandoRole(e.target.value)}>
               {Object.entries(PANDO_ROLE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -132,7 +129,8 @@ export function ParcoursForm({ mode, action, parcoursId, defaultValues, formatio
           </div>
           <div>
             <label className="input-label">Statut</label>
-            <select className="input" name="status" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <input type="hidden" name="status" value={status} />
+            <select className="input" id="status-select" value={status} onChange={(e) => setStatus(e.target.value)}>
               {Object.entries(PARCOURS_STATUS_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}

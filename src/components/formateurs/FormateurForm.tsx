@@ -150,12 +150,8 @@ export function FormateurForm({ mode, action, formateurId, defaultValues }: Prop
         </h2>
         <div>
           <label className="input-label">Type de contrat</label>
-          <select
-            className="input"
-            name="contractType"
-            value={contractType}
-            onChange={(e) => setContractType(e.target.value)}
-          >
+          <input type="hidden" name="contractType" value={contractType} />
+          <select className="input" value={contractType} onChange={(e) => setContractType(e.target.value)}>
             {Object.entries(CONTRACT_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}

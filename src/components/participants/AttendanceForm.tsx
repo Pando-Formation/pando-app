@@ -48,7 +48,8 @@ export function AttendanceForm({
         </p>
       )}
 
-      <select className="input" name="status" value={status} onChange={(e) => setStatus(e.target.value)}>
+      <input type="hidden" name="status" value={status} />
+      <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
         {Object.entries(ATTENDANCE_STATUS_LABELS).map(([value, label]) => (
           <option key={value} value={value}>
             {label}

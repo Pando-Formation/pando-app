@@ -154,17 +154,19 @@ async function main() {
   const past = new Date()
   past.setDate(past.getDate() - 5)
 
+  // 🔴 YYYY-MM-DD only — competenceInputSchema.date/expiresAt validate the
+  // exact shape a real <input type="date"> sends, not a full ISO datetime.
   const compSoon = await addCompetence(
     anthony.id,
-    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching', date: '2024-01-01', expiresAt: soon.toISOString() }),
+    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching', date: '2024-01-01', expiresAt: soon.toISOString().slice(0, 10) }),
   )
   const compFar = await addCompetence(
     anthony.id,
-    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching renouvelée', date: '2024-01-01', expiresAt: far.toISOString() }),
+    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching renouvelée', date: '2024-01-01', expiresAt: far.toISOString().slice(0, 10) }),
   )
   const compPast = await addCompetence(
     anthony.id,
-    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching expirée', date: '2020-01-01', expiresAt: past.toISOString() }),
+    competenceInputSchema.parse({ type: 'CERTIFICATION', title: 'Coaching expirée', date: '2020-01-01', expiresAt: past.toISOString().slice(0, 10) }),
   )
   const compNone = await addCompetence(
     anthony.id,

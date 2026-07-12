@@ -52,7 +52,8 @@ export function ParcoursParticipantForm({
           {participantName}
         </h2>
         <label className="input-label">Statut</label>
-        <select className="input" name="status" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <input type="hidden" name="status" value={status} />
+        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
           {Object.entries(PARTICIPANT_STATUS_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}

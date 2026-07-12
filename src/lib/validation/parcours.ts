@@ -8,6 +8,19 @@ const decimalString = (maxIntDigits: number) =>
     .regex(new RegExp(`^\\d{1,${maxIntDigits}}(\\.\\d{1,2})?$`), 'Nombre invalide')
 
 /**
+ * YYYY-MM-DD from `<input type="date">`, checked for real calendar validity
+ * — not just "non-empty". A malformed value (browser autofill glitch, a
+ * scripted client) must fail with a readable message here, never reach
+ * `new Date(...)` / Prisma as an unhandled invalid-argument error.
+ */
+const isoDateString = (message = 'Date invalide') =>
+  z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, message)
+    .refine((s) => !Number.isNaN(new Date(s).getTime()), message)
+
+/**
  * `formationId` is only used at CREATE time to pick the current
  * FormationVersion to snapshot onto the parcours — it is not a field on the
  * Parcours model. Once created, the formationVersionId is frozen: editing the
@@ -67,7 +80,7 @@ export const sequenceInputSchema = z.object({
   ordre: z.coerce.number().int().positive(),
   titre: z.string().trim().min(1, 'Titre requis'),
   type: z.enum(['PRESENTIEL', 'DISTANCIEL', 'ELEARNING', 'COACHING', 'TRAVAIL_AUTONOME', 'DEFI']),
-  date: z.string().trim().min(1, 'Date requise'),
+  date: isoDateString('Date requise'),
   // 🔴 THE LEGAL UNIT. At least one demi-journée — mirrors the DB CHECK.
   demiJournees: z.array(z.enum(['MATIN', 'APRES_MIDI'])).min(1, 'Au moins une demi-journée requise'),
   heures: decimalString(5),

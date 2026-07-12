@@ -7,6 +7,13 @@ const tvaRate = z
   .string()
   .trim()
   .regex(/^(0(\.\d{1,2})?|1(\.0{1,2})?)$/, 'Le taux de TVA doit être entre 0 et 1 (ex. 0.20 pour 20%).')
+/** YYYY-MM-DD from `<input type="date">`, checked for real calendar validity. */
+const isoDateString = (message = 'Date invalide') =>
+  z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, message)
+    .refine((s) => !Number.isNaN(new Date(s).getTime()), message)
 
 export const formateurInputSchema = z
   .object({
@@ -49,8 +56,8 @@ export type FormateurInput = z.infer<typeof formateurInputSchema>
 export const competenceInputSchema = z.object({
   type: z.enum(['CV', 'DIPLOME', 'CERTIFICATION', 'FORMATION_CONTINUE', 'SUPERVISION']),
   title: z.string().trim().min(1, 'Titre requis'),
-  date: z.string().trim().min(1, 'Date requise'), // ISO date string from <input type="date">
-  expiresAt: z.string().trim().nullable().optional(),
+  date: isoDateString('Date requise'),
+  expiresAt: isoDateString().nullable().optional(),
 })
 
 export type CompetenceInput = z.infer<typeof competenceInputSchema>
