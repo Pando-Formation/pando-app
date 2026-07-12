@@ -61,6 +61,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             Financeurs
           </Link>
           <Link
+            href="/amelioration"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Amélioration continue
+          </Link>
+          <Link
             href="/formateurs"
             className="t-nav-m"
             style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
