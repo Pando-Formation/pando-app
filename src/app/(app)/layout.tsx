@@ -40,6 +40,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             Clients
           </Link>
           <Link
+            href="/parcours"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Parcours
+          </Link>
+          <Link
             href="/formateurs"
             className="t-nav-m"
             style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}

@@ -22,6 +22,7 @@
 
 import { PrismaClient } from '@prisma/client'
 import { buildSnapshot, formationWithSpecialite } from '@/lib/formation'
+import { recomputeParcoursDerived, recomputeParcoursMontant } from '@/lib/parcours'
 
 const db = new PrismaClient()
 
@@ -235,6 +236,7 @@ async function scenarioOptas(formationVersionId: string) {
       },
     })
   }
+  await recomputeParcoursDerived(parcours.id)
 
   log.ok(`OPTA'S — sous-traitance · 6 séquences · 2026-06-16 → 2027-03-18 · bénéficiaire ≠ commanditaire`)
 }
@@ -279,6 +281,8 @@ async function scenarioBam(formationVersionId: string) {
       },
     })
   }
+
+  await recomputeParcoursDerived(parcours.id)
 
   const total = seqs.reduce((a, s) => a + s.h, 0)
   log.ok(`BAM! — 9 séquences · 4 modalités · 4 types de preuve · ${total}h sur 9 semaines`)
@@ -339,6 +343,8 @@ async function scenarioMixedPayer(parcoursId: string) {
     }
   }
 
+  await recomputeParcoursMontant(parcoursId)
+
   const sum = await db.contractualisation.aggregate({ where: { parcoursId }, _sum: { montantHT: true } })
   log.ok(`Bordeaux — 7 participants · 4 payeurs · 3 origines de financement · Σ ${(sum._sum.montantHT ?? 0) / 100} € (dérivé)`)
 }
@@ -387,6 +393,8 @@ async function scenarioClic(formationVersionId: string) {
       },
     })
   }
+
+  await recomputeParcoursDerived(parcours.id)
 
   log.ok('CLIC! — 3 séquences · 1 demi-journée chacune · collectif complet requis (7/7)')
 }
