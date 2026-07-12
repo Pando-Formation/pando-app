@@ -24,3 +24,16 @@ export async function requireSuperAdmin(): Promise<Session> {
   if (!hasRole(session, 'SUPER_ADMIN')) redirect('/')
   return session
 }
+
+/**
+ * Day-to-day operational roles — clients, demandes, parcours, participants,
+ * documents, invoicing. Per PANDO_APP_REFERENCE.md's role table: ADMIN has
+ * this everywhere, COMMERCIAL has it for clients/demandes/devis (parcours
+ * stays read-only for COMMERCIAL — not enforced by this guard, narrower
+ * checks belong at the call site once parcours exists). FORMATEUR does not.
+ */
+export async function requireOperational(): Promise<Session> {
+  const session = await requireSession()
+  if (!['SUPER_ADMIN', 'ADMIN', 'COMMERCIAL'].some((r) => hasRole(session, r as Role))) redirect('/')
+  return session
+}

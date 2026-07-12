@@ -32,6 +32,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             Catalogue
           </Link>
+          <Link
+            href="/clients"
+            className="t-nav-m"
+            style={{ color: 'var(--color-text-secondary)', padding: 'var(--space-3) 0' }}
+          >
+            Clients
+          </Link>
         </nav>
 
         <div style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-5)' }}>

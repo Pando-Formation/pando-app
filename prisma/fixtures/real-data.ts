@@ -350,6 +350,7 @@ async function scenarioClic(formationVersionId: string) {
       companyName: 'Mairie de Bordeaux',
       siret: '21330063200017',
       isPublicSector: true, // 🔴 cat. jur. 7210 → Chorus Pro
+      categorieJuridique: '7210', nafSource: 'SIRENE',
       status: 'ACTIF', postalCode: '33000', city: 'BORDEAUX',
     },
   })
