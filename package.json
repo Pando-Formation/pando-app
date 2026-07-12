@@ -24,6 +24,7 @@
     "verify:slice7": "tsx prisma/fixtures/slice7-communication.ts",
     "verify:slice8": "tsx prisma/fixtures/slice8-attendance.ts",
     "verify:slice9": "tsx prisma/fixtures/slice9-amelioration.ts",
+    "verify:slice10": "tsx prisma/fixtures/slice10-pilotage.ts",
     "mail:dev": "maildev"
   },
   "prisma": {
