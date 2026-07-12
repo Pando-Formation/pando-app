@@ -12,6 +12,27 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Serif:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&family=Roboto+Mono:wght@400;500&display=swap');
 
+/* ─────────────────────────────────────────────────────────────────────────
+   TAILWIND — foundation for shadcn/ui components only (@efferd/dashboard-2
+   and its dependencies), added alongside the existing hand-built system
+   below, not replacing it.
+
+   🔴 Safe by construction, not by luck: Tailwind v4 wraps everything it
+   generates in named CSS layers (@layer theme, base, components, utilities).
+   Per the CSS Cascade Layers spec, UNLAYERED rules always win over layered
+   ones regardless of layer order or selector specificity — and every rule
+   below this import is unlayered (this file never uses @layer). So
+   Tailwind's preflight reset cannot override this design system's existing
+   ~400 .btn/.card/.input/.badge usages; it only fills in defaults for
+   elements this file doesn't already style. Do not wrap anything below in
+   @layer — that would forfeit this protection.
+   ───────────────────────────────────────────────────────────────────────── */
+@import 'tailwindcss';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
 :root {
   /* ─────────────────────────────────────────────────────────────────────────
      LAYER 1 — PRIMITIVE TOKENS (raw values, never used directly in components)
@@ -270,6 +291,43 @@
   --input-height:         38px;
   --input-bg:             var(--color-surface-raised);
   --badge-radius:         var(--radius-full);
+  /* Remapped onto PANDO's own dark/blue tokens — the app is dark-only, so
+     these are set directly rather than gated behind a `.dark` class toggle
+     (the `.dark` block below is inert; nothing ever applies that class). */
+  --background:  var(--color-bg-base);
+  --foreground:  var(--color-text-primary);
+  --card:  var(--color-surface);
+  --card-foreground:  var(--color-text-primary);
+  --popover:  var(--color-surface-raised);
+  --popover-foreground:  var(--color-text-primary);
+  --primary:  var(--color-accent);
+  --primary-foreground:  var(--color-text-on-accent);
+  --secondary:  var(--color-surface-hover);
+  --secondary-foreground:  var(--color-text-primary);
+  --muted:  var(--color-surface-hover);
+  --muted-foreground:  var(--color-text-secondary);
+  /* shadcn's --accent is a hover-state NEUTRAL, not PANDO's brand accent —
+     mapping it to blue would tint every dropdown-item/ghost-button hover. */
+  --accent:  var(--color-surface-hover);
+  --accent-foreground:  var(--color-text-primary);
+  --destructive:  var(--color-danger);
+  --border:  var(--color-border-subtle);
+  --input:  var(--color-border-default);
+  --ring:  var(--color-accent);
+  --chart-1:  var(--color-accent-hover);
+  --chart-2:  var(--color-accent);
+  --chart-3:  var(--color-accent-active);
+  --chart-4:  var(--color-success);
+  --chart-5:  var(--color-warning);
+  --radius:  0.75rem;
+  --sidebar:  var(--color-bg-base);
+  --sidebar-foreground:  var(--color-text-primary);
+  --sidebar-primary:  var(--color-accent);
+  --sidebar-primary-foreground:  var(--color-text-on-accent);
+  --sidebar-accent:  var(--color-surface-hover);
+  --sidebar-accent-foreground:  var(--color-text-primary);
+  --sidebar-border:  var(--color-border-subtle);
+  --sidebar-ring:  var(--color-accent);
 }
 
 @media only screen and (max-width: 1068px) {
@@ -335,7 +393,21 @@
 }
 
 /* ── BASE ──────────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* 🔴 padding intentionally NOT reset here (unlike margin): this rule is
+   unlayered, so it would beat every Tailwind padding-* utility app-wide
+   (Card, Button, Badge, Table cells, Sidebar items, etc.), silently zeroing
+   all of it. PANDO's own .btn/.card/.input/.badge classes set their own
+   explicit padding regardless, so they're unaffected either way. Tailwind's
+   own (layered) preflight already zeroes padding on native form elements. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+/* Tailwind's preflight (`a { text-decoration: inherit }`) strips the browser
+   default underline. Restore it for plain content links; shadcn's own
+   components (Button, SidebarMenuButton, etc.) always carry a `data-slot`
+   attribute and manage their own decoration, so they're excluded here. */
+a:not([data-slot]) {
+  text-decoration: underline;
+}
 
 body {
   background: var(--color-bg-base);
@@ -434,3 +506,92 @@ body {
 .input::placeholder{color:var(--color-text-tertiary)}
 .input-label{display:block;font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
 textarea.input{height:auto;padding:var(--space-4);line-height:var(--app-lh);resize:vertical}
+
+@theme inline {
+  --font-heading:  var(--font-sans);
+  --font-sans:  var(--font-sans);
+  --color-sidebar-ring:  var(--sidebar-ring);
+  --color-sidebar-border:  var(--sidebar-border);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-accent:  var(--sidebar-accent);
+  --color-sidebar-primary-foreground:  var(--sidebar-primary-foreground);
+  --color-sidebar-primary:  var(--sidebar-primary);
+  --color-sidebar-foreground:  var(--sidebar-foreground);
+  --color-sidebar:  var(--sidebar);
+  --color-chart-5:  var(--chart-5);
+  --color-chart-4:  var(--chart-4);
+  --color-chart-3:  var(--chart-3);
+  --color-chart-2:  var(--chart-2);
+  --color-chart-1:  var(--chart-1);
+  --color-ring:  var(--ring);
+  --color-input:  var(--input);
+  --color-border:  var(--border);
+  --color-destructive:  var(--destructive);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-accent:  var(--accent);
+  --color-muted-foreground:  var(--muted-foreground);
+  --color-muted:  var(--muted);
+  --color-secondary-foreground:  var(--secondary-foreground);
+  --color-secondary:  var(--secondary);
+  --color-primary-foreground:  var(--primary-foreground);
+  --color-primary:  var(--primary);
+  --color-popover-foreground:  var(--popover-foreground);
+  --color-popover:  var(--popover);
+  --color-card-foreground:  var(--card-foreground);
+  --color-card:  var(--card);
+  --color-foreground:  var(--foreground);
+  --color-background:  var(--background);
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl:  calc(var(--radius) * 1.8);
+  --radius-3xl:  calc(var(--radius) * 2.2);
+  --radius-4xl:  calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background:  oklch(0.145 0 0);
+  --foreground:  oklch(0.985 0 0);
+  --card:  oklch(0.205 0 0);
+  --card-foreground:  oklch(0.985 0 0);
+  --popover:  oklch(0.205 0 0);
+  --popover-foreground:  oklch(0.985 0 0);
+  --primary:  oklch(0.922 0 0);
+  --primary-foreground:  oklch(0.205 0 0);
+  --secondary:  oklch(0.269 0 0);
+  --secondary-foreground:  oklch(0.985 0 0);
+  --muted:  oklch(0.269 0 0);
+  --muted-foreground:  oklch(0.708 0 0);
+  --accent:  oklch(0.269 0 0);
+  --accent-foreground:  oklch(0.985 0 0);
+  --destructive:  oklch(0.704 0.191 22.216);
+  --border:  oklch(1 0 0 / 10%);
+  --input:  oklch(1 0 0 / 15%);
+  --ring:  oklch(0.556 0 0);
+  --chart-1:  oklch(0.87 0 0);
+  --chart-2:  oklch(0.556 0 0);
+  --chart-3:  oklch(0.439 0 0);
+  --chart-4:  oklch(0.371 0 0);
+  --chart-5:  oklch(0.269 0 0);
+  --sidebar:  oklch(0.205 0 0);
+  --sidebar-foreground:  oklch(0.985 0 0);
+  --sidebar-primary:  oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground:  oklch(0.985 0 0);
+  --sidebar-accent:  oklch(0.269 0 0);
+  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-border:  oklch(1 0 0 / 10%);
+  --sidebar-ring:  oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

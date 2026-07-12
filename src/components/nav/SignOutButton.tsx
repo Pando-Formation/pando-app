@@ -1,13 +1,8 @@
-import { signOut } from '@/lib/auth'
-
-async function handleSignOut() {
-  'use server'
-  await signOut({ redirectTo: '/login' })
-}
+import { signOutAction } from '@/lib/actions/sign-out'
 
 export function SignOutButton() {
   return (
-    <form action={handleSignOut}>
+    <form action={signOutAction}>
       <button type="submit" className="btn btn-sm btn-ghost">
         Se déconnecter
       </button>
