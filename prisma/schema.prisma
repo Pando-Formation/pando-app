@@ -782,6 +782,11 @@ model Sequence {
   ///                            CLIC! is three séquences of ONE demi-journée each.
   heures       Decimal       @db.Decimal(5, 2)
   lieu         String?
+  /// Postal address of the lieu — only meaningful for PRESENTIEL, surfaced on
+  /// the convocation so participants know where to show up.
+  address      String?
+  postalCode   String?
+  city         String?
   preuveType   PreuveType
 
   /// 🔴 PER SEQUENCE. A 15-week POP! may involve several formateurs, and the

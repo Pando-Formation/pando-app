@@ -1,17 +1,19 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { SEQUENCE_TYPE_LABELS, PREUVE_TYPE_LABELS, DEMI_JOURNEE_LABELS } from '@/lib/parcours-labels'
 import type { SequenceActionState } from '@/app/(app)/parcours/actions'
 
 export type SequenceDefaultValues = {
-  ordre: string
   titre: string
   type: string
   date: string
   demiJournees: string[]
   heures: string
   lieu: string
+  address: string
+  postalCode: string
+  city: string
   preuveType: string
   formateurId: string | null
 }
@@ -25,22 +27,24 @@ type Props = {
   sequenceId?: string
   defaultValues?: SequenceDefaultValues
   formateurs: Option[]
-  nextOrdre: number
 }
 
-export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValues, formateurs, nextOrdre }: Props) {
+export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValues, formateurs }: Props) {
   const [state, formAction, pending] = useActionState<SequenceActionState, FormData>(action, null)
   const v = defaultValues ?? {
-    ordre: String(nextOrdre),
     titre: '',
     type: 'PRESENTIEL',
     date: '',
     demiJournees: [],
     heures: '',
     lieu: '',
+    address: '',
+    postalCode: '',
+    city: '',
     preuveType: 'SIGNATURE',
     formateurId: null,
   }
+  const [type, setType] = useState(v.type)
   const errors = state?.fieldErrors ?? {}
 
   return (
@@ -54,23 +58,16 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: 'var(--space-5)' }}>
-        <div>
-          <label className="input-label">Ordre</label>
-          <input className="input" type="number" name="ordre" defaultValue={v.ordre} required />
-          {errors.ordre && <FieldError messages={errors.ordre} />}
-        </div>
-        <div>
-          <label className="input-label">Titre</label>
-          <input className="input" name="titre" defaultValue={v.titre} required />
-          {errors.titre && <FieldError messages={errors.titre} />}
-        </div>
+      <div>
+        <label className="input-label">Titre</label>
+        <input className="input" name="titre" defaultValue={v.titre} required />
+        {errors.titre && <FieldError messages={errors.titre} />}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-5)' }}>
         <div>
           <label className="input-label">Type</label>
-          <select className="input" name="type" defaultValue={v.type}>
+          <select className="input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
             {Object.entries(SEQUENCE_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -138,6 +135,26 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
           </select>
         </div>
       </div>
+
+      {type === 'PRESENTIEL' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 'var(--space-5)' }}>
+          <div>
+            <label className="input-label">Adresse</label>
+            <input className="input" name="address" defaultValue={v.address} />
+            {errors.address && <FieldError messages={errors.address} />}
+          </div>
+          <div>
+            <label className="input-label">Code postal</label>
+            <input className="input" name="postalCode" defaultValue={v.postalCode} />
+            {errors.postalCode && <FieldError messages={errors.postalCode} />}
+          </div>
+          <div>
+            <label className="input-label">Ville</label>
+            <input className="input" name="city" defaultValue={v.city} />
+            {errors.city && <FieldError messages={errors.city} />}
+          </div>
+        </div>
+      )}
 
       <button type="submit" className="btn btn-primary" disabled={pending} style={{ alignSelf: 'flex-start' }}>
         {pending ? 'Enregistrement…' : mode === 'create' ? 'Ajouter la séquence' : 'Enregistrer'}

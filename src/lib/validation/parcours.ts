@@ -77,7 +77,6 @@ export const parcoursInputSchema = z
 export type ParcoursInput = z.infer<typeof parcoursInputSchema>
 
 export const sequenceInputSchema = z.object({
-  ordre: z.coerce.number().int().positive(),
   titre: z.string().trim().min(1, 'Titre requis'),
   type: z.enum(['PRESENTIEL', 'DISTANCIEL', 'ELEARNING', 'COACHING', 'TRAVAIL_AUTONOME', 'DEFI']),
   date: isoDateString('Date requise'),
@@ -85,6 +84,9 @@ export const sequenceInputSchema = z.object({
   demiJournees: z.array(z.enum(['MATIN', 'APRES_MIDI'])).min(1, 'Au moins une demi-journée requise'),
   heures: decimalString(5),
   lieu: z.string().trim().optional().nullable(),
+  address: z.string().trim().optional().nullable(),
+  postalCode: z.string().trim().optional().nullable(),
+  city: z.string().trim().optional().nullable(),
   preuveType: z.enum(['SIGNATURE', 'CONNEXION', 'COMPLETION', 'COMPTE_RENDU', 'PAPER']),
   formateurId: z.string().trim().min(1).nullable().optional(),
 })

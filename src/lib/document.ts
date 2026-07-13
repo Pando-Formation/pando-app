@@ -324,7 +324,16 @@ export async function generateConvocation(sequenceId: string) {
     ],
     bodyParagraphs: [
       { heading: 'Formation', text: snapshot.title },
-      ...(sequence.lieu ? [{ heading: 'Lieu', text: sequence.lieu }] : []),
+      ...(sequence.lieu || sequence.address || sequence.postalCode || sequence.city
+        ? [
+            {
+              heading: 'Lieu',
+              text: [sequence.lieu, sequence.address, [sequence.postalCode, sequence.city].filter(Boolean).join(' ')]
+                .filter(Boolean)
+                .join('\n'),
+            },
+          ]
+        : []),
       ...(sequence.formateur ? [{ heading: 'Formateur', text: `${sequence.formateur.firstName} ${sequence.formateur.lastName}` }] : []),
     ],
     table: {

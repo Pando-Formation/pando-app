@@ -107,13 +107,15 @@ export type SequenceActionState = {
 
 function formDataToSequenceInput(formData: FormData) {
   return {
-    ordre: optionalText(formData, 'ordre') ?? '1',
     titre: String(formData.get('titre') ?? ''),
     type: String(formData.get('type') ?? 'PRESENTIEL'),
     date: String(formData.get('date') ?? ''),
     demiJournees: formData.getAll('demiJournees').map(String),
     heures: String(formData.get('heures') ?? ''),
     lieu: optionalText(formData, 'lieu'),
+    address: optionalText(formData, 'address'),
+    postalCode: optionalText(formData, 'postalCode'),
+    city: optionalText(formData, 'city'),
     preuveType: String(formData.get('preuveType') ?? 'SIGNATURE'),
     formateurId: optionalText(formData, 'formateurId'),
   }

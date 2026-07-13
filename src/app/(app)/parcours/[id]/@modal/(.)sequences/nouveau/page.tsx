@@ -9,10 +9,9 @@ export default async function NewSequenceModal({ params }: { params: Promise<{ i
   const { id } = await params
   await requireAdmin()
 
-  const [parcours, formateurs, maxOrdre] = await Promise.all([
+  const [parcours, formateurs] = await Promise.all([
     db.parcours.findUnique({ where: { id }, select: { id: true, reference: true } }),
     db.formateur.findMany({ where: { deletedAt: null }, orderBy: { lastName: 'asc' } }),
-    db.sequence.aggregate({ where: { parcoursId: id }, _max: { ordre: true } }),
   ])
   if (!parcours) notFound()
 
@@ -26,7 +25,6 @@ export default async function NewSequenceModal({ params }: { params: Promise<{ i
         action={addSequenceAction}
         parcoursId={parcours.id}
         formateurs={formateurs.map((f) => ({ id: f.id, label: `${f.firstName} ${f.lastName}` }))}
-        nextOrdre={(maxOrdre._max.ordre ?? 0) + 1}
       />
     </Modal>
   )

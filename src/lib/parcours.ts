@@ -103,13 +103,15 @@ export async function updateParcours(parcoursId: string, input: ParcoursInput) {
 
 function sequencePrismaData(input: SequenceInput) {
   return {
-    ordre: input.ordre,
     titre: input.titre,
     type: input.type,
     date: new Date(input.date),
     demiJournees: input.demiJournees,
     heures: input.heures,
     lieu: input.lieu ?? null,
+    address: input.address ?? null,
+    postalCode: input.postalCode ?? null,
+    city: input.city ?? null,
     preuveType: input.preuveType,
     formateurId: input.formateurId ?? null,
   }
@@ -117,8 +119,12 @@ function sequencePrismaData(input: SequenceInput) {
 
 export async function addSequence(parcoursId: string, input: SequenceInput) {
   return db.$transaction(async (tx) => {
+    // 🔴 `ordre` is no longer user-facing — séquences display in date order —
+    // but it stays a real, unique-per-parcours column (convocation refs like
+    // "REF-CONVOC-3" are built from it), so it's assigned automatically here.
+    const { _max } = await tx.sequence.aggregate({ where: { parcoursId }, _max: { ordre: true } })
     const sequence = await tx.sequence.create({
-      data: { parcoursId, ...sequencePrismaData(input) },
+      data: { parcoursId, ordre: (_max.ordre ?? 0) + 1, ...sequencePrismaData(input) },
     })
     await recomputeParcoursDerived(parcoursId, tx)
     return sequence

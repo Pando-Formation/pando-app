@@ -47,6 +47,9 @@ export default async function EmargementPage({ params }: { params: Promise<{ id:
       <p className="t-body" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)' }}>
         {new Date(sequence.date).toLocaleDateString('fr-FR')}
         {sequence.lieu && <> · {sequence.lieu}</>}
+        {(sequence.address || sequence.postalCode || sequence.city) && (
+          <> · {[sequence.address, [sequence.postalCode, sequence.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</>
+        )}
         {sequence.formateur && (
           <>
             {' '}

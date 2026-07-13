@@ -16,13 +16,15 @@ export default async function EditSequencePage({ params }: { params: Promise<{ i
   if (!parcours || !sequence) notFound()
 
   const defaultValues: SequenceDefaultValues = {
-    ordre: sequence.ordre.toString(),
     titre: sequence.titre,
     type: sequence.type,
     date: sequence.date.toISOString().slice(0, 10),
     demiJournees: sequence.demiJournees,
     heures: sequence.heures.toString(),
     lieu: sequence.lieu ?? '',
+    address: sequence.address ?? '',
+    postalCode: sequence.postalCode ?? '',
+    city: sequence.city ?? '',
     preuveType: sequence.preuveType,
     formateurId: sequence.formateurId,
   }
@@ -33,7 +35,7 @@ export default async function EditSequencePage({ params }: { params: Promise<{ i
         Parcours · {parcours.reference}
       </div>
       <h1 className="t-title-2" style={{ marginBottom: 'var(--space-8)' }}>
-        Modifier la séquence #{sequence.ordre}
+        Modifier la séquence « {sequence.titre} »
       </h1>
 
       <div className="card" style={{ maxWidth: 720 }}>
@@ -44,7 +46,6 @@ export default async function EditSequencePage({ params }: { params: Promise<{ i
           sequenceId={sequence.id}
           defaultValues={defaultValues}
           formateurs={formateurs.map((f) => ({ id: f.id, label: `${f.firstName} ${f.lastName}` }))}
-          nextOrdre={sequence.ordre}
         />
       </div>
     </>
