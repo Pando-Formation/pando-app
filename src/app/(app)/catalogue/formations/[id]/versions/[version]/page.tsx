@@ -4,6 +4,9 @@ import { requireSession } from '@/lib/authz'
 import { db } from '@/lib/db'
 import { FORMAT_LABELS, BRAND_PROGRAMME_LABELS } from '@/lib/catalogue-labels'
 import type { FormationSnapshot } from '@/lib/formation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { PageHero } from '@/components/page-hero'
 
 export default async function FormationVersionPage({
   params,
@@ -34,59 +37,65 @@ export default async function FormationVersionPage({
         ← Retour à la formation
       </Link>
 
-      <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
-        Version {record.version} · figée le {new Date(record.effectiveFrom).toLocaleDateString('fr-FR')}
-      </div>
-      <h1 className="t-title-2" style={{ marginBottom: 'var(--space-3)' }}>
-        {snapshot.title}
-      </h1>
-      <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-8)' }}>
-        {snapshot.brandProgramme && (
-          <span className="badge badge-accent">
-            {BRAND_PROGRAMME_LABELS[snapshot.brandProgramme] ?? snapshot.brandProgramme}
-          </span>
-        )}
-        <span className="badge badge-neutral">Instantané figé — lecture seule</span>
-      </div>
+      <PageHero>
+        <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
+          Version {record.version} · figée le {new Date(record.effectiveFrom).toLocaleDateString('fr-FR')}
+        </div>
+        <h1 className="t-title-2" style={{ marginBottom: 'var(--space-3)' }}>
+          {snapshot.title}
+        </h1>
+        <div className="flex gap-2">
+          {snapshot.brandProgramme && (
+            <Badge variant="accent">{BRAND_PROGRAMME_LABELS[snapshot.brandProgramme] ?? snapshot.brandProgramme}</Badge>
+          )}
+          <Badge variant="secondary">Instantané figé — lecture seule</Badge>
+        </div>
+      </PageHero>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', maxWidth: 720 }}>
-        <div className="card">
-          <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-            Détails
-          </h2>
-          <p className="t-body-sm">
-            {snapshot.durationHours}h · {snapshot.durationDays}j · {FORMAT_LABELS[snapshot.format] ?? snapshot.format}
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Détails</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="t-body-sm">
+              {snapshot.durationHours}h · {snapshot.durationDays}j · {FORMAT_LABELS[snapshot.format] ?? snapshot.format}
+            </p>
+          </CardContent>
+        </Card>
 
-        <div className="card">
-          <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-            Objectifs pédagogiques
-          </h2>
-          <ol style={{ paddingLeft: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            {snapshot.pedagogicObjectives.map((o, i) => (
-              <li key={i} className="t-body-sm">
-                {o}
-              </li>
-            ))}
-          </ol>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Objectifs pédagogiques</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol style={{ paddingLeft: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {snapshot.pedagogicObjectives.map((o, i) => (
+                <li key={i} className="t-body-sm">
+                  {o}
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
 
-        <div className="card">
-          <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-            Information du public
-          </h2>
-          <div className="t-caption-1" style={{ marginBottom: 'var(--space-1)' }}>
-            Délai d&apos;accès
-          </div>
-          <p className="t-body-sm" style={{ marginBottom: 'var(--space-4)' }}>
-            {snapshot.delaiAcces}
-          </p>
-          <div className="t-caption-1" style={{ marginBottom: 'var(--space-1)' }}>
-            Accessibilité
-          </div>
-          <p className="t-body-sm">{snapshot.accessibilite}</p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Information du public</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="t-caption-1" style={{ marginBottom: 'var(--space-1)' }}>
+              Délai d&apos;accès
+            </div>
+            <p className="t-body-sm" style={{ marginBottom: 'var(--space-4)' }}>
+              {snapshot.delaiAcces}
+            </p>
+            <div className="t-caption-1" style={{ marginBottom: 'var(--space-1)' }}>
+              Accessibilité
+            </div>
+            <p className="t-body-sm">{snapshot.accessibilite}</p>
+          </CardContent>
+        </Card>
       </div>
     </>
   )

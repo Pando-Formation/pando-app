@@ -4,6 +4,10 @@ import { requireSession, hasRole } from '@/lib/authz'
 import { db } from '@/lib/db'
 import { FORMAT_LABELS, BRAND_PROGRAMME_LABELS } from '@/lib/catalogue-labels'
 import { archiveFormationAction, restoreFormationAction } from '@/app/(app)/catalogue/formations/actions'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { PageHero } from '@/components/page-hero'
 
 export default async function FormationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -23,131 +27,130 @@ export default async function FormationDetailPage({ params }: { params: Promise<
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 'var(--space-8)',
-        }}
-      >
-        <div>
-          <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
-            Catalogue · {formation.internalCode}
+      <PageHero>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
+              Catalogue · {formation.internalCode}
+            </div>
+            <h1 className="t-title-2" style={{ marginBottom: 'var(--space-3)' }}>
+              {formation.title}
+            </h1>
+            <div className="flex gap-2">
+              {formation.brandProgramme && (
+                <Badge variant="accent">{BRAND_PROGRAMME_LABELS[formation.brandProgramme] ?? formation.brandProgramme}</Badge>
+              )}
+              {!formation.isActive && <Badge variant="secondary">Archivée</Badge>}
+              {formation.requiresFullCohort && <Badge variant="warning">Collectif complet requis</Badge>}
+            </div>
           </div>
-          <h1 className="t-title-2" style={{ marginBottom: 'var(--space-3)' }}>
-            {formation.title}
-          </h1>
-          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-            {formation.brandProgramme && (
-              <span className="badge badge-accent">
-                {BRAND_PROGRAMME_LABELS[formation.brandProgramme] ?? formation.brandProgramme}
-              </span>
-            )}
-            {!formation.isActive && <span className="badge badge-neutral">Archivée</span>}
-            {formation.requiresFullCohort && <span className="badge badge-warning">Collectif complet requis</span>}
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-          {latestVersion && (
-            <a
-              href={`/api/formations/${formation.id}/programme`}
-              className="btn btn-md btn-secondary"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Générer le programme (PDF)
-            </a>
-          )}
-          {canWrite && (
-            <Link href={`/catalogue/formations/${formation.id}/modifier`} className="btn btn-md btn-primary">
-              Modifier
-            </Link>
-          )}
+          <div className="flex gap-3">
+            {latestVersion && (
+              <Button
+                render={<a href={`/api/formations/${formation.id}/programme`} target="_blank" rel="noreferrer" />} nativeButton={false}
+                variant="secondary"
+              >
+                Générer le programme (PDF)
+              </Button>
+            )}
+            {canWrite && <Button render={<Link href={`/catalogue/formations/${formation.id}/modifier`} />} nativeButton={false}>Modifier</Button>}
+          </div>
         </div>
-      </div>
+      </PageHero>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--space-7)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div className="card">
-            <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-              Détails
-            </h2>
-            <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-              <Field label="Durée" value={`${formation.durationHours.toString()}h · ${formation.durationDays.toString()}j`} />
-              <Field label="Format" value={FORMAT_LABELS[formation.format] ?? formation.format} />
-              <Field label="Public visé" value={formation.targetAudience} full />
-              <Field label="Prérequis" value={formation.prerequisites} full />
-            </dl>
-          </div>
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Détails</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                <Field label="Durée" value={`${formation.durationHours.toString()}h · ${formation.durationDays.toString()}j`} />
+                <Field label="Format" value={FORMAT_LABELS[formation.format] ?? formation.format} />
+                <Field label="Public visé" value={formation.targetAudience} full />
+                <Field label="Prérequis" value={formation.prerequisites} full />
+              </dl>
+            </CardContent>
+          </Card>
 
-          <div className="card">
-            <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-              Objectifs pédagogiques
-            </h2>
-            <ol style={{ paddingLeft: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              {formation.pedagogicObjectives.map((o, i) => (
-                <li key={i} className="t-body-sm">
-                  {o}
-                </li>
-              ))}
-            </ol>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Objectifs pédagogiques</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol style={{ paddingLeft: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                {formation.pedagogicObjectives.map((o, i) => (
+                  <li key={i} className="t-body-sm">
+                    {o}
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
 
-          <div className="card">
-            <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-              Information du public
-            </h2>
-            <dl style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-              <Field label="Délai d'accès" value={formation.delaiAcces} full />
-              <Field label="Accessibilité" value={formation.accessibilite} full />
-            </dl>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Information du public</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                <Field label="Délai d'accès" value={formation.delaiAcces} full />
+                <Field label="Accessibilité" value={formation.accessibilite} full />
+              </dl>
+            </CardContent>
+          </Card>
 
           {formation.specialite && (
-            <div className="card">
-              <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-                Spécialité NSF
-              </h2>
-              <p className="t-body-sm">
-                {formation.specialite.code} — {formation.specialite.titre}
-              </p>
-              <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                Groupe {formation.specialite.groupe.titre} · Champs {formation.specialite.champs.titre}
-              </p>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Spécialité NSF</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="t-body-sm">
+                  {formation.specialite.code} — {formation.specialite.titre}
+                </p>
+                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                  Groupe {formation.specialite.groupe.titre} · Champs {formation.specialite.champs.titre}
+                </p>
+              </CardContent>
+            </Card>
           )}
 
           {canWrite && (
-            <div className="card">
-              <form action={formation.isActive ? archiveFormationAction : restoreFormationAction}>
-                <input type="hidden" name="id" value={formation.id} />
-                <button type="submit" className={`btn btn-sm ${formation.isActive ? 'btn-danger' : 'btn-secondary'}`}>
-                  {formation.isActive ? 'Archiver' : 'Réactiver'}
-                </button>
-              </form>
-            </div>
+            <Card>
+              <CardContent>
+                <form action={formation.isActive ? archiveFormationAction : restoreFormationAction}>
+                  <input type="hidden" name="id" value={formation.id} />
+                  <Button type="submit" variant={formation.isActive ? 'destructive' : 'secondary'} size="sm">
+                    {formation.isActive ? 'Archiver' : 'Réactiver'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           )}
         </div>
 
-        <div className="card">
-          <h2 className="t-heading" style={{ marginBottom: 'var(--space-4)' }}>
-            Historique des versions
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {formation.versions.map((v) => (
-              <Link
-                key={v.id}
-                href={`/catalogue/formations/${formation.id}/versions/${v.version}`}
-                className="t-body-sm"
-                style={{ color: 'var(--color-accent-hover)' }}
-              >
-                v{v.version} — {new Date(v.effectiveFrom).toLocaleDateString('fr-FR')}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Historique des versions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {formation.versions.map((v) => (
+                <Link
+                  key={v.id}
+                  href={`/catalogue/formations/${formation.id}/versions/${v.version}`}
+                  className="t-body-sm"
+                  style={{ color: 'var(--color-accent-hover)' }}
+                >
+                  v{v.version} — {new Date(v.effectiveFrom).toLocaleDateString('fr-FR')}
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </>
   )

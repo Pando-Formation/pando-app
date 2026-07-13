@@ -6,7 +6,7 @@ import type { AlertGroup } from '@/lib/pilotage'
 
 export function AlertCard({ group }: { group: AlertGroup }) {
 	return (
-		<DashboardCard className="gap-0 md:col-span-2 lg:col-span-4">
+		<DashboardCard className="gap-0 md:col-span-2">
 			<CardHeader className="flex flex-row items-center gap-2 border-b">
 				<SeverityDot severity={group.severity} />
 				<CardTitle className="flex-1 text-base">{group.category}</CardTitle>

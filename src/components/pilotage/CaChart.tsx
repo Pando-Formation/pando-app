@@ -34,7 +34,7 @@ export function CaChart({ data }: { data: MonthlyPoint[] }) {
 		<DashboardCard className="gap-0 md:col-span-2">
 			<CardHeader className="gap-2">
 				<CardTitle>CA contractualisé</CardTitle>
-				<CardDescription>5 derniers mois, par date de contractualisation</CardDescription>
+				<CardDescription>Depuis janvier, par date de contractualisation</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer className="aspect-auto h-60 w-full md:h-80" config={chartConfig}>

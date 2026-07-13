@@ -2,6 +2,8 @@ import { requireAdmin, hasRole } from '@/lib/authz'
 import { db } from '@/lib/db'
 import { FinanceurForm } from '@/components/participants/FinanceurForm'
 import { createFinanceurAction } from '@/app/(app)/financeurs/actions'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHero } from '@/components/page-hero'
 
 export default async function FinanceursPage() {
   const session = await requireAdmin()
@@ -11,20 +13,22 @@ export default async function FinanceursPage() {
 
   return (
     <>
-      <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
-        Financeurs
-      </div>
-      <h1 className="t-title-2" style={{ marginBottom: 'var(--space-8)' }}>
-        Financeurs (OPCO)
-      </h1>
+      <PageHero>
+        <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
+          Financeurs
+        </div>
+        <h1 className="t-title-2">Financeurs (OPCO)</h1>
+      </PageHero>
 
       {canWrite && (
-        <div className="card" style={{ maxWidth: 560, marginBottom: 'var(--space-8)' }}>
-          <h2 className="t-heading" style={{ marginBottom: 'var(--space-5)' }}>
-            Nouveau financeur
-          </h2>
-          <FinanceurForm action={createFinanceurAction} />
-        </div>
+        <Card style={{ maxWidth: 560, marginBottom: 'var(--space-8)' }}>
+          <CardHeader>
+            <CardTitle>Nouveau financeur</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FinanceurForm action={createFinanceurAction} />
+          </CardContent>
+        </Card>
       )}
 
       {financeurs.length === 0 ? (
@@ -32,16 +36,18 @@ export default async function FinanceursPage() {
           Aucun financeur pour le moment.
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="flex flex-col gap-3">
           {financeurs.map((f) => (
-            <div key={f.id} className="card">
-              <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
-                {f.name}
-              </span>
-              <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                {f.type ?? 'Type non renseigné'} {f.siret && <>· {f.siret}</>}
-              </p>
-            </div>
+            <Card key={f.id}>
+              <CardContent>
+                <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
+                  {f.name}
+                </span>
+                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                  {f.type ?? 'Type non renseigné'} {f.siret && <>· {f.siret}</>}
+                </p>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

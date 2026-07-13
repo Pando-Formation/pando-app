@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import type { DocumentActionState } from '@/app/(app)/parcours/document-actions'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   action: (state: DocumentActionState, formData: FormData) => Promise<DocumentActionState>
@@ -19,9 +20,9 @@ export function GenerateDocumentButton({ action, parcoursId, hiddenFields, label
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <button type="submit" className="btn btn-sm btn-secondary" disabled={pending}>
+      <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         {pending ? 'Génération…' : label}
-      </button>
+      </Button>
       {state?.error && (
         <p className="t-caption-1" style={{ color: 'var(--color-danger)' }}>
           {state.error}

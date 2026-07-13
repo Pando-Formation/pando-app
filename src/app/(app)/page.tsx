@@ -4,7 +4,7 @@ import { getAlerts, groupAlertsByCategory, getParcoursAtRisk, getCaTotal, getMar
 import { CaChart } from '@/components/pilotage/CaChart'
 import { ParticipantsChart } from '@/components/pilotage/ParticipantsChart'
 import { FinancialStats, type FinancialStat } from '@/components/pilotage/FinancialStats'
-import { DashboardHero } from '@/components/pilotage/DashboardHero'
+import { PageHero } from '@/components/page-hero'
 import { AlertCard } from '@/components/pilotage/AlertCard'
 import { EmptyAlerts } from '@/components/pilotage/EmptyAlerts'
 import { ParcoursAtRiskTable } from '@/components/pilotage/ParcoursAtRiskTable'
@@ -23,12 +23,13 @@ import { ParcoursAtRiskTable } from '@/components/pilotage/ParcoursAtRiskTable'
  */
 export default async function Home() {
   const session = await requireSession()
+  const monthsSinceJanuary = new Date().getMonth() + 1
   const [alerts, ca, margin, caSeries, participantsSeries] = await Promise.all([
     getAlerts(),
     getCaTotal(),
     getMargin(),
-    getMonthlyCaSeries(5),
-    getMonthlyParticipantsSeries(5),
+    getMonthlyCaSeries(monthsSinceJanuary),
+    getMonthlyParticipantsSeries(monthsSinceJanuary),
   ])
   const parcoursAtRisk = await getParcoursAtRisk(alerts)
   const alertGroups = groupAlertsByCategory(alerts)
@@ -63,7 +64,7 @@ export default async function Home() {
 
   return (
     <>
-      <DashboardHero>
+      <PageHero>
         <div className="t-overline" style={{ marginBottom: 'var(--space-3)' }}>
           PANDO
         </div>
@@ -74,7 +75,7 @@ export default async function Home() {
           {alerts.length} alerte{alerts.length !== 1 ? 's' : ''} · {dangerCount} critique{dangerCount !== 1 ? 's' : ''} ·{' '}
           {warningCount} à surveiller.
         </p>
-      </DashboardHero>
+      </PageHero>
 
       <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border bg-border md:grid-cols-2 lg:grid-cols-4">
         <FinancialStats stats={stats} />

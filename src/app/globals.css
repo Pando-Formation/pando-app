@@ -510,6 +510,15 @@ textarea.input{height:auto;padding:var(--space-4);line-height:var(--app-lh);resi
 @theme inline {
   --font-heading:  var(--font-sans);
   --font-sans:  var(--font-sans);
+  /* Semantic badge colors with no shadcn variant equivalent (success/warning/
+     accent) — named distinctly from PANDO's own --color-* tokens to avoid a
+     self-referencing (and therefore invalid) custom property declaration. */
+  --color-badge-success:     var(--color-success);
+  --color-badge-success-bg:  var(--color-success-subtle);
+  --color-badge-warning:     var(--color-warning);
+  --color-badge-warning-bg:  var(--color-warning-subtle);
+  --color-badge-accent:      var(--color-accent-hover);
+  --color-badge-accent-bg:   var(--color-accent-subtle);
   --color-sidebar-ring:  var(--sidebar-ring);
   --color-sidebar-border:  var(--sidebar-border);
   --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);

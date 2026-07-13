@@ -53,7 +53,7 @@ export function ParticipantsChart({ data }: { data: MonthlyPoint[] }) {
 		<DashboardCard className="gap-0 md:col-span-2">
 			<CardHeader className="gap-2">
 				<CardTitle>Participants inscrits</CardTitle>
-				<CardDescription>5 derniers mois, par date d&apos;inscription au parcours</CardDescription>
+				<CardDescription>Depuis janvier, par date d&apos;inscription au parcours</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer className="aspect-auto h-60 w-full md:h-80" config={chartConfig}>

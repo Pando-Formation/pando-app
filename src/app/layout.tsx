@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Agentation } from 'agentation'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -16,7 +17,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        {children}
+        {process.env.NODE_ENV === 'development' && <Agentation endpoint="http://localhost:4747" />}
+      </body>
     </html>
   )
 }
