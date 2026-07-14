@@ -604,3 +604,12 @@ textarea.input{height:auto;padding:var(--space-4);line-height:var(--app-lh);resi
     @apply font-sans;
   }
 }
+
+/* Scrollable, but no visible scrollbar — e.g. a table with a frozen last column. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

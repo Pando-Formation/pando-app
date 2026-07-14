@@ -2,38 +2,22 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireOperational, hasRole } from '@/lib/authz'
 import { db } from '@/lib/db'
-import { euros } from '@/lib/money'
-import {
-  TRACK_LABELS,
-  PARCOURS_STATUS_LABELS,
-  PANDO_ROLE_LABELS,
-  SEQUENCE_TYPE_LABELS,
-  PREUVE_TYPE_LABELS,
-  DEMI_JOURNEE_LABELS,
-} from '@/lib/parcours-labels'
-import { PAYER_TYPE_LABELS, CONTRACTUALISATION_STATUS_LABELS, PARTICIPANT_STATUS_LABELS } from '@/lib/participant-labels'
-import { DOCUMENT_TYPE_LABELS, SIGNATURE_STATUS_LABELS } from '@/lib/document-labels'
+import { euros, formateurDayCost } from '@/lib/money'
+import { TRACK_LABELS, PARCOURS_STATUS_LABELS, PANDO_ROLE_LABELS } from '@/lib/parcours-labels'
+import { PAYER_TYPE_LABELS, PARTICIPANT_STATUS_LABELS, isContractualisationAtLeast } from '@/lib/participant-labels'
 import { computePaymentTriggerDate } from '@/lib/participant'
-import { deleteSequenceAction, addFinancementAction } from '@/app/(app)/parcours/actions'
-import {
-  generateDevisAction,
-  generateConventionAction,
-  generateFactureAction,
-  generateAttestationPackAction,
-  generateCertificatPackAction,
-  generateConvocationAction,
-  markChorusProSentAction,
-  markDocumentSentAction,
-  markDocumentSignedAction,
-} from '@/app/(app)/parcours/document-actions'
-import { GenerateDocumentButton } from '@/components/participants/GenerateDocumentButton'
 import { DELIVERY_STATUS_LABELS } from '@/lib/communication-labels'
-import { sendConvocationsAction, simulateDeliveryAction } from '@/app/(app)/parcours/communication-actions'
+import { simulateDeliveryAction } from '@/app/(app)/parcours/communication-actions'
 import type { FormationSnapshot } from '@/lib/formation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, type badgeVariants } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageHero } from '@/components/page-hero'
+import { SequencesTable, type SequenceRow } from '@/components/parcours/SequencesTable'
+import { ContractualisationsTable, type ContractualisationRow } from '@/components/parcours/ContractualisationsTable'
+import { ParticipantConvocationMenu } from '@/components/parcours/ParticipantConvocationMenu'
+import { FacturationTable, type FacturationGroupRow } from '@/components/parcours/FacturationTable'
+import { FormateursOnParcoursTable, type FormateurOnParcoursRow } from '@/components/parcours/FormateursOnParcoursTable'
 import type { VariantProps } from 'class-variance-authority'
 
 const TABS = [
@@ -41,7 +25,9 @@ const TABS = [
   { id: 'sequences', label: 'Séquences' },
   { id: 'contractualisations', label: 'Contractualisations' },
   { id: 'participants', label: 'Participants' },
+  { id: 'facturation', label: 'Facturation' },
   { id: 'envois', label: 'Envois' },
+  { id: 'formateurs', label: 'Formateurs' },
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
@@ -64,50 +50,131 @@ export default async function ParcoursDetailPage({
   const session = await requireOperational()
   const canWrite = ['SUPER_ADMIN', 'ADMIN'].some((r) => hasRole(session, r as 'SUPER_ADMIN' | 'ADMIN'))
 
-  const parcours = await db.parcours.findUnique({
-    where: { id },
-    include: {
-      formationVersion: true,
-      client: { select: { companyName: true } },
-      beneficiaire: { select: { companyName: true } },
-      donneurOrdre: { select: { companyName: true } },
-      sequences: {
-        orderBy: { date: 'asc' },
-        include: { formateur: { select: { firstName: true, lastName: true } }, documents: true },
-      },
-      contractualisations: {
-        orderBy: { createdAt: 'asc' },
-        include: {
-          payerClient: { select: { companyName: true, isPublicSector: true } },
-          payerParticipant: { select: { firstName: true, lastName: true } },
-          financeur: { select: { name: true } },
-          financements: true,
-          documents: { orderBy: { createdAt: 'desc' } },
-          _count: { select: { participants: true } },
+  const [parcours, sousTraitanceDocuments] = await Promise.all([
+    db.parcours.findUnique({
+      where: { id },
+      include: {
+        formationVersion: true,
+        client: { select: { companyName: true } },
+        beneficiaire: { select: { companyName: true } },
+        donneurOrdre: { select: { companyName: true } },
+        sequences: {
+          orderBy: { date: 'asc' },
+          include: {
+            formateur: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                contractType: true,
+                tvaRate: true,
+                tarifJour: true,
+                forfaitDeplacement: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+        contractualisations: {
+          where: { status: { not: 'ANNULEE' } },
+          orderBy: { createdAt: 'asc' },
+          include: {
+            payerClient: { select: { companyName: true, isPublicSector: true } },
+            payerParticipant: { select: { firstName: true, lastName: true } },
+            financeur: { select: { name: true } },
+            financements: { include: { financeur: { select: { name: true } } }, orderBy: { createdAt: 'asc' } },
+            documents: { orderBy: { createdAt: 'desc' } },
+            factures: {
+              orderBy: { createdAt: 'asc' },
+              include: {
+                sequences: { select: { id: true, date: true } },
+                documents: { where: { isVoid: false }, orderBy: { createdAt: 'desc' } },
+              },
+            },
+            _count: { select: { participants: true } },
+          },
+        },
+        participants: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            participant: true,
+            contractualisation: { select: { payerType: true, status: true } },
+            documents: { where: { type: 'CONVOCATION' }, orderBy: { createdAt: 'desc' }, take: 1 },
+          },
+        },
+        communicationSequences: {
+          include: { messages: { orderBy: { createdAt: 'desc' } } },
         },
       },
-      participants: {
-        orderBy: { createdAt: 'asc' },
-        include: { participant: true, contractualisation: { select: { payerType: true } } },
-      },
-      communicationSequences: {
-        include: { messages: { orderBy: { createdAt: 'desc' } } },
-      },
-    },
-  })
+    }),
+    db.document.findMany({ where: { parcoursId: id, type: 'CONVENTION_SOUS_TRAITANCE' }, orderBy: { createdAt: 'desc' } }),
+  ])
   if (!parcours) notFound()
 
   const messages = parcours.communicationSequences.flatMap((cs) => cs.messages)
   const snapshot = parcours.formationVersion.snapshot as unknown as FormationSnapshot
 
-  const activeTab: TabId = TABS.some((t) => t.id === tab) ? (tab as TabId) : 'apercu'
+  // 🔴 RGPD SCOPE — Formateur day-rate/address/cost data is not part of
+  // COMMERCIAL's stated scope (see requireAdmin's comment in lib/authz.ts),
+  // even though COMMERCIAL can otherwise view this page. The tab is hidden
+  // entirely — nav entry and content — rather than just gating its actions.
+  const visibleTabs = TABS.filter((t) => t.id !== 'formateurs' || canWrite)
+
+  // 🔴 THE CONTRACT = ALL THE SÉQUENCES this formateur is assigned to, on
+  // THIS parcours only — same cost formula as lib/pilotage.ts's getMargin(),
+  // so this number always matches what pilotage reports for this formateur.
+  const formateurRows: FormateurOnParcoursRow[] = (() => {
+    type Assignment = {
+      formateur: NonNullable<(typeof parcours.sequences)[number]['formateur']>
+      sequenceCount: number
+      totalHeures: number
+      estimatedCost: number
+    }
+    const byFormateur = new Map<string, Assignment>()
+    for (const s of parcours.sequences) {
+      if (!s.formateur) continue
+      const dayCost = formateurDayCost({
+        contractType: s.formateur.contractType,
+        tarifJour: s.formateur.tarifJour,
+        tvaRate: Number(s.formateur.tvaRate),
+        forfaitDeplacement: s.formateur.forfaitDeplacement,
+      })
+      const cost = Math.round(dayCost * (Number(s.heures) / 7))
+      const existing = byFormateur.get(s.formateur.id)
+      if (existing) {
+        existing.sequenceCount += 1
+        existing.totalHeures += Number(s.heures)
+        existing.estimatedCost += cost
+      } else {
+        byFormateur.set(s.formateur.id, { formateur: s.formateur, sequenceCount: 1, totalHeures: Number(s.heures), estimatedCost: cost })
+      }
+    }
+    return Array.from(byFormateur.values()).map((a) => ({
+      id: a.formateur.id,
+      firstName: a.formateur.firstName,
+      lastName: a.formateur.lastName,
+      contractType: a.formateur.contractType,
+      isActive: a.formateur.isActive,
+      sequenceCount: a.sequenceCount,
+      totalHeures: a.totalHeures.toString(),
+      estimatedCost: a.estimatedCost,
+      documents: sousTraitanceDocuments
+        .filter((d) => d.formateurId === a.formateur.id)
+        .map((d) => ({ id: d.id, type: d.type, signatureStatus: d.signatureStatus, isVoid: d.isVoid })),
+    }))
+  })()
+
+  const activeTab: TabId = visibleTabs.some((t) => t.id === tab) ? (tab as TabId) : 'apercu'
   const counts: Record<TabId, number | null> = {
     apercu: null,
     sequences: parcours.sequences.length,
     contractualisations: parcours.contractualisations.length,
     participants: parcours.participants.length,
+    facturation: parcours.contractualisations.reduce((n, c) => n + c.factures.length, 0),
     envois: messages.length,
+    formateurs: formateurRows.length,
   }
+  const realizedSequenceCount = parcours.sequences.filter((s) => s.date <= new Date()).length
 
   return (
     <>
@@ -152,7 +219,7 @@ export default async function ParcoursDetailPage({
           marginBottom: 'var(--space-7)',
         }}
       >
-        {TABS.map((t) => {
+        {visibleTabs.map((t) => {
           const isActive = t.id === activeTab
           return (
             <Link
@@ -223,296 +290,71 @@ export default async function ParcoursDetailPage({
       )}
 
       {activeTab === 'sequences' && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-5)' }}>
-            {canWrite && (
-              <Button render={<Link href={`/parcours/${parcours.id}/sequences/nouveau`} />} nativeButton={false} size="sm">
-                Ajouter une séquence
-              </Button>
-            )}
-          </div>
-
-          {parcours.sequences.length === 0 ? (
-            <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
-              Aucune séquence — les dates et la durée totale resteront vides tant qu&apos;aucune n&apos;est ajoutée.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {parcours.sequences.map((s) => (
-                <Card key={s.id}>
-                  <CardContent>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                          <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
-                            {s.titre}
-                          </span>
-                          <Badge variant="secondary">{SEQUENCE_TYPE_LABELS[s.type] ?? s.type}</Badge>
-                        </div>
-                        <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                          {new Date(s.date).toLocaleDateString('fr-FR')} ·{' '}
-                          {s.demiJournees.map((dj) => DEMI_JOURNEE_LABELS[dj] ?? dj).join(' + ')} · {s.heures.toString()}h ·{' '}
-                          preuve : {PREUVE_TYPE_LABELS[s.preuveType] ?? s.preuveType}
-                          {s.lieu && <> · {s.lieu}</>}
-                          {(s.address || s.postalCode || s.city) && (
-                            <> · {[s.address, [s.postalCode, s.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</>
-                          )}
-                          {s.formateur && (
-                            <>
-                              {' '}
-                              · {s.formateur.firstName} {s.formateur.lastName}
-                            </>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button render={<Link href={`/parcours/${parcours.id}/sequences/${s.id}/emargement`} />} nativeButton={false} variant="secondary" size="sm">
-                          Émargement
-                        </Button>
-                        {canWrite && (
-                          <>
-                            <Button render={<Link href={`/parcours/${parcours.id}/sequences/${s.id}/modifier`} />} nativeButton={false} variant="ghost" size="sm">
-                              Modifier
-                            </Button>
-                            <form action={deleteSequenceAction}>
-                              <input type="hidden" name="id" value={s.id} />
-                              <input type="hidden" name="parcoursId" value={parcours.id} />
-                              <Button type="submit" variant="ghost" size="sm">
-                                Retirer
-                              </Button>
-                            </form>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {(s.documents.length > 0 || canWrite) && (
-                      <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
-                        {s.documents.map((d) => (
-                          <Badge
-                            key={d.id}
-                            variant="secondary"
-                            render={<a href={`/api/documents/${d.id}`} target="_blank" rel="noreferrer" />}
-                            style={{ marginRight: 'var(--space-3)' }}
-                          >
-                            {DOCUMENT_TYPE_LABELS[d.type] ?? d.type} ↗
-                          </Badge>
-                        ))}
-                        {canWrite && (
-                          <div className="flex gap-3">
-                            <GenerateDocumentButton
-                              action={generateConvocationAction}
-                              parcoursId={parcours.id}
-                              hiddenFields={{ sequenceId: s.id }}
-                              label="Générer la convocation"
-                            />
-                            <form action={sendConvocationsAction}>
-                              <input type="hidden" name="sequenceId" value={s.id} />
-                              <input type="hidden" name="parcoursId" value={parcours.id} />
-                              <Button type="submit" size="sm">
-                                Envoyer les convocations
-                              </Button>
-                            </form>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        <SequencesTable
+          canWrite={canWrite}
+          parcoursId={parcours.id}
+          data={parcours.sequences.map(
+            (s): SequenceRow => ({
+              id: s.id,
+              titre: s.titre,
+              type: s.type,
+              date: s.date.toISOString(),
+              demiJournees: s.demiJournees,
+              heures: s.heures.toString(),
+              preuveType: s.preuveType,
+              lieu: s.lieu,
+              address: s.address,
+              postalCode: s.postalCode,
+              city: s.city,
+              visioLink: s.visioLink,
+              formateurName: s.formateur ? `${s.formateur.firstName} ${s.formateur.lastName}` : null,
+            }),
           )}
-        </>
+        />
       )}
 
       {activeTab === 'contractualisations' && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-5)' }}>
-            {canWrite && (
-              <Button render={<Link href={`/parcours/${parcours.id}/contractualisations/nouveau`} />} nativeButton={false} size="sm">
-                Ajouter une contractualisation
-              </Button>
-            )}
-          </div>
-
-          {parcours.contractualisations.length === 0 ? (
-            <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
-              Aucune contractualisation — le montant HT du parcours restera à 0 €.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {parcours.contractualisations.map((c) => {
-                const payerName =
-                  c.payerClient?.companyName ??
-                  (c.payerParticipant ? `${c.payerParticipant.firstName} ${c.payerParticipant.lastName}` : null) ??
-                  c.financeur?.name ??
-                  '—'
-                const paymentTrigger =
-                  c.payerType === 'INDIVIDU' && c.retractationEndsAt && parcours.dateDebut
-                    ? computePaymentTriggerDate(parcours.dateDebut, c.retractationEndsAt)
-                    : null
-                return (
-                  <Card key={c.id}>
-                    <CardContent>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                            <Badge variant="secondary">{PAYER_TYPE_LABELS[c.payerType] ?? c.payerType}</Badge>
-                            <span className="t-heading" style={{ color: 'var(--color-text-primary)' }}>
-                              {payerName}
-                            </span>
-                            <Badge variant="accent">{CONTRACTUALISATION_STATUS_LABELS[c.status] ?? c.status}</Badge>
-                          </div>
-                          <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                            {euros(c.montantHT)} HT{c.remise > 0 && <> · remise {euros(c.remise)}</>} ·{' '}
-                            {c._count.participants} participant{c._count.participants > 1 ? 's' : ''}
-                            {c.numeroEngagement && <> · engagement {c.numeroEngagement}</>}
-                          </p>
-                        </div>
-                        {canWrite && (
-                          <Button render={<Link href={`/parcours/${parcours.id}/contractualisations/${c.id}/modifier`} />} nativeButton={false} variant="ghost" size="sm">
-                            Modifier
-                          </Button>
-                        )}
-                      </div>
-
-                      {c.payerType === 'INDIVIDU' && c.retractationEndsAt && (
-                        <Badge variant="warning" style={{ marginTop: 'var(--space-3)', whiteSpace: 'normal', height: 'auto' }}>
-                          Rétractation jusqu&apos;au {new Date(c.retractationEndsAt).toLocaleDateString('fr-FR')} — aucun
-                          paiement ne peut être demandé avant.
-                          {paymentTrigger && (
-                            <> Déclenchement du paiement : {paymentTrigger.toLocaleDateString('fr-FR')} (max J-2, rétractation).</>
-                          )}
-                        </Badge>
-                      )}
-
-                      {c.financements.length > 0 && (
-                        <p className="t-caption-1" style={{ marginTop: 'var(--space-3)' }}>
-                          Financement{c.financements.length > 1 ? 's' : ''} :{' '}
-                          {c.financements.map((f) => `${f.type} (${euros(f.montantPrisEnCharge)})`).join(' · ')}
-                        </p>
-                      )}
-
-                      {canWrite && (
-                        <form action={addFinancementAction} style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-4)', alignItems: 'flex-end' }}>
-                          <input type="hidden" name="contractualisationId" value={c.id} />
-                          <input type="hidden" name="parcoursId" value={parcours.id} />
-                          <div>
-                            <label className="input-label">Type de financement</label>
-                            <select className="input" name="type" defaultValue="ENTREPRISE_DIRECTE">
-                              <option value="ENTREPRISE_DIRECTE">Entreprise directe</option>
-                              <option value="OPCO">OPCO</option>
-                              <option value="CPF">CPF</option>
-                              <option value="FONDS_PROPRES">Fonds propres</option>
-                              <option value="AUTRE">Autre</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="input-label">Montant pris en charge (€)</label>
-                            <input className="input" type="number" step="0.01" min="0" name="montantPrisEnCharge" />
-                          </div>
-                          <button type="submit" className="btn btn-sm btn-secondary">
-                            Ajouter un financement
-                          </button>
-                        </form>
-                      )}
-
-                      <div style={{ marginTop: 'var(--space-5)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border-subtle)' }}>
-                        <h3 className="t-caption-1" style={{ marginBottom: 'var(--space-3)' }}>
-                          Documents ({c.documents.length})
-                        </h3>
-
-                        {c.documents.length > 0 && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                            {c.documents.map((d) => (
-                              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                                <a href={`/api/documents/${d.id}`} target="_blank" rel="noreferrer" className="t-body-sm">
-                                  {DOCUMENT_TYPE_LABELS[d.type] ?? d.type} ↗
-                                </a>
-                                <Badge variant={d.signatureStatus === 'SIGNED' ? 'accent' : 'secondary'}>
-                                  {SIGNATURE_STATUS_LABELS[d.signatureStatus] ?? d.signatureStatus}
-                                </Badge>
-                                {d.isVoid && <Badge variant="destructive">Annulé</Badge>}
-                                {canWrite && !d.isVoid && d.signatureStatus === 'PENDING' && (
-                                  <form action={markDocumentSentAction}>
-                                    <input type="hidden" name="documentId" value={d.id} />
-                                    <input type="hidden" name="parcoursId" value={parcours.id} />
-                                    <Button type="submit" variant="ghost" size="sm">
-                                      Marquer envoyé
-                                    </Button>
-                                  </form>
-                                )}
-                                {canWrite && !d.isVoid && (d.signatureStatus === 'SENT' || d.signatureStatus === 'PENDING') && (
-                                  <form action={markDocumentSignedAction}>
-                                    <input type="hidden" name="documentId" value={d.id} />
-                                    <input type="hidden" name="parcoursId" value={parcours.id} />
-                                    <Button type="submit" variant="ghost" size="sm">
-                                      Marquer signé (simulation — pas de YouSign réel)
-                                    </Button>
-                                  </form>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {canWrite && (
-                          <div className="flex flex-wrap gap-3">
-                            <GenerateDocumentButton action={generateDevisAction} parcoursId={parcours.id} hiddenFields={{ contractualisationId: c.id }} label="Générer le devis" />
-                            <GenerateDocumentButton
-                              action={generateConventionAction}
-                              parcoursId={parcours.id}
-                              hiddenFields={{ contractualisationId: c.id }}
-                              label={c.payerType === 'INDIVIDU' ? 'Générer le contrat' : 'Générer la convention'}
-                            />
-                            <GenerateDocumentButton action={generateFactureAction} parcoursId={parcours.id} hiddenFields={{ contractualisationId: c.id }} label="Générer la facture" />
-                            <GenerateDocumentButton
-                              action={generateAttestationPackAction}
-                              parcoursId={parcours.id}
-                              hiddenFields={{ contractualisationId: c.id }}
-                              label="Attestations (ce payeur uniquement)"
-                            />
-                            <GenerateDocumentButton
-                              action={generateCertificatPackAction}
-                              parcoursId={parcours.id}
-                              hiddenFields={{ contractualisationId: c.id }}
-                              label="Certificats de réalisation"
-                            />
-                          </div>
-                        )}
-
-                        {c.payerClient?.isPublicSector && (
-                          <div style={{ marginTop: 'var(--space-4)' }}>
-                            {c.chorusProSentAt ? (
-                              <Badge variant="accent">
-                                Envoyé sur Chorus Pro le {new Date(c.chorusProSentAt).toLocaleDateString('fr-FR')}
-                              </Badge>
-                            ) : (
-                              canWrite && (
-                                <form action={markChorusProSentAction}>
-                                  <input type="hidden" name="contractualisationId" value={c.id} />
-                                  <input type="hidden" name="parcoursId" value={parcours.id} />
-                                  <Button type="submit" variant="secondary" size="sm" disabled={!c.numeroEngagement || !c.codeService}>
-                                    Marquer envoyé sur Chorus Pro (upload manuel)
-                                  </Button>
-                                </form>
-                              )
-                            )}
-                            {!c.numeroEngagement || !c.codeService ? (
-                              <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                                N° d&apos;engagement et code service requis avant facturation — voir Modifier.
-                              </p>
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
-        </>
+        <ContractualisationsTable
+          canWrite={canWrite}
+          parcoursId={parcours.id}
+          data={parcours.contractualisations.map((c): ContractualisationRow => {
+            const payerName =
+              c.payerClient?.companyName ??
+              (c.payerParticipant ? `${c.payerParticipant.firstName} ${c.payerParticipant.lastName}` : null) ??
+              c.financeur?.name ??
+              '—'
+            const paymentTrigger =
+              c.payerType === 'INDIVIDU' && c.retractationEndsAt && parcours.dateDebut
+                ? computePaymentTriggerDate(parcours.dateDebut, c.retractationEndsAt)
+                : null
+            return {
+              id: c.id,
+              payerType: c.payerType,
+              payerName,
+              status: c.status,
+              montantHT: c.montantHT,
+              participantsCount: c._count.participants,
+              isPublicSectorClient: c.payerClient?.isPublicSector ?? false,
+              numeroEngagement: c.numeroEngagement,
+              codeService: c.codeService,
+              retractationEndsAt: c.payerType === 'INDIVIDU' && c.retractationEndsAt ? c.retractationEndsAt.toISOString() : null,
+              paymentTriggerDate: paymentTrigger ? paymentTrigger.toISOString() : null,
+              financements: c.financements.map((f) => ({
+                id: f.id,
+                type: f.type,
+                financeurName: f.financeur?.name ?? null,
+                dossierNumber: f.dossierNumber,
+                montantPrisEnCharge: f.montantPrisEnCharge,
+              })),
+              documents: c.documents.map((d) => ({
+                id: d.id,
+                type: d.type,
+                signatureStatus: d.signatureStatus,
+                isVoid: d.isVoid,
+              })),
+            }
+          })}
+        />
       )}
 
       {activeTab === 'participants' && (
@@ -552,17 +394,68 @@ export default async function ParcoursDetailPage({
                         {pp.status === 'ABANDON' && pp.abandonReason && <> · {pp.abandonReason}</>}
                       </p>
                     </div>
-                    {canWrite && (
-                      <Button render={<Link href={`/parcours/${parcours.id}/participants/${pp.id}/modifier`} />} nativeButton={false} variant="ghost" size="sm">
-                        Gérer
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {canWrite && (
+                        <ParticipantConvocationMenu
+                          parcoursId={parcours.id}
+                          parcoursParticipantId={pp.id}
+                          canGenerate={!!pp.contractualisation && isContractualisationAtLeast(pp.contractualisation.status, 'CONVENTION_SIGNEE')}
+                          document={pp.documents[0] ? { id: pp.documents[0].id } : null}
+                          convocationStatus={pp.convocationStatus}
+                        />
+                      )}
+                      {canWrite && (
+                        <Button render={<Link href={`/parcours/${parcours.id}/participants/${pp.id}/modifier`} />} nativeButton={false} variant="ghost" size="sm">
+                          Gérer
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           )}
         </>
+      )}
+
+      {activeTab === 'facturation' && (
+        <FacturationTable
+          canWrite={canWrite}
+          parcoursId={parcours.id}
+          data={parcours.contractualisations.map((c): FacturationGroupRow => {
+            const payerName =
+              c.payerClient?.companyName ??
+              (c.payerParticipant ? `${c.payerParticipant.firstName} ${c.payerParticipant.lastName}` : null) ??
+              c.financeur?.name ??
+              '—'
+            return {
+              contractualisationId: c.id,
+              payerName,
+              payerType: c.payerType,
+              isPublicSectorClient: c.payerClient?.isPublicSector ?? false,
+              canCreateFacture: isContractualisationAtLeast(c.status, 'CONVENTION_SIGNEE'),
+              totalSequences: realizedSequenceCount,
+              invoicedSequences: c.factures.reduce((n, f) => n + f.sequences.length, 0),
+              factures: c.factures.map((f) => {
+                const dates = f.sequences.map((s) => s.date).sort((a, b) => a.getTime() - b.getTime())
+                const first = dates[0]
+                const last = dates[dates.length - 1]
+                const periodLabel = !first || !last ? '—' : first.getTime() === last.getTime() ? first.toLocaleDateString('fr-FR') : `${first.toLocaleDateString('fr-FR')} – ${last.toLocaleDateString('fr-FR')}`
+                return {
+                  id: f.id,
+                  montantHT: f.montantHT,
+                  sequenceCount: f.sequences.length,
+                  periodLabel,
+                  documentId: f.documents.find((d) => d.type === 'FACTURE')?.id ?? null,
+                  certificatDocumentId: f.documents.find((d) => d.type === 'CERTIFICAT_REALISATION')?.id ?? null,
+                  sentAt: f.sentAt ? f.sentAt.toISOString() : null,
+                  chorusProSentAt: f.chorusProSentAt ? f.chorusProSentAt.toISOString() : null,
+                  paidAt: f.paidAt ? f.paidAt.toISOString() : null,
+                }
+              }),
+            }
+          })}
+        />
       )}
 
       {activeTab === 'envois' && (
@@ -575,7 +468,7 @@ export default async function ParcoursDetailPage({
 
           {messages.length === 0 ? (
             <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
-              Aucun envoi pour le moment — utilisez « Envoyer les convocations » sur une séquence.
+              Aucun envoi pour le moment — utilisez « Envoyer par email » sur un participant, onglet Participants.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -622,6 +515,10 @@ export default async function ParcoursDetailPage({
             </div>
           )}
         </>
+      )}
+
+      {activeTab === 'formateurs' && canWrite && (
+        <FormateursOnParcoursTable canWrite={canWrite} parcoursId={parcours.id} data={formateurRows} />
       )}
     </>
   )

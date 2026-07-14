@@ -37,19 +37,6 @@ export type FinanceurInput = z.infer<typeof financeurInputSchema>
 export const contractualisationInputSchema = z.object({
   payerType: z.enum(['ORGANISATION', 'INDIVIDU', 'OPCO', 'DONNEUR_ORDRE']),
   payerId: z.string().trim().min(1, 'Payeur requis'),
-  status: z.enum([
-    'BROUILLON',
-    'DEVIS_ENVOYE',
-    'DEVIS_SIGNE',
-    'CONVENTION_ENVOYEE',
-    'CONVENTION_SIGNEE',
-    'FACTUREE',
-    'PAYEE',
-    'ANNULEE',
-  ]),
-  priceMode: z.enum(['FORFAIT_JOUR', 'PAR_PERSONNE', 'NEGOCIE']),
-  montantHT: z.coerce.number().int().nonnegative(), // cents
-  remise: z.coerce.number().int().nonnegative().default(0), // cents
   delaiReglement: z.coerce.number().int().nonnegative().nullable().optional(),
   numeroEngagement: z.string().trim().optional().nullable(),
   codeService: z.string().trim().optional().nullable(),

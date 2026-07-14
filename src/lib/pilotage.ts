@@ -154,10 +154,18 @@ export async function getParcoursAtRisk(alerts: Alert[]): Promise<ParcoursRisk[]
     .sort((a, b) => b.score - a.score)
 }
 
-/** Σ contractualisations.montantHT for non-cancelled contractualisations. No objective figure is invented — PANDO hasn't given one. */
+/**
+ * 🔴 CA = MONEY ACTUALLY COLLECTED, not contracted value. Σ Facture.montantHT
+ * where paidAt is set — Facture.paidAt is the ONLY payment signal in this
+ * schema (see markFacturePaid in lib/facturation.ts, which itself requires
+ * sentAt first, so "paid" already implies "sent"). Contractualisation.montantHT
+ * is a different number entirely (derived from séquence list prices, moves the
+ * moment a séquence is priced — long before any invoice exists, let alone is
+ * paid) and must never be conflated with CA again.
+ */
 export async function getCaTotal(): Promise<number> {
-  const agg = await db.contractualisation.aggregate({
-    where: { status: { not: 'ANNULEE' } },
+  const agg = await db.facture.aggregate({
+    where: { paidAt: { not: null } },
     _sum: { montantHT: true },
   })
   return agg._sum.montantHT ?? 0
@@ -208,18 +216,17 @@ function trailingMonths(count: number): { start: Date; end: Date; label: string 
 }
 
 /**
- * CA contractualisé par mois — bucketed by Contractualisation.createdAt (when
- * the deal entered the system), NOT a revenue-recognition date. No accounting
- * policy is asserted here; this is "when contracted," clearly labeled as such
- * wherever it renders, not "recognized revenue" (that's an accountant's call,
- * same caution as formateurDayCost's VAT-deductibility note above).
+ * CA encaissé par mois — bucketed by Facture.paidAt (when the money actually
+ * arrived), matching getCaTotal()'s cash basis. No accounting policy beyond
+ * that is asserted here (that's an accountant's call, same caution as
+ * formateurDayCost's VAT-deductibility note above).
  */
 export async function getMonthlyCaSeries(months = 5): Promise<MonthlyPoint[]> {
   const buckets = trailingMonths(months)
   const results = await Promise.all(
     buckets.map(({ start, end }) =>
-      db.contractualisation.aggregate({
-        where: { status: { not: 'ANNULEE' }, createdAt: { gte: start, lt: end } },
+      db.facture.aggregate({
+        where: { paidAt: { gte: start, lt: end } },
         _sum: { montantHT: true },
       }),
     ),

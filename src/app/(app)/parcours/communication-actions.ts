@@ -2,14 +2,14 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/authz'
-import { sendConvocations, simulateDelivery } from '@/lib/communication'
+import { sendParticipantConvocation, simulateDelivery } from '@/lib/communication'
 
-export async function sendConvocationsAction(formData: FormData) {
+export async function sendParticipantConvocationAction(formData: FormData) {
   await requireAdmin()
-  const sequenceId = String(formData.get('sequenceId') ?? '')
+  const parcoursParticipantId = String(formData.get('parcoursParticipantId') ?? '')
   const parcoursId = String(formData.get('parcoursId') ?? '')
-  if (!sequenceId) return
-  await sendConvocations(sequenceId)
+  if (!parcoursParticipantId) return
+  await sendParticipantConvocation(parcoursParticipantId)
   revalidatePath(`/parcours/${parcoursId}`)
 }
 

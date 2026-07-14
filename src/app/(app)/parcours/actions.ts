@@ -14,7 +14,10 @@ import {
 import {
   createContractualisation,
   updateContractualisation,
+  cancelContractualisation,
   addFinancement,
+  updateFinancement,
+  deleteFinancement,
   enrollParticipant,
   updateParcoursParticipant,
 } from '@/lib/participant'
@@ -23,6 +26,14 @@ import { toCents } from '@/lib/money'
 function parseEuros(raw: FormDataEntryValue | null): string {
   const s = String(raw ?? '').trim()
   if (!s) return '0'
+  const n = Number(s)
+  return String(Number.isNaN(n) ? 0 : toCents(n))
+}
+
+/** Unlike parseEuros, blank stays blank — 0€ and "not priced at all" must stay distinguishable. */
+function parseOptionalEuros(raw: FormDataEntryValue | null): string | null {
+  const s = String(raw ?? '').trim()
+  if (!s) return null
   const n = Number(s)
   return String(Number.isNaN(n) ? 0 : toCents(n))
 }
@@ -112,10 +123,12 @@ function formDataToSequenceInput(formData: FormData) {
     date: String(formData.get('date') ?? ''),
     demiJournees: formData.getAll('demiJournees').map(String),
     heures: String(formData.get('heures') ?? ''),
+    montantHT: parseOptionalEuros(formData.get('montantHT')),
     lieu: optionalText(formData, 'lieu'),
     address: optionalText(formData, 'address'),
     postalCode: optionalText(formData, 'postalCode'),
     city: optionalText(formData, 'city'),
+    visioLink: optionalText(formData, 'visioLink'),
     preuveType: String(formData.get('preuveType') ?? 'SIGNATURE'),
     formateurId: optionalText(formData, 'formateurId'),
   }
@@ -182,10 +195,6 @@ function formDataToContractualisationInput(formData: FormData) {
   return {
     payerType: String(formData.get('payerType') ?? 'ORGANISATION'),
     payerId: String(formData.get('payerId') ?? ''),
-    status: String(formData.get('status') ?? 'BROUILLON'),
-    priceMode: String(formData.get('priceMode') ?? 'FORFAIT_JOUR'),
-    montantHT: parseEuros(formData.get('montantHT')),
-    remise: parseEuros(formData.get('remise')),
     delaiReglement: optionalText(formData, 'delaiReglement'),
     numeroEngagement: optionalText(formData, 'numeroEngagement'),
     codeService: optionalText(formData, 'codeService'),
@@ -235,21 +244,79 @@ export async function updateContractualisationAction(
   redirect(`/parcours/${parcoursId}?tab=contractualisations`)
 }
 
-export async function addFinancementAction(formData: FormData) {
+export async function cancelContractualisationAction(formData: FormData) {
   await requireAdmin()
-  const contractualisationId = String(formData.get('contractualisationId') ?? '')
+  const id = String(formData.get('id') ?? '')
   const parcoursId = String(formData.get('parcoursId') ?? '')
-  if (!contractualisationId) return
+  if (!id) return
+  await cancelContractualisation(id)
+  revalidatePath(`/parcours/${parcoursId}`)
+}
 
-  const parsed = financementInputSchema.safeParse({
+export type FinancementActionState = {
+  formError?: string
+  fieldErrors?: Record<string, string[]>
+} | null
+
+function formDataToFinancementInput(formData: FormData) {
+  return {
     type: String(formData.get('type') ?? 'AUTRE'),
     financeurId: optionalText(formData, 'financeurId'),
     dossierNumber: optionalText(formData, 'dossierNumber'),
     montantPrisEnCharge: parseEuros(formData.get('montantPrisEnCharge')),
-  })
-  if (!parsed.success) return
+  }
+}
 
-  await addFinancement(contractualisationId, parsed.data)
+export async function addFinancementAction(
+  _prevState: FinancementActionState,
+  formData: FormData,
+): Promise<FinancementActionState> {
+  await requireAdmin()
+  const contractualisationId = String(formData.get('contractualisationId') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!contractualisationId || !parcoursId) return { formError: 'Contractualisation introuvable.' }
+
+  const parsed = financementInputSchema.safeParse(formDataToFinancementInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await addFinancement(contractualisationId, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=contractualisations`)
+}
+
+export async function updateFinancementAction(
+  _prevState: FinancementActionState,
+  formData: FormData,
+): Promise<FinancementActionState> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id || !parcoursId) return { formError: 'Financement introuvable.' }
+
+  const parsed = financementInputSchema.safeParse(formDataToFinancementInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await updateFinancement(id, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=contractualisations`)
+}
+
+export async function deleteFinancementAction(formData: FormData) {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id) return
+  await deleteFinancement(id)
   revalidatePath(`/parcours/${parcoursId}`)
 }
 

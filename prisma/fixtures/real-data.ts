@@ -22,7 +22,7 @@
 
 import { PrismaClient } from '@prisma/client'
 import { buildSnapshot, formationWithSpecialite } from '@/lib/formation'
-import { recomputeParcoursDerived, recomputeParcoursMontant } from '@/lib/parcours'
+import { recomputeParcoursDerived, recomputeMontants } from '@/lib/parcours'
 
 const db = new PrismaClient()
 
@@ -296,6 +296,13 @@ async function scenarioBam(formationVersionId: string) {
  * 🔴 Groupe Cassous must NEVER receive Enedis's employee's attestation.
  *    Documents are scoped to the CONTRACTUALISATION, never to the PARCOURS.
  *    The legacy process doc instructs the opposite. Do not follow it.
+ *
+ * 🟡 FOLLOW-UP (flagged, not decided here): under v1.6 every payer's
+ *    montantHT is now Σ the parcours's séquence prices, and BAM!'s 9
+ *    séquences (scenarioBam, above) are currently unpriced — so all 4
+ *    contracts below land at 0€ instead of their old differentiated
+ *    per-seat amounts. Left as-is deliberately pending a real pricing
+ *    decision for this demo scenario.
  */
 async function scenarioMixedPayer(parcoursId: string) {
   const payers = [
@@ -320,8 +327,9 @@ async function scenarioMixedPayer(parcoursId: string) {
         payerType: 'ORGANISATION',
         payerClientId: client.id, // CHECK 8: exactly one payer target
         status: 'CONVENTION_SIGNEE',
-        priceMode: 'PAR_PERSONNE',
-        montantHT: p.seats * 178_500, // 1 785 € HT per seat, in cents
+        // montantHT is left at its default — recomputeMontants() below derives
+        // it (and every other non-cancelled contract's) from the parcours's
+        // séquences right after the loop, same figure for every payer now.
         financements: { create: { type: p.fin, montantPrisEnCharge: p.seats * 178_500 } },
       },
     })
@@ -343,10 +351,10 @@ async function scenarioMixedPayer(parcoursId: string) {
     }
   }
 
-  await recomputeParcoursMontant(parcoursId)
+  await recomputeMontants(parcoursId)
 
   const sum = await db.contractualisation.aggregate({ where: { parcoursId }, _sum: { montantHT: true } })
-  log.ok(`Bordeaux — 7 participants · 4 payeurs · 3 origines de financement · Σ ${(sum._sum.montantHT ?? 0) / 100} € (dérivé)`)
+  log.ok(`Bordeaux — 7 participants · 4 payeurs · 3 origines de financement · chacun affiche ${(sum._sum.montantHT ?? 0) / 100 / payers.length} € (dérivé des séquences, identique pour tous)`)
 }
 
 /** CLIC! — three séquences of ONE demi-journée each. requiresFullCohort. */

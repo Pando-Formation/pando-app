@@ -43,7 +43,7 @@ export default async function Home() {
 
   const stats: FinancialStat[] = [
     {
-      label: 'CA (HT, non annulé)',
+      label: 'CA encaissé (HT)',
       value: euros(ca),
       deltaPct: caDeltaPct,
       deltaLabel: 'vs mois précédent',

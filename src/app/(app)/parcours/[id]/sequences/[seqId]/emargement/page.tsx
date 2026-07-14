@@ -50,6 +50,14 @@ export default async function EmargementPage({ params }: { params: Promise<{ id:
         {(sequence.address || sequence.postalCode || sequence.city) && (
           <> · {[sequence.address, [sequence.postalCode, sequence.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</>
         )}
+        {sequence.visioLink && (
+          <>
+            {' · '}
+            <a href={sequence.visioLink} target="_blank" rel="noreferrer">
+              Rejoindre la visio ↗
+            </a>
+          </>
+        )}
         {sequence.formateur && (
           <>
             {' '}
@@ -83,7 +91,7 @@ export default async function EmargementPage({ params }: { params: Promise<{ id:
           const incomplete = snapshot.requiresFullCohort && absentCount > 0
 
           return (
-            <div key={dj} style={{ marginBottom: 'var(--space-9)' }}>
+            <div key={dj} id={`dj-${dj}`} style={{ marginBottom: 'var(--space-9)', scrollMarginTop: 'var(--space-6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
                 <h2 className="t-heading">{DEMI_JOURNEE_LABELS[dj] ?? dj}</h2>
                 <span className="badge badge-neutral">

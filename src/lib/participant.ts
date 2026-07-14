@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { recomputeParcoursMontant } from '@/lib/parcours'
+import { recomputeMontants } from '@/lib/parcours'
 import type {
   ParticipantInput,
   FinanceurInput,
@@ -86,10 +86,7 @@ export async function createContractualisation(parcoursId: string, input: Contra
         parcoursId,
         payerType: input.payerType,
         ...target,
-        status: input.status,
-        priceMode: input.priceMode,
-        montantHT: input.montantHT,
-        remise: input.remise,
+        status: 'BROUILLON',
         delaiReglement: input.delaiReglement ?? null,
         numeroEngagement: input.numeroEngagement ?? null,
         codeService: input.codeService ?? null,
@@ -97,7 +94,10 @@ export async function createContractualisation(parcoursId: string, input: Contra
         retractationEndsAt: input.payerType === 'INDIVIDU' ? computeRetractationEndsAt() : null,
       },
     })
-    await recomputeParcoursMontant(parcoursId, tx)
+    // 🔴 v1.6 — montantHT is derived (the contract = all the parcours's
+    // séquences), so a brand-new contractualisation must immediately mirror
+    // the current séquence total instead of starting at 0.
+    await recomputeMontants(parcoursId, tx)
     return created
   })
   return contract
@@ -113,10 +113,6 @@ export async function updateContractualisation(id: string, input: Contractualisa
       data: {
         payerType: input.payerType,
         ...target,
-        status: input.status,
-        priceMode: input.priceMode,
-        montantHT: input.montantHT,
-        remise: input.remise,
         delaiReglement: input.delaiReglement ?? null,
         numeroEngagement: input.numeroEngagement ?? null,
         codeService: input.codeService ?? null,
@@ -124,9 +120,22 @@ export async function updateContractualisation(id: string, input: Contractualisa
           input.payerType === 'INDIVIDU' ? (existing.retractationEndsAt ?? computeRetractationEndsAt()) : null,
       },
     })
-    await recomputeParcoursMontant(existing.parcoursId, tx)
+    // No montant recompute here — editing payer/délai/etc. never changes the
+    // price; it only ever moves when a séquence's price does (see lib/parcours.ts).
     return updated
   })
+}
+
+/// 🔴 A contractualisation is never hard-deleted — it can already carry real
+/// documents (devis/factures/conventions) and enrolled participants, neither
+/// of which cascade-delete from it. Cancelling sets status ANNULEE and is
+/// otherwise a no-op on montants: Parcours.montantHT is the séquences'
+/// value now, not a sum of active deals, so it doesn't move when a payer
+/// cancels. The cancelled contractualisation's own montantHT is simply
+/// frozen at whatever it last was — recomputeMontants only ever touches
+/// non-cancelled rows going forward.
+export async function cancelContractualisation(id: string) {
+  return db.contractualisation.update({ where: { id }, data: { status: 'ANNULEE' } })
 }
 
 export async function addFinancement(contractualisationId: string, input: FinancementInput) {
@@ -139,6 +148,22 @@ export async function addFinancement(contractualisationId: string, input: Financ
       montantPrisEnCharge: input.montantPrisEnCharge,
     },
   })
+}
+
+export async function updateFinancement(id: string, input: FinancementInput) {
+  return db.financement.update({
+    where: { id },
+    data: {
+      type: input.type,
+      financeurId: input.financeurId ?? null,
+      dossierNumber: input.dossierNumber ?? null,
+      montantPrisEnCharge: input.montantPrisEnCharge,
+    },
+  })
+}
+
+export async function deleteFinancement(id: string) {
+  return db.financement.delete({ where: { id } })
 }
 
 export async function enrollParticipant(parcoursId: string, input: EnrollParticipantInput) {

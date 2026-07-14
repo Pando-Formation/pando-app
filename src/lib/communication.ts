@@ -33,38 +33,36 @@ async function getOrCreateConvocationBatch(parcoursId: string) {
   return batch
 }
 
-export async function sendConvocations(sequenceId: string) {
-  const sequence = await db.sequence.findUniqueOrThrow({
-    where: { id: sequenceId },
-    include: { parcours: { include: { participants: { include: { participant: true } } } } },
+/**
+ * 🔴 One participant, one message — not a parcours-wide broadcast. The old
+ * per-séquence version of this function bulk-`updateMany`d convocationStatus
+ * across every participant of the parcours regardless of who was actually
+ * being sent to; this version updates exactly the one row it sent to.
+ */
+export async function sendParticipantConvocation(parcoursParticipantId: string) {
+  const pp = await db.parcoursParticipant.findUniqueOrThrow({
+    where: { id: parcoursParticipantId },
+    include: { participant: true },
   })
-  const batch = await getOrCreateConvocationBatch(sequence.parcoursId)
+  const batch = await getOrCreateConvocationBatch(pp.parcoursId)
 
   const now = new Date()
-  const created = await db.$transaction(
-    sequence.parcours.participants.map((pp) =>
-      db.communicationMessage.create({
-        data: {
-          sequenceId: batch.id,
-          recipientEmail: pp.participant.email,
-          subject: `Convocation — ${sequence.titre}`,
-          body: `Vous êtes convoqué·e à la séquence "${sequence.titre}" le ${sequence.date.toLocaleDateString('fr-FR')}.`,
-          scheduledFor: now,
-          sentAt: now,
-          deliveryStatus: 'SENT',
-        },
-      }),
-    ),
-  )
+  const [message] = await db.$transaction([
+    db.communicationMessage.create({
+      data: {
+        sequenceId: batch.id,
+        recipientEmail: pp.participant.email,
+        subject: 'Convocation — parcours',
+        body: `Vous êtes convoqué·e aux séquences de votre parcours de formation. Vous trouverez le calendrier complet en pièce jointe.`,
+        scheduledFor: now,
+        sentAt: now,
+        deliveryStatus: 'SENT',
+      },
+    }),
+    db.parcoursParticipant.update({ where: { id: parcoursParticipantId }, data: { convocationStatus: 'SENT' } }),
+  ])
 
-  // Each ParcoursParticipant tracks its own convocationStatus (Slice 5's
-  // per-participant state machine) — mirror the send here.
-  await db.parcoursParticipant.updateMany({
-    where: { id: { in: sequence.parcours.participants.map((pp) => pp.id) } },
-    data: { convocationStatus: 'SENT' },
-  })
-
-  return created
+  return message
 }
 
 type SimulatedOutcome = 'DELIVERED' | 'HARD_BOUNCE' | 'SOFT_BOUNCE' | 'OPENED'

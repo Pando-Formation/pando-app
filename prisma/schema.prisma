@@ -523,6 +523,8 @@ model Formateur {
   competences FormateurCompetence[]
   sequences   Sequence[]
   evaluations Evaluation[]
+  /// Conventions de sous-traitance generated for this formateur (see Document.formateurId).
+  documents   Document[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -661,12 +663,6 @@ enum ParcoursStatus {
   ANNULE
 }
 
-enum PriceMode {
-  FORFAIT_JOUR // day rate × days × sessions
-  PAR_PERSONNE // inter
-  NEGOCIE // appels d'offre
-}
-
 /// What is SOLD, CONTRACTED, INVOICED, CERTIFIED.
 /// A single startDate/endDate CANNOT express OPTA'S (6 séquences, June 2026 →
 /// March 2027) or BAM! (10 events, 4 modalities, 9 weeks). Hence Sequence[].
@@ -781,12 +777,20 @@ model Sequence {
   demiJournees DemiJournee[] /// 🔴 THE LEGAL UNIT. A 7h day = MATIN + APRES_MIDI.
   ///                            CLIC! is three séquences of ONE demi-journée each.
   heures       Decimal       @db.Decimal(5, 2)
+  /// 🔴 Optional list price for THIS séquence — free-text, opt-in (most
+  /// séquences won't have one). Never summed automatically into
+  /// Contractualisation/Parcours/Facture totals — it only ever suggests a
+  /// default when creating a Facture that covers this séquence.
+  montantHT    Int? /// euro cents
   lieu         String?
   /// Postal address of the lieu — only meaningful for PRESENTIEL, surfaced on
   /// the convocation so participants know where to show up.
   address      String?
   postalCode   String?
   city         String?
+  /// Videoconference URL — only meaningful for DISTANCIEL, surfaced on the
+  /// convocation so participants know where to connect.
+  visioLink    String?
   preuveType   PreuveType
 
   /// 🔴 PER SEQUENCE. A 15-week POP! may involve several formateurs, and the
@@ -806,11 +810,17 @@ model Sequence {
   defiSubmissions DefiSubmission[]
   compteRendus    CompteRendu[]
 
+  /// 🔴 A séquence belongs to AT MOST ONE invoice, ever — this relation shape
+  /// IS the double-billing guard, not application logic layered on top.
+  facture   Facture? @relation(fields: [factureId], references: [id])
+  factureId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([parcoursId, ordre])
   @@index([date])
+  @@index([factureId])
 }
 
 /// 🔴 Confidentiality is a ROW-LEVEL access boundary, not a UI toggle.
@@ -905,12 +915,13 @@ model Contractualisation {
 
   status ContractualisationStatus @default(BROUILLON)
 
-  /// 🔴 v1.4 — THE DEAL LIVES HERE, not on Parcours.
-  /// Groupe Cassous buys 4 seats and negotiates a discount; Cabinet Mérignac
-  /// buys 1 and does not. One parcours, several prices.
-  priceMode      PriceMode @default(FORFAIT_JOUR)
-  montantHT      Int       @default(0) /// euro cents — PANDO never charges VAT
-  remise         Int       @default(0) /// euro cents
+  /// 🔴 v1.6 — DERIVED, not entered. The contract = all the parcours's
+  /// séquences: montantHT mirrors the sum of Sequence.montantHT (see
+  /// recomputeMontants in lib/parcours.ts), recomputed whenever a séquence's
+  /// price changes or a new contractualisation is created. Every non-
+  /// cancelled contractualisation on the same parcours shows the same
+  /// figure — there is no more per-payer negotiated amount.
+  montantHT      Int  @default(0) /// euro cents — PANDO never charges VAT
   delaiReglement Int? /// overrides Parcours default
 
   /// 🔴 PUBLIC SECTOR (Chorus Pro). Public procurement does not sign devis —
@@ -932,12 +943,41 @@ model Contractualisation {
   participants ParcoursParticipant[]
   /// 🔴 v1.4 — see Financement. The funding route belongs to the PAYER.
   financements Financement[]
+  /// 🔴 v1.5 — many invoices over the life of the parcours, not one. See Facture.
+  factures     Facture[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([parcoursId])
   @@index([status])
+}
+
+/// 🔴 v1.5 — RECURRING INVOICING. A contractualisation is billed progressively
+/// as séquences are delivered (typically monthly), not once as a lump sum —
+/// this record IS one invoice, hand-scoped by the admin to a subset of
+/// already-delivered séquences with a hand-entered montant. No stored status
+/// enum: a hand-settable status field was the root cause of an earlier
+/// "disorder" bug in this app (see the contractualisation pipeline gating),
+/// so status here is DERIVED from documents/sentAt/chorusProSentAt/paidAt.
+model Facture {
+  id                   String             @id @default(uuid())
+  contractualisation   Contractualisation @relation(fields: [contractualisationId], references: [id], onDelete: Cascade)
+  contractualisationId String
+
+  montantHT Int /// euro cents — hand-entered, never computed from séquences
+
+  sequences Sequence[]
+  documents Document[]
+
+  sentAt          DateTime?
+  chorusProSentAt DateTime? /// public-sector send — also counts as "sent"
+  paidAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contractualisationId])
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1049,6 +1089,9 @@ model ParcoursParticipant {
   carnetEntries   CarnetEntry[] /// ⚙ digital Carnet → the richest evidence PANDO has
   planAction      PlanAction? /// ⚙ plan d'action 90 jours
   defiSubmissions DefiSubmission[] /// ⚙ défis intersession
+
+  /// The per-participant convocation (see Document.parcoursParticipantId).
+  documents Document[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1243,12 +1286,24 @@ model Document {
   id   String       @id @default(uuid())
   type DocumentType
 
-  parcours             Parcours?           @relation(fields: [parcoursId], references: [id])
-  parcoursId           String?
-  sequence             Sequence?           @relation(fields: [sequenceId], references: [id])
-  sequenceId           String?
-  contractualisation   Contractualisation? @relation(fields: [contractualisationId], references: [id])
-  contractualisationId String?
+  parcours              Parcours?            @relation(fields: [parcoursId], references: [id])
+  parcoursId            String?
+  sequence              Sequence?            @relation(fields: [sequenceId], references: [id])
+  sequenceId            String?
+  contractualisation    Contractualisation?  @relation(fields: [contractualisationId], references: [id])
+  contractualisationId  String?
+  /// 🔴 Scopes a CONVOCATION to the one participant it's addressed to.
+  parcoursParticipant   ParcoursParticipant? @relation(fields: [parcoursParticipantId], references: [id])
+  parcoursParticipantId String?
+  /// 🔴 Scopes a FACTURE to the specific invoice it was generated for — a
+  /// contractualisation accrues many of these over the parcours.
+  facture               Facture?             @relation(fields: [factureId], references: [id])
+  factureId             String?
+  /// 🔴 Scopes a CONVENTION_SOUS_TRAITANCE to the formateur it was generated
+  /// for — paired with parcoursId, since it covers every séquence that
+  /// formateur is assigned to on that one parcours, not a single FK entity.
+  formateur             Formateur?           @relation(fields: [formateurId], references: [id])
+  formateurId           String?
 
   /// 🔴 Provenance.
   template          DocumentTemplate? @relation(fields: [templateVersionId], references: [id])
@@ -1295,6 +1350,9 @@ model Document {
 
   @@index([parcoursId])
   @@index([type])
+  @@index([parcoursParticipantId])
+  @@index([factureId])
+  @@index([formateurId])
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

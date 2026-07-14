@@ -5,11 +5,13 @@
  *  Exercises the real domain logic (src/lib/participant.ts) directly against
  *  the Slice 5 acceptance criteria: seven participants under four
  *  contractualisations with three funding origins on one parcours,
- *  Parcours.montantHT derived as Σ contractualisations, remise living on the
- *  contractualisation (not the parcours), the 10-day rétractation window
- *  computed — never entered — for a self-funding individual, the max(J-2,
- *  rétractation) payment trigger, and the accessibility chain (declared →
- *  référent → adaptation → traced).
+ *  Parcours.montantHT and every non-cancelled Contractualisation.montantHT
+ *  derived from Σ the parcours's séquences (v1.6 — "the contract = all the
+ *  séquences": every payer mirrors the same total, cancelling one never
+ *  moves the parcours figure), the 10-day rétractation window computed —
+ *  never entered — for a self-funding individual, the max(J-2, rétractation)
+ *  payment trigger, and the accessibility chain (declared → référent →
+ *  adaptation → traced).
  *
  *  Deliberately separate from real-data.ts. Own cleanup, scoped to
  *  reference/email prefixed VERIFY5-.
@@ -32,6 +34,7 @@ import {
   createParticipant,
   createFinanceur,
   createContractualisation,
+  cancelContractualisation,
   addFinancement,
   enrollParticipant,
   updateParcoursParticipant,
@@ -121,16 +124,17 @@ async function main() {
       date: '2026-09-14',
       demiJournees: ['MATIN', 'APRES_MIDI'],
       heures: '7',
+      montantHT: 714_000, // 🔴 v1.6 — the contract = all the séquences: this IS the parcours's total now.
       preuveType: 'SIGNATURE',
     }),
   )
 
   // ── 1. Bordeaux Inter — 7 participants, 4 payers, 3 funding origins ──────
   const payers = [
-    { name: `${PREFIX}Groupe Cassous`, seats: 4, remise: '10000', fin: 'OPCO' as const },
-    { name: `${PREFIX}Cabinet Mérignac`, seats: 1, remise: '0', fin: 'ENTREPRISE_DIRECTE' as const },
-    { name: `${PREFIX}Bordeaux Métropole`, seats: 1, remise: '0', fin: 'AUTRE' as const },
-    { name: `${PREFIX}Enedis Sud-Ouest`, seats: 1, remise: '0', fin: 'OPCO' as const },
+    { name: `${PREFIX}Groupe Cassous`, seats: 4, fin: 'OPCO' as const },
+    { name: `${PREFIX}Cabinet Mérignac`, seats: 1, fin: 'ENTREPRISE_DIRECTE' as const },
+    { name: `${PREFIX}Bordeaux Métropole`, seats: 1, fin: 'AUTRE' as const },
+    { name: `${PREFIX}Enedis Sud-Ouest`, seats: 1, fin: 'OPCO' as const },
   ]
 
   const contractIds: string[] = []
@@ -144,9 +148,6 @@ async function main() {
         payerType: 'ORGANISATION',
         payerId: client.id,
         status: 'CONVENTION_SIGNEE',
-        priceMode: 'PAR_PERSONNE',
-        montantHT: String(p.seats * 178_500),
-        remise: p.remise,
         delaiReglement: '30',
       }),
     )
@@ -189,18 +190,56 @@ async function main() {
     'Bordeaux Inter — 3 distinct funding origins (OPCO, ENTREPRISE_DIRECTE, AUTRE) on one parcours',
   )
 
-  // ── 2. Parcours.montantHT = Σ contractualisations, read-only ─────────────
-  const expectedSum = payers.reduce((acc, p) => acc + p.seats * 178_500, 0)
+  // ── 2. Parcours.montantHT = Σ séquences, read-only ────────────────────────
+  const SEQ_TOTAL = 714_000
   assert(
-    reloaded.montantHT === expectedSum,
-    `Parcours.montantHT (${reloaded.montantHT}) = Σ contractualisations (${expectedSum}), derived after every create`,
+    reloaded.montantHT === SEQ_TOTAL,
+    `Parcours.montantHT (${reloaded.montantHT}) = Σ séquences' montantHT (${SEQ_TOTAL}), derived from the séquences, not summed across payers`,
   )
 
-  // ── 3. remise lives on the contractualisation, not the parcours ──────────
-  const cassous = reloaded.contractualisations.find((c) => c.montantHT === 4 * 178_500)!
-  const merignac = reloaded.contractualisations.find((c) => c.montantHT === 178_500 && c.remise === 0)!
-  assert(cassous.remise === 10_000, 'Groupe Cassous — 100€ remise on its OWN contractualisation')
-  assert(merignac.remise === 0, 'Cabinet Mérignac — no remise, same parcours, same programme, different deal')
+  // ── 3. THE CONTRACT = ALL THE SÉQUENCES — every payer mirrors the SAME total,
+  // whether they bought 4 seats (Groupe Cassous) or 1 (the other three).
+  assert(
+    reloaded.contractualisations.every((c) => c.montantHT === SEQ_TOTAL),
+    'Every payer on this parcours shows the IDENTICAL séquence-derived montantHT — no more per-payer negotiated amount',
+  )
+
+  // ── 3b. Pricing a further séquence recomputes EVERY non-cancelled payer's
+  // montantHT together, in lockstep with Parcours.montantHT ─────────────────
+  await addSequence(
+    parcours.id,
+    sequenceInputSchema.parse({
+      ordre: '2',
+      titre: 'Jour 2',
+      type: 'PRESENTIEL',
+      date: '2026-09-15',
+      demiJournees: ['MATIN', 'APRES_MIDI'],
+      heures: '7',
+      montantHT: 178_500,
+      preuveType: 'SIGNATURE',
+    }),
+  )
+  const NEW_TOTAL = SEQ_TOTAL + 178_500
+  const afterSecondSequence = await db.parcours.findUniqueOrThrow({
+    where: { id: parcours.id },
+    include: { contractualisations: true },
+  })
+  assert(afterSecondSequence.montantHT === NEW_TOTAL, 'Pricing a second séquence updates Parcours.montantHT to the new sum')
+  assert(
+    afterSecondSequence.contractualisations.every((c) => c.montantHT === NEW_TOTAL),
+    'The same new total propagates to every non-cancelled contractualisation on the parcours',
+  )
+
+  // ── 3c. Cancelling a payer freezes ITS montantHT but never moves the
+  // parcours total — it is the séquences' value, not a sum of active deals ──
+  await cancelContractualisation(contractIds[0]!)
+  const afterCancel = await db.parcours.findUniqueOrThrow({
+    where: { id: parcours.id },
+    include: { contractualisations: true },
+  })
+  assert(afterCancel.montantHT === NEW_TOTAL, 'Cancelling a contractualisation leaves Parcours.montantHT unaffected')
+  const cancelled = afterCancel.contractualisations.find((c) => c.id === contractIds[0])!
+  assert(cancelled.status === 'ANNULEE' && cancelled.montantHT === NEW_TOTAL, "The cancelled contractualisation's montantHT stays frozen at its last value")
 
   // ── 4. Intra has one contractualisation, inter has clientId = null ───────
   assert(reloaded.clientId === null, 'Inter parcours has NO client — payers live on Contractualisation')
@@ -238,9 +277,6 @@ async function main() {
       payerType: 'INDIVIDU',
       payerId: sarah.id,
       status: 'BROUILLON',
-      priceMode: 'PAR_PERSONNE',
-      montantHT: '178500',
-      remise: '0',
     }),
   )
   assert(individuContract.retractationEndsAt !== null, 'INDIVIDU contractualisation gets a retractationEndsAt — never null')
@@ -339,9 +375,6 @@ async function main() {
       payerType: 'OPCO',
       payerId: financeur.id,
       status: 'BROUILLON',
-      priceMode: 'FORFAIT_JOUR',
-      montantHT: '178500',
-      remise: '0',
     }),
   )
   assert(opcoContract.financeurId === financeur.id && opcoContract.payerClientId === null, 'OPCO payer resolves to financeurId, not payerClientId')

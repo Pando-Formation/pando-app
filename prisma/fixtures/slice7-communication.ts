@@ -13,6 +13,12 @@
  *  green state, HARD_BOUNCE is always red, and nothing renders green from
  *  a bare SENT with no webhook confirmation.
  *
+ *  🔴 Sending is per-participant now (sendParticipantConvocation), not a
+ *  bulk per-séquence broadcast — the old version bulk-`updateMany`d every
+ *  enrolled participant's convocationStatus to SENT regardless of who was
+ *  actually sent to. This fixture explicitly checks that sending to ONE
+ *  participant never marks any other participant as sent.
+ *
  *  Deliberately separate from real-data.ts. Own cleanup, scoped to
  *  reference prefixed VERIFY7-.
  *
@@ -22,11 +28,11 @@
 
 import { db } from '@/lib/db'
 import { createFormationWithVersion } from '@/lib/formation'
-import { parcoursInputSchema, sequenceInputSchema } from '@/lib/validation/parcours'
-import { createParcours, addSequence } from '@/lib/parcours'
+import { parcoursInputSchema } from '@/lib/validation/parcours'
+import { createParcours } from '@/lib/parcours'
 import { participantInputSchema } from '@/lib/validation/participant'
 import { createParticipant, enrollParticipant } from '@/lib/participant'
-import { sendConvocations, simulateDelivery } from '@/lib/communication'
+import { sendParticipantConvocation, simulateDelivery } from '@/lib/communication'
 import { deliveryStatusBadgeClass } from '@/lib/communication-labels'
 
 const log = {
@@ -100,18 +106,6 @@ async function main() {
       delaiReglement: '30',
     }),
   )
-  const sequence = await addSequence(
-    parcours.id,
-    sequenceInputSchema.parse({
-      ordre: '1',
-      titre: 'Jour 1',
-      type: 'PRESENTIEL',
-      date: '2026-09-14',
-      demiJournees: ['MATIN', 'APRES_MIDI'],
-      heures: '7',
-      preuveType: 'SIGNATURE',
-    }),
-  )
 
   const deadAddressParticipant = await createParticipant(
     participantInputSchema.parse({
@@ -121,25 +115,37 @@ async function main() {
       situation: 'SALARIE',
     }),
   )
-  await enrollParticipant(parcours.id, { participantId: deadAddressParticipant.id, contractualisationId: null })
+  const deadPp = await enrollParticipant(parcours.id, { participantId: deadAddressParticipant.id, contractualisationId: null })
 
+  const goodPpIds: string[] = []
   for (let i = 1; i <= 7; i++) {
     const p = await createParticipant(
       participantInputSchema.parse({ firstName: `Good${i}`, lastName: 'Address', email: `good${i}${EMAIL_DOMAIN}`, situation: 'SALARIE' }),
     )
-    await enrollParticipant(parcours.id, { participantId: p.id, contractualisationId: null })
+    const pp = await enrollParticipant(parcours.id, { participantId: p.id, contractualisationId: null })
+    goodPpIds.push(pp.id)
   }
 
-  // ── 1. Alexandra clicks "Envoyer les convocations" — 8 go out ────────────
-  const sent = await sendConvocations(sequence.id)
-  assert(sent.length === 8, 'Eight convocations go out — one CommunicationMessage per enrolled participant')
-  assert(sent.every((m) => m.deliveryStatus === 'SENT'), 'Every message starts SENT — dispatch is not delivery')
+  // ── 1. 🔴 Sending to ONE participant never marks any other as sent ───────
+  const deadMessage = await sendParticipantConvocation(deadPp.id)
+  assert(deadMessage.deliveryStatus === 'SENT', 'The message starts SENT — dispatch is not delivery')
+  const deadPpAfter = await db.parcoursParticipant.findUniqueOrThrow({ where: { id: deadPp.id } })
+  assert(deadPpAfter.convocationStatus === 'SENT', "The sent-to participant's own convocationStatus mirrors the send")
+  const othersStillPending = await db.parcoursParticipant.findMany({ where: { id: { in: goodPpIds } } })
+  assert(
+    othersStillPending.every((pp) => pp.convocationStatus === 'PENDING'),
+    'Sending to one participant does NOT mark every other participant as sent — the old bulk-update bug is fixed',
+  )
 
-  const ppAfterSend = await db.parcoursParticipant.findMany({ where: { parcoursId: parcours.id } })
-  assert(ppAfterSend.every((pp) => pp.convocationStatus === 'SENT'), "Each participant's convocationStatus mirrors the send")
+  // ── 2. Alexandra sends to the seven good addresses individually ──────────
+  const goodMessages = []
+  for (const ppId of goodPpIds) {
+    goodMessages.push(await sendParticipantConvocation(ppId))
+  }
+  assert(goodMessages.length === 7, 'Seven convocations go out — one CommunicationMessage per participant sent to')
+  assert(goodMessages.every((m) => m.deliveryStatus === 'SENT'), 'Every message starts SENT — dispatch is not delivery')
 
-  // ── 2. ⭐ THE TEST THAT MATTERS — the dead address hard-bounces ──────────
-  const deadMessage = sent.find((m) => m.recipientEmail === deadAddressParticipant.email)!
+  // ── 3. ⭐ THE TEST THAT MATTERS — the dead address hard-bounces ──────────
   const bounced = await simulateDelivery(deadMessage.id, 'HARD_BOUNCE')
   assert(bounced.deliveryStatus === 'HARD_BOUNCE', 'The dead address hard-bounces')
   assert(
@@ -148,8 +154,7 @@ async function main() {
   )
   assert(deliveryStatusBadgeClass(bounced.deliveryStatus) !== 'badge-success', 'A hard-bounced message is never mapped to the green/success badge class')
 
-  // ── 3. The seven good addresses deliver — this IS the proof, nothing else is ─
-  const goodMessages = sent.filter((m) => m.id !== deadMessage.id)
+  // ── 4. The seven good addresses deliver — this IS the proof, nothing else is ─
   for (const m of goodMessages) {
     await simulateDelivery(m.id, 'DELIVERED')
   }
@@ -163,32 +168,19 @@ async function main() {
     'DELIVERED — and only DELIVERED/OPENED — renders green',
   )
 
-  // ── 4. A plain SENT with no webhook confirmation is amber, NOT green ─────
-  const freshSequence = await addSequence(
-    parcours.id,
-    sequenceInputSchema.parse({
-      ordre: '2',
-      titre: 'Jour 2',
-      type: 'PRESENTIEL',
-      date: '2026-09-21',
-      demiJournees: ['MATIN'],
-      heures: '3.5',
-      preuveType: 'SIGNATURE',
-    }),
-  )
-  const freshSent = await sendConvocations(freshSequence.id)
+  // ── 5. A plain SENT with no webhook confirmation is amber, NOT green ─────
+  const freshMessage = await sendParticipantConvocation(goodPpIds[0]!)
   assert(
-    freshSent.every((m) => deliveryStatusBadgeClass(m.deliveryStatus) === 'badge-warning'),
+    deliveryStatusBadgeClass(freshMessage.deliveryStatus) === 'badge-warning',
     'A SENT message with no webhook yet is amber ("unconfirmed") — not green, not red',
   )
 
-  // ── 5. Soft bounce → retry ×2 → THEN escalate to HARD_BOUNCE ─────────────
-  const softTarget = freshSent[0]!
-  const attempt1 = await simulateDelivery(softTarget.id, 'SOFT_BOUNCE')
+  // ── 6. Soft bounce → retry ×2 → THEN escalate to HARD_BOUNCE ─────────────
+  const attempt1 = await simulateDelivery(freshMessage.id, 'SOFT_BOUNCE')
   assert(attempt1.deliveryStatus === 'SOFT_BOUNCE' && attempt1.retryCount === 1, 'First soft bounce — retryCount 1, still SOFT_BOUNCE')
-  const attempt2 = await simulateDelivery(softTarget.id, 'SOFT_BOUNCE')
+  const attempt2 = await simulateDelivery(freshMessage.id, 'SOFT_BOUNCE')
   assert(attempt2.deliveryStatus === 'SOFT_BOUNCE' && attempt2.retryCount === 2, 'Second soft bounce — retryCount 2, still SOFT_BOUNCE (2 retries per docs)')
-  const attempt3 = await simulateDelivery(softTarget.id, 'SOFT_BOUNCE')
+  const attempt3 = await simulateDelivery(freshMessage.id, 'SOFT_BOUNCE')
   assert(attempt3.deliveryStatus === 'HARD_BOUNCE', 'Third failure escalates to HARD_BOUNCE — never lingers as an unresolved soft bounce forever')
   assert(deliveryStatusBadgeClass(attempt3.deliveryStatus) === 'badge-danger', 'The escalated bounce renders red, same as a direct hard bounce')
 

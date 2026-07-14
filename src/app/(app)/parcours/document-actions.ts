@@ -5,11 +5,9 @@ import { requireAdmin } from '@/lib/authz'
 import {
   generateDevis,
   generateConvention,
-  generateFacture,
+  generateConventionSousTraitance,
   generateAttestationPack,
-  generateCertificatPack,
-  generateConvocation,
-  markChorusProSent,
+  generateParticipantConvocation,
   markDocumentSent,
   markDocumentSigned,
   voidDocument,
@@ -43,10 +41,10 @@ export async function generateConventionAction(_prev: DocumentActionState, formD
   return runGeneration(parcoursId, () => generateConvention(contractualisationId))
 }
 
-export async function generateFactureAction(_prev: DocumentActionState, formData: FormData) {
-  const contractualisationId = String(formData.get('contractualisationId') ?? '')
+export async function generateConventionSousTraitanceAction(_prev: DocumentActionState, formData: FormData) {
+  const formateurId = String(formData.get('formateurId') ?? '')
   const parcoursId = String(formData.get('parcoursId') ?? '')
-  return runGeneration(parcoursId, () => generateFacture(contractualisationId))
+  return runGeneration(parcoursId, () => generateConventionSousTraitance(formateurId, parcoursId))
 }
 
 export async function generateAttestationPackAction(_prev: DocumentActionState, formData: FormData) {
@@ -55,25 +53,10 @@ export async function generateAttestationPackAction(_prev: DocumentActionState, 
   return runGeneration(parcoursId, () => generateAttestationPack(contractualisationId))
 }
 
-export async function generateCertificatPackAction(_prev: DocumentActionState, formData: FormData) {
-  const contractualisationId = String(formData.get('contractualisationId') ?? '')
+export async function generateParticipantConvocationAction(_prev: DocumentActionState, formData: FormData) {
+  const parcoursParticipantId = String(formData.get('parcoursParticipantId') ?? '')
   const parcoursId = String(formData.get('parcoursId') ?? '')
-  return runGeneration(parcoursId, () => generateCertificatPack(contractualisationId))
-}
-
-export async function generateConvocationAction(_prev: DocumentActionState, formData: FormData) {
-  const sequenceId = String(formData.get('sequenceId') ?? '')
-  const parcoursId = String(formData.get('parcoursId') ?? '')
-  return runGeneration(parcoursId, () => generateConvocation(sequenceId))
-}
-
-export async function markChorusProSentAction(formData: FormData) {
-  await requireAdmin()
-  const contractualisationId = String(formData.get('contractualisationId') ?? '')
-  const parcoursId = String(formData.get('parcoursId') ?? '')
-  if (!contractualisationId) return
-  await markChorusProSent(contractualisationId)
-  revalidatePath(`/parcours/${parcoursId}`)
+  return runGeneration(parcoursId, () => generateParticipantConvocation(parcoursParticipantId))
 }
 
 export async function markDocumentSentAction(formData: FormData) {

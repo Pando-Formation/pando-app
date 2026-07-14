@@ -30,15 +30,28 @@ export async function recomputeParcoursDerived(parcoursId: string, tx: Prisma.Tr
   })
 }
 
-/** 🔴 DERIVED — Parcours.montantHT = Σ contractualisations.montantHT. Slice 5 territory, defined here since Parcours owns the field. */
-export async function recomputeParcoursMontant(parcoursId: string, tx: Prisma.TransactionClient = db) {
-  const agg = await tx.contractualisation.aggregate({
+/**
+ * 🔴 v1.6 — THE CONTRACT = ALL THE SÉQUENCES. Sum of a parcours's séquences'
+ * montantHT (null → 0) is the single source for both every non-cancelled
+ * Contractualisation.montantHT AND the Parcours's own montantHT — pricing
+ * lives at the séquence level now, not typed per payer. Every payer on the
+ * same parcours mirrors the same figure; there is no more per-payer amount.
+ */
+async function computeParcoursSequenceTotal(parcoursId: string, tx: Prisma.TransactionClient = db): Promise<number> {
+  const agg = await tx.sequence.aggregate({ where: { parcoursId }, _sum: { montantHT: true } })
+  return agg._sum.montantHT ?? 0
+}
+
+/** Recomputes every non-cancelled contractualisation's montantHT AND the parcours's own — call whenever a séquence's price could have changed, or a contractualisation is created. */
+export async function recomputeMontants(parcoursId: string, tx: Prisma.TransactionClient = db) {
+  const total = await computeParcoursSequenceTotal(parcoursId, tx)
+  await tx.contractualisation.updateMany({
     where: { parcoursId, status: { not: 'ANNULEE' } },
-    _sum: { montantHT: true },
+    data: { montantHT: total },
   })
   return tx.parcours.update({
     where: { id: parcoursId },
-    data: { montantHT: agg._sum.montantHT ?? 0 },
+    data: { montantHT: total },
   })
 }
 
@@ -108,10 +121,12 @@ function sequencePrismaData(input: SequenceInput) {
     date: new Date(input.date),
     demiJournees: input.demiJournees,
     heures: input.heures,
+    montantHT: input.montantHT ?? null,
     lieu: input.lieu ?? null,
     address: input.address ?? null,
     postalCode: input.postalCode ?? null,
     city: input.city ?? null,
+    visioLink: input.visioLink ?? null,
     preuveType: input.preuveType,
     formateurId: input.formateurId ?? null,
   }
@@ -127,6 +142,7 @@ export async function addSequence(parcoursId: string, input: SequenceInput) {
       data: { parcoursId, ordre: (_max.ordre ?? 0) + 1, ...sequencePrismaData(input) },
     })
     await recomputeParcoursDerived(parcoursId, tx)
+    await recomputeMontants(parcoursId, tx)
     return sequence
   })
 }
@@ -138,6 +154,7 @@ export async function updateSequence(sequenceId: string, input: SequenceInput) {
       data: sequencePrismaData(input),
     })
     await recomputeParcoursDerived(sequence.parcoursId, tx)
+    await recomputeMontants(sequence.parcoursId, tx)
     return sequence
   })
 }
@@ -146,6 +163,7 @@ export async function deleteSequence(sequenceId: string) {
   return db.$transaction(async (tx) => {
     const sequence = await tx.sequence.delete({ where: { id: sequenceId } })
     await recomputeParcoursDerived(sequence.parcoursId, tx)
+    await recomputeMontants(sequence.parcoursId, tx)
     return sequence
   })
 }

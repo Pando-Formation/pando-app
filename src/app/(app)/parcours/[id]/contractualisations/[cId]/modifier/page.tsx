@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/authz'
 import { db } from '@/lib/db'
-import { centsToEuroInput } from '@/lib/money'
 import { ContractualisationForm, type ContractualisationDefaultValues } from '@/components/participants/ContractualisationForm'
 import { updateContractualisationAction } from '@/app/(app)/parcours/actions'
 
@@ -21,10 +20,6 @@ export default async function EditContractualisationPage({ params }: { params: P
   const defaultValues: ContractualisationDefaultValues = {
     payerType: contract.payerType,
     payerId: contract.payerClientId ?? contract.payerParticipantId ?? contract.financeurId ?? '',
-    status: contract.status,
-    priceMode: contract.priceMode,
-    montantHTEuros: centsToEuroInput(contract.montantHT),
-    remiseEuros: centsToEuroInput(contract.remise),
     delaiReglement: contract.delaiReglement?.toString() ?? '',
     numeroEngagement: contract.numeroEngagement ?? '',
     codeService: contract.codeService ?? '',

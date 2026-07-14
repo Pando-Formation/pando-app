@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/authz'
 import { db } from '@/lib/db'
+import { centsToEuroInput } from '@/lib/money'
 import { SequenceForm, type SequenceDefaultValues } from '@/components/parcours/SequenceForm'
 import { updateSequenceAction } from '@/app/(app)/parcours/actions'
 
@@ -21,10 +22,12 @@ export default async function EditSequencePage({ params }: { params: Promise<{ i
     date: sequence.date.toISOString().slice(0, 10),
     demiJournees: sequence.demiJournees,
     heures: sequence.heures.toString(),
+    montantHTEuros: centsToEuroInput(sequence.montantHT),
     lieu: sequence.lieu ?? '',
     address: sequence.address ?? '',
     postalCode: sequence.postalCode ?? '',
     city: sequence.city ?? '',
+    visioLink: sequence.visioLink ?? '',
     preuveType: sequence.preuveType,
     formateurId: sequence.formateurId,
   }

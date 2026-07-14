@@ -29,6 +29,8 @@ import { createContractualisation, createParticipant, enrollParticipant } from '
 import { createAction } from '@/lib/amelioration'
 import { getAlerts, groupAlertsByCategory, getParcoursAtRisk, getCaTotal, getMargin, getMonthlyCaSeries, getMonthlyParticipantsSeries } from '@/lib/pilotage'
 import { formateurDayCost } from '@/lib/money'
+import { generateDevis, generateConvention, generateFactureDocument, markDocumentSent, markDocumentSigned } from '@/lib/document'
+import { createFacture, markFactureSent, markFacturePaid } from '@/lib/facturation'
 
 const log = {
   head: (s: string) => console.log(`\n─── ${s} ───\n`),
@@ -51,6 +53,7 @@ const PREFIX = 'VERIFY10-'
 const EMAIL_DOMAIN = '@verify-slice10.test'
 
 async function cleanup() {
+  await db.document.deleteMany({ where: { parcours: { reference: { startsWith: PREFIX } } } })
   await db.communicationMessage.deleteMany({ where: { recipientEmail: { endsWith: EMAIL_DOMAIN } } })
   await db.communicationSequence.deleteMany({ where: { parcours: { reference: { startsWith: PREFIX } } } })
   await db.parcoursParticipant.deleteMany({ where: { parcours: { reference: { startsWith: PREFIX } } } })
@@ -114,12 +117,34 @@ async function main() {
   )
   const sequenceB = await addSequence(
     parcoursB.id,
-    sequenceInputSchema.parse({ ordre: '1', titre: 'Jour 1', type: 'PRESENTIEL', date: '2026-09-14', demiJournees: ['MATIN', 'APRES_MIDI'], heures: '7', preuveType: 'SIGNATURE' }),
+    sequenceInputSchema.parse({
+      ordre: '1',
+      titre: 'Jour 1',
+      type: 'PRESENTIEL',
+      date: '2026-09-14',
+      demiJournees: ['MATIN', 'APRES_MIDI'],
+      heures: '7',
+      montantHT: 178_500, // 🔴 v1.6 — the contract = all the séquences: priced here to exercise Contractualisation.montantHT derivation, unrelated to CA below (CA is paid-invoice cash, not contract value — see section 3).
+      preuveType: 'SIGNATURE',
+    }),
+  )
+  // A PAST séquence — only past, unfactured séquences are invoiceable (see listInvoiceableSequences) — needed for the real devis → convention → facture → payée pipeline in section 3.
+  const invoiceableSequence = await addSequence(
+    parcoursB.id,
+    sequenceInputSchema.parse({
+      ordre: '3',
+      titre: 'Jour Facturé',
+      type: 'PRESENTIEL',
+      date: '2026-07-01',
+      demiJournees: ['MATIN', 'APRES_MIDI'],
+      heures: '7',
+      preuveType: 'SIGNATURE',
+    }),
   )
   const client = await db.client.create({ data: { companyName: `${PREFIX}Client`, status: 'ACTIF' } })
   const contract = await createContractualisation(
     parcoursB.id,
-    contractualisationInputSchema.parse({ payerType: 'ORGANISATION', payerId: client.id, status: 'BROUILLON', priceMode: 'PAR_PERSONNE', montantHT: '178500', remise: '0' }),
+    contractualisationInputSchema.parse({ payerType: 'ORGANISATION', payerId: client.id, status: 'BROUILLON' }),
   )
   const participant = await createParticipant(
     participantInputSchema.parse({ firstName: 'Bounce', lastName: 'Target', email: `bounce${EMAIL_DOMAIN}`, situation: 'SALARIE' }),
@@ -197,9 +222,30 @@ async function main() {
   assert(riskB !== undefined && riskB.score >= 3, 'Parcours B (unsigned convention + hard bounce + missing positionnement) scores at least 3')
   assert(atRisk.indexOf(riskB!) < atRisk.indexOf(riskA!), 'The parcours with more distinct problems ranks ABOVE the one with fewer — this is the point of "at risk, ranked"')
 
-  // ── 3. CA total — Σ non-cancelled contractualisations ─────────────────────
+  // ── 3. 🔴 CA = cash collected, not contracted value ───────────────────────
+  const caAfterContract = await getCaTotal()
+  assert(caAfterContract === caBefore, "Creating a contractualisation — even a priced one — moves CA by ZERO: it isn't an invoice, let alone a paid one")
+
+  // Real pipeline: devis → convention → facture → envoyée → payée. No shortcuts.
+  const devisPilotage = await generateDevis(contract.id)
+  await markDocumentSent(devisPilotage.id)
+  await markDocumentSigned(devisPilotage.id)
+  const conventionPilotage = await generateConvention(contract.id)
+  await markDocumentSent(conventionPilotage.id)
+  await markDocumentSigned(conventionPilotage.id)
+
+  const facturePilotage = await createFacture(contract.id, { sequenceIds: [invoiceableSequence.id], montantHT: 178_500 })
+  await generateFactureDocument(facturePilotage.id)
+  const caAfterUnsentFacture = await getCaTotal()
+  assert(caAfterUnsentFacture === caBefore, 'A generated-but-unsent invoice still moves CA by ZERO')
+
+  await markFactureSent(facturePilotage.id)
+  const caAfterSentUnpaid = await getCaTotal()
+  assert(caAfterSentUnpaid === caBefore, 'A SENT-but-unpaid invoice STILL moves CA by ZERO — sent is not the same as collected')
+
+  await markFacturePaid(facturePilotage.id)
   const caAfter = await getCaTotal()
-  assert(caAfter - caBefore === 178_500, 'CA total increases by exactly the new contractualisation\'s montantHT (1 785 €)')
+  assert(caAfter - caBefore === 178_500, "CA increases by exactly the PAID invoice's montantHT (1 785 €) — the moment money actually arrives, not before")
 
   // ── 4. 🔴 Margin — TTC for external, 0 for internal, never the notional rate ─
   const formateurExternal = await db.formateur.create({
@@ -223,7 +269,7 @@ async function main() {
   const caSeries = await getMonthlyCaSeries(5)
   assert(caSeries.length === 5, 'getMonthlyCaSeries(5) always returns exactly 5 points, even for months with zero activity')
   const currentMonthCa = caSeries[caSeries.length - 1]!
-  assert(currentMonthCa.value >= 178_500, "This fixture's contractualisation (created just now) is counted in the CURRENT month's bucket")
+  assert(currentMonthCa.value >= 178_500, "This fixture's invoice (paid just now) is counted in the CURRENT month's bucket, keyed off Facture.paidAt")
 
   const participantsSeries = await getMonthlyParticipantsSeries(5)
   assert(participantsSeries.length === 5, 'getMonthlyParticipantsSeries(5) always returns exactly 5 points')

@@ -1,16 +1,12 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { PAYER_TYPE_LABELS, CONTRACTUALISATION_STATUS_LABELS, PRICE_MODE_LABELS } from '@/lib/participant-labels'
+import { PAYER_TYPE_LABELS } from '@/lib/participant-labels'
 import type { ContractualisationActionState } from '@/app/(app)/parcours/actions'
 
 export type ContractualisationDefaultValues = {
   payerType: string
   payerId: string
-  status: string
-  priceMode: string
-  montantHTEuros: string
-  remiseEuros: string
   delaiReglement: string
   numeroEngagement: string
   codeService: string
@@ -32,10 +28,6 @@ type Props = {
 const EMPTY: ContractualisationDefaultValues = {
   payerType: 'ORGANISATION',
   payerId: '',
-  status: 'BROUILLON',
-  priceMode: 'FORFAIT_JOUR',
-  montantHTEuros: '',
-  remiseEuros: '0',
   delaiReglement: '',
   numeroEngagement: '',
   codeService: '',
@@ -102,48 +94,14 @@ export function ContractualisationForm({
         </p>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-5)' }}>
-        <div>
-          <label className="input-label">Statut</label>
-          <select className="input" name="status" defaultValue={v.status}>
-            {Object.entries(CONTRACTUALISATION_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="input-label">Mode de tarification</label>
-          <select className="input" name="priceMode" defaultValue={v.priceMode}>
-            {Object.entries(PRICE_MODE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div>
+        <label className="input-label">Délai de règlement (jours)</label>
+        <input className="input" type="number" name="delaiReglement" defaultValue={v.delaiReglement} style={{ maxWidth: 220 }} />
+        <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+          Le montant HT n&apos;est plus saisi ici — il est calculé automatiquement à partir du prix des séquences du
+          parcours.
+        </p>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-5)' }}>
-        <div>
-          <label className="input-label">Montant HT (€)</label>
-          <input className="input" type="number" step="0.01" min="0" name="montantHT" defaultValue={v.montantHTEuros} required />
-          {errors.montantHT && <FieldError messages={errors.montantHT} />}
-        </div>
-        <div>
-          <label className="input-label">Remise (€)</label>
-          <input className="input" type="number" step="0.01" min="0" name="remise" defaultValue={v.remiseEuros} />
-        </div>
-        <div>
-          <label className="input-label">Délai de règlement (jours)</label>
-          <input className="input" type="number" name="delaiReglement" defaultValue={v.delaiReglement} />
-        </div>
-      </div>
-      <p className="t-caption-1">
-        La remise vit sur la contractualisation, pas sur le parcours — un payeur négocie, un autre non, sur la même
-        session.
-      </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-5)' }}>
         <div>

@@ -10,10 +10,12 @@ export type SequenceDefaultValues = {
   date: string
   demiJournees: string[]
   heures: string
+  montantHTEuros: string
   lieu: string
   address: string
   postalCode: string
   city: string
+  visioLink: string
   preuveType: string
   formateurId: string | null
 }
@@ -37,10 +39,12 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
     date: '',
     demiJournees: [],
     heures: '',
+    montantHTEuros: '',
     lieu: '',
     address: '',
     postalCode: '',
     city: '',
+    visioLink: '',
     preuveType: 'SIGNATURE',
     formateurId: null,
   }
@@ -64,7 +68,7 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
         {errors.titre && <FieldError messages={errors.titre} />}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-5)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--space-5)' }}>
         <div>
           <label className="input-label">Type</label>
           <select className="input" name="type" value={type} onChange={(e) => setType(e.target.value)}>
@@ -84,6 +88,14 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
           <label className="input-label">Heures</label>
           <input className="input" name="heures" defaultValue={v.heures} placeholder="7" required />
           {errors.heures && <FieldError messages={errors.heures} />}
+        </div>
+        <div>
+          <label className="input-label">Montant HT (€) — optionnel</label>
+          <input className="input" type="number" step="0.01" min="0" name="montantHT" defaultValue={v.montantHTEuros} />
+          {errors.montantHT && <FieldError messages={errors.montantHT} />}
+          <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+            Laissez vide si non tarifée.
+          </p>
         </div>
       </div>
 
@@ -153,6 +165,20 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
             <input className="input" name="city" defaultValue={v.city} />
             {errors.city && <FieldError messages={errors.city} />}
           </div>
+        </div>
+      )}
+
+      {type === 'DISTANCIEL' && (
+        <div>
+          <label className="input-label">Lien visio</label>
+          <input
+            className="input"
+            type="url"
+            name="visioLink"
+            placeholder="https://meet.google.com/…"
+            defaultValue={v.visioLink}
+          />
+          {errors.visioLink && <FieldError messages={errors.visioLink} />}
         </div>
       )}
 

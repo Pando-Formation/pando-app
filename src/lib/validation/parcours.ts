@@ -83,10 +83,17 @@ export const sequenceInputSchema = z.object({
   // 🔴 THE LEGAL UNIT. At least one demi-journée — mirrors the DB CHECK.
   demiJournees: z.array(z.enum(['MATIN', 'APRES_MIDI'])).min(1, 'Au moins une demi-journée requise'),
   heures: decimalString(5),
+  montantHT: z.coerce.number().int().nonnegative().nullable().optional(),
   lieu: z.string().trim().optional().nullable(),
   address: z.string().trim().optional().nullable(),
   postalCode: z.string().trim().optional().nullable(),
   city: z.string().trim().optional().nullable(),
+  visioLink: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .refine((v) => !v || /^https?:\/\//i.test(v), 'Le lien visio doit commencer par http:// ou https://'),
   preuveType: z.enum(['SIGNATURE', 'CONNEXION', 'COMPLETION', 'COMPTE_RENDU', 'PAPER']),
   formateurId: z.string().trim().min(1).nullable().optional(),
 })
