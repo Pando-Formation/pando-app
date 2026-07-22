@@ -280,10 +280,15 @@ async function main() {
   assert(clicReloaded.totalHours.toString() === '10.5', 'CLIC! — totalHours = 3 × 3.5h = 10.5h, derived')
 
   let dbRejectedEmptyDj = false
+  const clicFormationSession = await db.formationSession.findFirstOrThrow({
+    where: { parcoursId: clic.id, deletedAt: null },
+    orderBy: { ordre: 'asc' },
+  })
   try {
     await db.sequence.create({
       data: {
         parcoursId: clic.id,
+        formationSessionId: clicFormationSession.id,
         ordre: 99,
         titre: 'No demi-journée',
         type: 'PRESENTIEL',

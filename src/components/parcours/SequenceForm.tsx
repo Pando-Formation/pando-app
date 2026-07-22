@@ -26,12 +26,13 @@ type Props = {
   mode: 'create' | 'edit'
   action: (state: SequenceActionState, formData: FormData) => Promise<SequenceActionState>
   parcoursId: string
+  formationSessionId?: string
   sequenceId?: string
   defaultValues?: SequenceDefaultValues
   formateurs: Option[]
 }
 
-export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValues, formateurs }: Props) {
+export function SequenceForm({ mode, action, parcoursId, formationSessionId, sequenceId, defaultValues, formateurs }: Props) {
   const [state, formAction, pending] = useActionState<SequenceActionState, FormData>(action, null)
   const v = defaultValues ?? {
     titre: '',
@@ -54,6 +55,7 @@ export function SequenceForm({ mode, action, parcoursId, sequenceId, defaultValu
   return (
     <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       <input type="hidden" name="parcoursId" value={parcoursId} />
+      {formationSessionId && <input type="hidden" name="formationSessionId" value={formationSessionId} />}
       {mode === 'edit' && <input type="hidden" name="id" value={sequenceId} />}
 
       {state?.formError && (

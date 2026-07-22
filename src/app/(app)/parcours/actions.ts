@@ -3,8 +3,16 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/authz'
-import { parcoursInputSchema, sequenceInputSchema } from '@/lib/validation/parcours'
-import { createParcours, updateParcours, addSequence, updateSequence, deleteSequence } from '@/lib/parcours'
+import { formationSessionInputSchema, parcoursInputSchema, sequenceInputSchema } from '@/lib/validation/parcours'
+import {
+  createParcours,
+  updateParcours,
+  addFormationSession,
+  updateFormationSession,
+  addSequence,
+  updateSequence,
+  deleteSequence,
+} from '@/lib/parcours'
 import {
   contractualisationInputSchema,
   financementInputSchema,
@@ -111,6 +119,60 @@ export async function updateParcoursAction(
   redirect(`/parcours/${id}`)
 }
 
+export type FormationSessionActionState = {
+  formError?: string
+  fieldErrors?: Record<string, string[]>
+} | null
+
+function formDataToFormationSessionInput(formData: FormData) {
+  return {
+    titre: String(formData.get('titre') ?? ''),
+  }
+}
+
+export async function addFormationSessionAction(
+  _prevState: FormationSessionActionState,
+  formData: FormData,
+): Promise<FormationSessionActionState> {
+  await requireAdmin()
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!parcoursId) return { formError: 'Parcours introuvable.' }
+
+  const parsed = formationSessionInputSchema.safeParse(formDataToFormationSessionInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await addFormationSession(parcoursId, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=sequences`)
+}
+
+export async function updateFormationSessionAction(
+  _prevState: FormationSessionActionState,
+  formData: FormData,
+): Promise<FormationSessionActionState> {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id || !parcoursId) return { formError: 'Session introuvable.' }
+
+  const parsed = formationSessionInputSchema.safeParse(formDataToFormationSessionInput(formData))
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
+
+  try {
+    await updateFormationSession(id, parsed.data)
+  } catch (e) {
+    return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
+  }
+
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=sequences`)
+}
+
 export type SequenceActionState = {
   formError?: string
   fieldErrors?: Record<string, string[]>
@@ -140,13 +202,14 @@ export async function addSequenceAction(
 ): Promise<SequenceActionState> {
   await requireAdmin()
   const parcoursId = String(formData.get('parcoursId') ?? '')
+  const formationSessionId = String(formData.get('formationSessionId') ?? '')
   if (!parcoursId) return { formError: 'Parcours introuvable.' }
 
   const parsed = sequenceInputSchema.safeParse(formDataToSequenceInput(formData))
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> }
 
   try {
-    await addSequence(parcoursId, parsed.data)
+    await addSequence(parcoursId, parsed.data, formationSessionId || undefined)
   } catch (e) {
     return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
   }

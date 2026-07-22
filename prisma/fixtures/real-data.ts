@@ -220,11 +220,16 @@ async function scenarioOptas(formationVersionId: string) {
     },
   })
 
+  const formationSession = await db.formationSession.create({
+    data: { parcoursId: parcours.id, ordre: 1, titre: "OPTA'S — devenir manager du changement" },
+  })
+
   const dates = ['2026-06-16', '2026-09-15', '2026-11-10', '2026-12-08', '2027-02-09', '2027-03-18']
   for (const [i, d] of dates.entries()) {
     await db.sequence.create({
       data: {
         parcoursId: parcours.id,
+        formationSessionId: formationSession.id,
         ordre: i + 1,
         titre: `Session ${i + 1} — Devenir manager du changement`,
         type: 'PRESENTIEL',
@@ -255,6 +260,10 @@ async function scenarioBam(formationVersionId: string) {
     },
   })
 
+  const formationSession = await db.formationSession.create({
+    data: { parcoursId: parcours.id, ordre: 1, titre: 'BAM! — parcours collectif' },
+  })
+
   const seqs = [
     { t: 'Kick-off + capsule de positionnement',                 y: 'ELEARNING',        p: 'COMPLETION',   dj: ['MATIN'] as const,               h: 0.5, d: '2026-09-07' },
     { t: 'Jour 1 — Construire son identité managériale',         y: 'PRESENTIEL',       p: 'SIGNATURE',    dj: ['MATIN', 'APRES_MIDI'] as const, h: 7,   d: '2026-09-14' },
@@ -271,6 +280,7 @@ async function scenarioBam(formationVersionId: string) {
     await db.sequence.create({
       data: {
         parcoursId: parcours.id,
+        formationSessionId: formationSession.id,
         ordre: i + 1,
         titre: s.t,
         type: s.y,
@@ -297,12 +307,10 @@ async function scenarioBam(formationVersionId: string) {
  *    Documents are scoped to the CONTRACTUALISATION, never to the PARCOURS.
  *    The legacy process doc instructs the opposite. Do not follow it.
  *
- * 🟡 FOLLOW-UP (flagged, not decided here): under v1.6 every payer's
- *    montantHT is now Σ the parcours's séquence prices, and BAM!'s 9
- *    séquences (scenarioBam, above) are currently unpriced — so all 4
- *    contracts below land at 0€ instead of their old differentiated
- *    per-seat amounts. Left as-is deliberately pending a real pricing
- *    decision for this demo scenario.
+ * 🟡 FOLLOW-UP (flagged, not decided here): BAM!'s 9 séquences
+ *    (scenarioBam, above) are currently unpriced — so the participant-weighted
+ *    contract amounts below still land at 0€. Left as-is deliberately pending
+ *    a real pricing decision for this demo scenario.
  */
 async function scenarioMixedPayer(parcoursId: string) {
   const payers = [
@@ -328,8 +336,8 @@ async function scenarioMixedPayer(parcoursId: string) {
         payerClientId: client.id, // CHECK 8: exactly one payer target
         status: 'CONVENTION_SIGNEE',
         // montantHT is left at its default — recomputeMontants() below derives
-        // it (and every other non-cancelled contract's) from the parcours's
-        // séquences right after the loop, same figure for every payer now.
+        // it from the parcours's séquences and THIS contract's participant
+        // count right after the loop.
         financements: { create: { type: p.fin, montantPrisEnCharge: p.seats * 178_500 } },
       },
     })
@@ -353,8 +361,8 @@ async function scenarioMixedPayer(parcoursId: string) {
 
   await recomputeMontants(parcoursId)
 
-  const sum = await db.contractualisation.aggregate({ where: { parcoursId }, _sum: { montantHT: true } })
-  log.ok(`Bordeaux — 7 participants · 4 payeurs · 3 origines de financement · chacun affiche ${(sum._sum.montantHT ?? 0) / 100 / payers.length} € (dérivé des séquences, identique pour tous)`)
+  const sum = await db.contractualisation.aggregate({ where: { parcoursId, status: { not: 'ANNULEE' } }, _sum: { montantHT: true } })
+  log.ok(`Bordeaux — 7 participants · 4 payeurs · 3 origines de financement · ${((sum._sum.montantHT ?? 0) / 100).toLocaleString('fr-FR')} € pondérés par participants`)
 }
 
 /** CLIC! — three séquences of ONE demi-journée each. requiresFullCohort. */
@@ -381,6 +389,10 @@ async function scenarioClic(formationVersionId: string) {
     },
   })
 
+  const formationSession = await db.formationSession.create({
+    data: { parcoursId: parcours.id, ordre: 1, titre: 'CLIC! — CODIR' },
+  })
+
   const djs = [
     { t: 'DJ1 — Sommes-nous réellement une équipe de direction ?', d: '2026-10-06' },
     { t: 'DJ2 — Pouvons-nous débattre et décider ensemble ?',      d: '2026-11-10' },
@@ -391,6 +403,7 @@ async function scenarioClic(formationVersionId: string) {
     await db.sequence.create({
       data: {
         parcoursId: parcours.id,
+        formationSessionId: formationSession.id,
         ordre: i + 1,
         titre: dj.t,
         type: 'PRESENTIEL',

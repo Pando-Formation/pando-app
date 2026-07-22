@@ -8,19 +8,39 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageHero } from '@/components/page-hero'
 
-export default async function ParcoursListPage() {
+const TRACK_TABS = [
+  { id: 'INTER', label: 'Inter' },
+  { id: 'INTRA', label: 'Intra' },
+] as const
+type TrackTabId = (typeof TRACK_TABS)[number]['id']
+
+export default async function ParcoursListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ track?: string }>
+}) {
+  const { track } = await searchParams
   const session = await requireOperational()
   const canWrite = ['SUPER_ADMIN', 'ADMIN'].some((r) => hasRole(session, r as 'SUPER_ADMIN' | 'ADMIN'))
+  const activeTrack: TrackTabId = TRACK_TABS.some((t) => t.id === track) ? (track as TrackTabId) : 'INTER'
 
-  const parcours = await db.parcours.findMany({
-    where: { deletedAt: null },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      formationVersion: { select: { snapshot: true } },
-      client: { select: { companyName: true } },
-      _count: { select: { sequences: true } },
-    },
-  })
+  const [parcours, trackCounts] = await Promise.all([
+    db.parcours.findMany({
+      where: { deletedAt: null, track: activeTrack },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        formationVersion: { select: { snapshot: true } },
+        client: { select: { companyName: true } },
+        _count: { select: { sequences: true } },
+      },
+    }),
+    db.parcours.groupBy({
+      by: ['track'],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    }),
+  ])
+  const counts = Object.fromEntries(trackCounts.map((c) => [c.track, c._count._all])) as Partial<Record<TrackTabId, number>>
 
   return (
     <>
@@ -36,9 +56,40 @@ export default async function ParcoursListPage() {
         </div>
       </PageHero>
 
+      <nav
+        style={{
+          display: 'flex',
+          gap: 'var(--space-6)',
+          borderBottom: '1px solid var(--color-border-subtle)',
+          marginBottom: 'var(--space-7)',
+        }}
+      >
+        {TRACK_TABS.map((t) => {
+          const isActive = t.id === activeTrack
+          return (
+            <Link
+              key={t.id}
+              href={`/parcours?track=${t.id}`}
+              className="t-nav-m"
+              style={{
+                display: 'inline-block',
+                padding: 'var(--space-4) 0',
+                marginBottom: '-1px',
+                color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                borderBottom: isActive ? '2px solid var(--color-text-primary)' : '2px solid transparent',
+                textDecoration: 'none',
+              }}
+            >
+              {t.label}
+              <span className="t-caption-1"> ({counts[t.id] ?? 0})</span>
+            </Link>
+          )
+        })}
+      </nav>
+
       {parcours.length === 0 ? (
         <p className="t-body" style={{ color: 'var(--color-text-secondary)' }}>
-          Aucun parcours pour le moment.
+          Aucun parcours {(TRACK_LABELS[activeTrack] ?? activeTrack).toLowerCase()} pour le moment.
         </p>
       ) : (
         <Card className="bg-transparent rounded-none p-0 ring-0">

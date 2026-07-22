@@ -96,15 +96,19 @@ async function main() {
     }),
   )
 
+  const formationSession = await db.formationSession.create({
+    data: { parcoursId: parcours.id, ordre: 1, titre: 'Session facturation' },
+  })
+
   // Two past séquences (September) and one future séquence (never invoiceable).
   const seqSept1 = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 1, titre: 'Jour 1', type: 'PRESENTIEL', date: new Date('2026-06-01'), demiJournees: ['MATIN', 'APRES_MIDI'], heures: 7, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 1, titre: 'Jour 1', type: 'PRESENTIEL', date: new Date('2026-06-01'), demiJournees: ['MATIN', 'APRES_MIDI'], heures: 7, preuveType: 'SIGNATURE' },
   })
   const seqSept2 = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 2, titre: 'Jour 2', type: 'PRESENTIEL', date: new Date('2026-06-08'), demiJournees: ['MATIN', 'APRES_MIDI'], heures: 7, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 2, titre: 'Jour 2', type: 'PRESENTIEL', date: new Date('2026-06-08'), demiJournees: ['MATIN', 'APRES_MIDI'], heures: 7, preuveType: 'SIGNATURE' },
   })
   const seqFuture = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 3, titre: 'Jour 3', type: 'PRESENTIEL', date: new Date('2027-06-01'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 3, titre: 'Jour 3', type: 'PRESENTIEL', date: new Date('2027-06-01'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
   })
 
   const client = await db.client.create({ data: { companyName: `${PREFIX}OPTA'S`, status: 'ACTIF' } })
@@ -206,10 +210,10 @@ async function main() {
   assert(publicInvoiceable.length === 0, 'A séquence already invoiced by one payer is unavailable to every other payer on the parcours')
 
   const seqOct1 = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 6, titre: 'Jour 6', type: 'PRESENTIEL', date: new Date('2026-06-22'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 6, titre: 'Jour 6', type: 'PRESENTIEL', date: new Date('2026-06-22'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
   })
   const seqOct2 = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 7, titre: 'Jour 7', type: 'PRESENTIEL', date: new Date('2026-06-29'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 7, titre: 'Jour 7', type: 'PRESENTIEL', date: new Date('2026-06-29'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
   })
 
   // ── 6. Chorus Pro send counts as "sent" too — no separate manual step needed ─
@@ -228,7 +232,7 @@ async function main() {
 
   // ── 8. deleteFacture — only while still a draft (no generated document) ──
   const seqForDraft = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 4, titre: 'Jour 4', type: 'PRESENTIEL', date: new Date('2026-06-15'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 4, titre: 'Jour 4', type: 'PRESENTIEL', date: new Date('2026-06-15'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
   })
   const draft = await createFacture(contract.id, { sequenceIds: [seqForDraft.id], montantHT: toCents(500) })
   let deleteBlockedAfterGeneration = false
@@ -241,7 +245,7 @@ async function main() {
   assert(deleteBlockedAfterGeneration, 'A facture cannot be deleted once its document has been generated')
 
   const seqForDraft2 = await db.sequence.create({
-    data: { parcoursId: parcours.id, ordre: 5, titre: 'Jour 5', type: 'PRESENTIEL', date: new Date('2026-06-16'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
+    data: { parcoursId: parcours.id, formationSessionId: formationSession.id, ordre: 5, titre: 'Jour 5', type: 'PRESENTIEL', date: new Date('2026-06-16'), demiJournees: ['MATIN'], heures: 3.5, preuveType: 'SIGNATURE' },
   })
   const draft2 = await createFacture(contract.id, { sequenceIds: [seqForDraft2.id], montantHT: toCents(500) })
   await deleteFacture(draft2.id)

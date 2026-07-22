@@ -5,13 +5,12 @@
  *  Exercises the real domain logic (src/lib/participant.ts) directly against
  *  the Slice 5 acceptance criteria: seven participants under four
  *  contractualisations with three funding origins on one parcours,
- *  Parcours.montantHT and every non-cancelled Contractualisation.montantHT
- *  derived from Σ the parcours's séquences (v1.6 — "the contract = all the
- *  séquences": every payer mirrors the same total, cancelling one never
- *  moves the parcours figure), the 10-day rétractation window computed —
- *  never entered — for a self-funding individual, the max(J-2, rétractation)
- *  payment trigger, and the accessibility chain (declared → référent →
- *  adaptation → traced).
+ *  Contractualisation.montantHT derived from sequence prices × seat count
+ *  for INTER, and Parcours.montantHT derived from the sum of active
+ *  contractualisations. Also exercises the 10-day rétractation window
+ *  computed — never entered — for a self-funding individual, the max(J-2,
+ *  rétractation) payment trigger, and the accessibility chain (declared →
+ *  référent → adaptation → traced).
  *
  *  Deliberately separate from real-data.ts. Own cleanup, scoped to
  *  reference/email prefixed VERIFY5-.
@@ -62,6 +61,7 @@ function assert(condition: boolean, message: string) {
 
 const PREFIX = 'VERIFY5-'
 const EMAIL_DOMAIN = '@verify-slice5.test'
+const SEQUENCE_PRICE = 178_500
 
 async function cleanup() {
   await db.financement.deleteMany({ where: { contractualisation: { parcours: { reference: { startsWith: PREFIX } } } } })
@@ -124,7 +124,7 @@ async function main() {
       date: '2026-09-14',
       demiJournees: ['MATIN', 'APRES_MIDI'],
       heures: '7',
-      montantHT: 714_000, // 🔴 v1.6 — the contract = all the séquences: this IS the parcours's total now.
+      montantHT: SEQUENCE_PRICE,
       preuveType: 'SIGNATURE',
     }),
   )
@@ -157,7 +157,7 @@ async function main() {
       contract.id,
       financementInputSchema.parse({
         type: p.fin,
-        montantPrisEnCharge: String(p.seats * 178_500),
+        montantPrisEnCharge: String(p.seats * SEQUENCE_PRICE),
       }),
     )
 
@@ -190,22 +190,25 @@ async function main() {
     'Bordeaux Inter — 3 distinct funding origins (OPCO, ENTREPRISE_DIRECTE, AUTRE) on one parcours',
   )
 
-  // ── 2. Parcours.montantHT = Σ séquences, read-only ────────────────────────
-  const SEQ_TOTAL = 714_000
+  // ── 2. Parcours.montantHT = Σ active contractualisations, read-only ───────
+  const INTER_TOTAL = payers.reduce((sum, p) => sum + p.seats * SEQUENCE_PRICE, 0)
   assert(
-    reloaded.montantHT === SEQ_TOTAL,
-    `Parcours.montantHT (${reloaded.montantHT}) = Σ séquences' montantHT (${SEQ_TOTAL}), derived from the séquences, not summed across payers`,
+    reloaded.montantHT === INTER_TOTAL,
+    `Parcours.montantHT (${reloaded.montantHT}) = Σ contractualisations (${INTER_TOTAL}), derived from the payer-scoped deals`,
   )
 
-  // ── 3. THE CONTRACT = ALL THE SÉQUENCES — every payer mirrors the SAME total,
-  // whether they bought 4 seats (Groupe Cassous) or 1 (the other three).
-  assert(
-    reloaded.contractualisations.every((c) => c.montantHT === SEQ_TOTAL),
-    'Every payer on this parcours shows the IDENTICAL séquence-derived montantHT — no more per-payer negotiated amount',
-  )
+  // ── 3. INTER price = Σ séquences × participants on THIS contractualisation ─
+  const contractsBySeats = new Map(reloaded.contractualisations.map((c) => [c.id, c]))
+  for (const [index, payer] of payers.entries()) {
+    const contract = contractsBySeats.get(contractIds[index]!)
+    assert(
+      contract?.montantHT === payer.seats * SEQUENCE_PRICE,
+      `${payer.name} — ${payer.seats} participant(s) × ${SEQUENCE_PRICE / 100} € = ${(payer.seats * SEQUENCE_PRICE) / 100} €`,
+    )
+  }
 
   // ── 3b. Pricing a further séquence recomputes EVERY non-cancelled payer's
-  // montantHT together, in lockstep with Parcours.montantHT ─────────────────
+  // montantHT from its own participant count ────────────────────────────────
   await addSequence(
     parcours.id,
     sequenceInputSchema.parse({
@@ -215,31 +218,39 @@ async function main() {
       date: '2026-09-15',
       demiJournees: ['MATIN', 'APRES_MIDI'],
       heures: '7',
-      montantHT: 178_500,
+      montantHT: SEQUENCE_PRICE,
       preuveType: 'SIGNATURE',
     }),
   )
-  const NEW_TOTAL = SEQ_TOTAL + 178_500
+  const NEW_SEQUENCE_TOTAL = SEQUENCE_PRICE * 2
+  const NEW_INTER_TOTAL = payers.reduce((sum, p) => sum + p.seats * NEW_SEQUENCE_TOTAL, 0)
   const afterSecondSequence = await db.parcours.findUniqueOrThrow({
     where: { id: parcours.id },
     include: { contractualisations: true },
   })
-  assert(afterSecondSequence.montantHT === NEW_TOTAL, 'Pricing a second séquence updates Parcours.montantHT to the new sum')
-  assert(
-    afterSecondSequence.contractualisations.every((c) => c.montantHT === NEW_TOTAL),
-    'The same new total propagates to every non-cancelled contractualisation on the parcours',
-  )
+  assert(afterSecondSequence.montantHT === NEW_INTER_TOTAL, 'Pricing a second séquence updates Parcours.montantHT via every active payer')
+  for (const [index, payer] of payers.entries()) {
+    const contract = afterSecondSequence.contractualisations.find((c) => c.id === contractIds[index])
+    assert(
+      contract?.montantHT === payer.seats * NEW_SEQUENCE_TOTAL,
+      `${payer.name} recomputed after second sequence from its own ${payer.seats} seat(s)`,
+    )
+  }
 
-  // ── 3c. Cancelling a payer freezes ITS montantHT but never moves the
-  // parcours total — it is the séquences' value, not a sum of active deals ──
+  // ── 3c. Cancelling a payer freezes ITS montantHT and removes it from the
+  // active parcours total ───────────────────────────────────────────────────
   await cancelContractualisation(contractIds[0]!)
   const afterCancel = await db.parcours.findUniqueOrThrow({
     where: { id: parcours.id },
     include: { contractualisations: true },
   })
-  assert(afterCancel.montantHT === NEW_TOTAL, 'Cancelling a contractualisation leaves Parcours.montantHT unaffected')
+  const afterCancelTotal = payers.slice(1).reduce((sum, p) => sum + p.seats * NEW_SEQUENCE_TOTAL, 0)
+  assert(afterCancel.montantHT === afterCancelTotal, 'Cancelling a contractualisation removes it from Parcours.montantHT')
   const cancelled = afterCancel.contractualisations.find((c) => c.id === contractIds[0])!
-  assert(cancelled.status === 'ANNULEE' && cancelled.montantHT === NEW_TOTAL, "The cancelled contractualisation's montantHT stays frozen at its last value")
+  assert(
+    cancelled.status === 'ANNULEE' && cancelled.montantHT === payers[0]!.seats * NEW_SEQUENCE_TOTAL,
+    "The cancelled contractualisation's montantHT stays frozen at its last value",
+  )
 
   // ── 4. Intra has one contractualisation, inter has clientId = null ───────
   assert(reloaded.clientId === null, 'Inter parcours has NO client — payers live on Contractualisation')

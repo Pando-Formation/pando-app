@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, type badgeVariants } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageHero } from '@/components/page-hero'
-import { SequencesTable, type SequenceRow } from '@/components/parcours/SequencesTable'
+import { SequencesTable, type FormationSessionRow, type SequenceRow } from '@/components/parcours/SequencesTable'
 import { ContractualisationsTable, type ContractualisationRow } from '@/components/parcours/ContractualisationsTable'
 import { ParticipantConvocationMenu } from '@/components/parcours/ParticipantConvocationMenu'
 import { FacturationTable, type FacturationGroupRow } from '@/components/parcours/FacturationTable'
@@ -22,7 +22,7 @@ import type { VariantProps } from 'class-variance-authority'
 
 const TABS = [
   { id: 'apercu', label: 'Aperçu' },
-  { id: 'sequences', label: 'Séquences' },
+  { id: 'sequences', label: 'Sessions' },
   { id: 'contractualisations', label: 'Contractualisations' },
   { id: 'participants', label: 'Participants' },
   { id: 'facturation', label: 'Facturation' },
@@ -71,6 +71,29 @@ export default async function ParcoursDetailPage({
                 tarifJour: true,
                 forfaitDeplacement: true,
                 isActive: true,
+              },
+            },
+          },
+        },
+        formationSessions: {
+          where: { deletedAt: null },
+          orderBy: { ordre: 'asc' },
+          include: {
+            sequences: {
+              orderBy: { date: 'asc' },
+              include: {
+                formateur: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    contractType: true,
+                    tvaRate: true,
+                    tarifJour: true,
+                    forfaitDeplacement: true,
+                    isActive: true,
+                  },
+                },
               },
             },
           },
@@ -167,7 +190,7 @@ export default async function ParcoursDetailPage({
   const activeTab: TabId = visibleTabs.some((t) => t.id === tab) ? (tab as TabId) : 'apercu'
   const counts: Record<TabId, number | null> = {
     apercu: null,
-    sequences: parcours.sequences.length,
+    sequences: parcours.formationSessions.length,
     contractualisations: parcours.contractualisations.length,
     participants: parcours.participants.length,
     facturation: parcours.contractualisations.reduce((n, c) => n + c.factures.length, 0),
@@ -293,21 +316,28 @@ export default async function ParcoursDetailPage({
         <SequencesTable
           canWrite={canWrite}
           parcoursId={parcours.id}
-          data={parcours.sequences.map(
-            (s): SequenceRow => ({
-              id: s.id,
-              titre: s.titre,
-              type: s.type,
-              date: s.date.toISOString(),
-              demiJournees: s.demiJournees,
-              heures: s.heures.toString(),
-              preuveType: s.preuveType,
-              lieu: s.lieu,
-              address: s.address,
-              postalCode: s.postalCode,
-              city: s.city,
-              visioLink: s.visioLink,
-              formateurName: s.formateur ? `${s.formateur.firstName} ${s.formateur.lastName}` : null,
+          data={parcours.formationSessions.map(
+            (formationSession): FormationSessionRow => ({
+              id: formationSession.id,
+              titre: formationSession.titre,
+              sequences: formationSession.sequences.map(
+                (s): SequenceRow => ({
+                  id: s.id,
+                  titre: s.titre,
+                  type: s.type,
+                  date: s.date.toISOString(),
+                  demiJournees: s.demiJournees,
+                  heures: s.heures.toString(),
+                  montantHT: s.montantHT,
+                  preuveType: s.preuveType,
+                  lieu: s.lieu,
+                  address: s.address,
+                  postalCode: s.postalCode,
+                  city: s.city,
+                  visioLink: s.visioLink,
+                  formateurName: s.formateur ? `${s.formateur.firstName} ${s.formateur.lastName}` : null,
+                }),
+              ),
             }),
           )}
         />

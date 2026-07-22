@@ -717,6 +717,7 @@ model Parcours {
   cancellationReason String? /// 🔴 REQUIRED on ANNULE. No silent cancellation. [CHECK]
 
   sequences              Sequence[]
+  formationSessions      FormationSession[]
   participants           ParcoursParticipant[]
   contractualisations    Contractualisation[]
   documents              Document[]
@@ -759,6 +760,27 @@ enum DemiJournee {
   APRES_MIDI
 }
 
+/// User-facing "Session" — a planning/grouping container inside a Parcours.
+/// It is NOT the proof unit: convocation, émargement, formateur assignment,
+/// modality and demi-journées stay on Sequence below.
+model FormationSession {
+  id         String   @id @default(uuid())
+  parcours   Parcours @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
+  parcoursId String
+  ordre      Int
+  titre      String
+
+  sequences Sequence[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([parcoursId, ordre])
+  @@index([parcoursId])
+  @@index([deletedAt])
+}
+
 /// What is CONVENED, ATTENDED, PROVED.
 /// Convocation (J-7) and émargement (J0) fire PER SEQUENCE. Everything else
 /// fires once per parcours. This is the Parcours/Séquence split as behaviour.
@@ -766,6 +788,8 @@ model Sequence {
   id         String   @id @default(uuid())
   parcours   Parcours @relation(fields: [parcoursId], references: [id], onDelete: Cascade)
   parcoursId String
+  formationSession   FormationSession @relation(fields: [formationSessionId], references: [id], onDelete: Restrict)
+  formationSessionId String
   ordre      Int
 
   /// "Jour 2 — Structurer l'organisation de son équipe"
@@ -777,10 +801,9 @@ model Sequence {
   demiJournees DemiJournee[] /// 🔴 THE LEGAL UNIT. A 7h day = MATIN + APRES_MIDI.
   ///                            CLIC! is three séquences of ONE demi-journée each.
   heures       Decimal       @db.Decimal(5, 2)
-  /// 🔴 Optional list price for THIS séquence — free-text, opt-in (most
-  /// séquences won't have one). Never summed automatically into
-  /// Contractualisation/Parcours/Facture totals — it only ever suggests a
-  /// default when creating a Facture that covers this séquence.
+  /// 🔴 Optional list price for THIS séquence — free-text, opt-in. Used by
+  /// recomputeMontants as the list-price base for contractualisations
+  /// (INTRA once, INTER × participant count), and as a facture suggestion.
   montantHT    Int? /// euro cents
   lieu         String?
   /// Postal address of the lieu — only meaningful for PRESENTIEL, surfaced on
@@ -819,6 +842,7 @@ model Sequence {
   updatedAt DateTime @updatedAt
 
   @@unique([parcoursId, ordre])
+  @@index([formationSessionId])
   @@index([date])
   @@index([factureId])
 }
@@ -915,12 +939,10 @@ model Contractualisation {
 
   status ContractualisationStatus @default(BROUILLON)
 
-  /// 🔴 v1.6 — DERIVED, not entered. The contract = all the parcours's
-  /// séquences: montantHT mirrors the sum of Sequence.montantHT (see
-  /// recomputeMontants in lib/parcours.ts), recomputed whenever a séquence's
-  /// price changes or a new contractualisation is created. Every non-
-  /// cancelled contractualisation on the same parcours shows the same
-  /// figure — there is no more per-payer negotiated amount.
+  /// 🔴 DERIVED, not entered. INTRA uses the parcours's sequence total once.
+  /// INTER multiplies the sequence total by the number of participants
+  /// attached to THIS contractualisation. Recomputed whenever a séquence price,
+  /// contractualisation, or participant assignment changes.
   montantHT      Int  @default(0) /// euro cents — PANDO never charges VAT
   delaiReglement Int? /// overrides Parcours default
 

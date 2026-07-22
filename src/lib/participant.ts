@@ -94,9 +94,9 @@ export async function createContractualisation(parcoursId: string, input: Contra
         retractationEndsAt: input.payerType === 'INDIVIDU' ? computeRetractationEndsAt() : null,
       },
     })
-    // 🔴 v1.6 — montantHT is derived (the contract = all the parcours's
-    // séquences), so a brand-new contractualisation must immediately mirror
-    // the current séquence total instead of starting at 0.
+    // 🔴 montantHT is derived. For INTER it remains 0 until participants are
+    // attached to this contractualisation; for INTRA it mirrors the parcours
+    // sequence total immediately.
     await recomputeMontants(parcoursId, tx)
     return created
   })
@@ -128,14 +128,15 @@ export async function updateContractualisation(id: string, input: Contractualisa
 
 /// 🔴 A contractualisation is never hard-deleted — it can already carry real
 /// documents (devis/factures/conventions) and enrolled participants, neither
-/// of which cascade-delete from it. Cancelling sets status ANNULEE and is
-/// otherwise a no-op on montants: Parcours.montantHT is the séquences'
-/// value now, not a sum of active deals, so it doesn't move when a payer
-/// cancels. The cancelled contractualisation's own montantHT is simply
-/// frozen at whatever it last was — recomputeMontants only ever touches
-/// non-cancelled rows going forward.
+/// of which cascade-delete from it. Cancelling freezes the contractualisation's
+/// own montantHT as the historical deal amount, then recomputes the parcours
+/// from the remaining non-cancelled deals.
 export async function cancelContractualisation(id: string) {
-  return db.contractualisation.update({ where: { id }, data: { status: 'ANNULEE' } })
+  return db.$transaction(async (tx) => {
+    const cancelled = await tx.contractualisation.update({ where: { id }, data: { status: 'ANNULEE' } })
+    await recomputeMontants(cancelled.parcoursId, tx)
+    return cancelled
+  })
 }
 
 export async function addFinancement(contractualisationId: string, input: FinancementInput) {
@@ -167,12 +168,18 @@ export async function deleteFinancement(id: string) {
 }
 
 export async function enrollParticipant(parcoursId: string, input: EnrollParticipantInput) {
-  return db.parcoursParticipant.create({
-    data: {
-      parcoursId,
-      participantId: input.participantId,
-      contractualisationId: input.contractualisationId ?? null,
-    },
+  return db.$transaction(async (tx) => {
+    const enrollment = await tx.parcoursParticipant.create({
+      data: {
+        parcoursId,
+        participantId: input.participantId,
+        contractualisationId: input.contractualisationId ?? null,
+      },
+    })
+    if (input.contractualisationId) {
+      await recomputeMontants(parcoursId, tx)
+    }
+    return enrollment
   })
 }
 

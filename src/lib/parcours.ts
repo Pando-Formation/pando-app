@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import type { FormationSnapshot } from '@/lib/formation'
-import type { ParcoursInput, SequenceInput } from '@/lib/validation/parcours'
+import type { FormationSessionInput, ParcoursInput, SequenceInput } from '@/lib/validation/parcours'
 
 /**
  * 🔴 DERIVED TOTALS — never entered by hand. See 0002_check_constraints §C.
@@ -30,28 +30,41 @@ export async function recomputeParcoursDerived(parcoursId: string, tx: Prisma.Tr
   })
 }
 
-/**
- * 🔴 v1.6 — THE CONTRACT = ALL THE SÉQUENCES. Sum of a parcours's séquences'
- * montantHT (null → 0) is the single source for both every non-cancelled
- * Contractualisation.montantHT AND the Parcours's own montantHT — pricing
- * lives at the séquence level now, not typed per payer. Every payer on the
- * same parcours mirrors the same figure; there is no more per-payer amount.
- */
 async function computeParcoursSequenceTotal(parcoursId: string, tx: Prisma.TransactionClient = db): Promise<number> {
   const agg = await tx.sequence.aggregate({ where: { parcoursId }, _sum: { montantHT: true } })
   return agg._sum.montantHT ?? 0
 }
 
-/** Recomputes every non-cancelled contractualisation's montantHT AND the parcours's own — call whenever a séquence's price could have changed, or a contractualisation is created. */
+/**
+ * 🔴 DERIVED MONEY — sequence prices are list prices; contractualisations are
+ * payer-scoped. INTRA contracts use the parcours sequence total once. INTER
+ * contracts multiply that same sequence total by the number of participants
+ * attached to THIS contractualisation. Parcours.montantHT is then the sum of
+ * non-cancelled contractualisations.
+ */
 export async function recomputeMontants(parcoursId: string, tx: Prisma.TransactionClient = db) {
-  const total = await computeParcoursSequenceTotal(parcoursId, tx)
-  await tx.contractualisation.updateMany({
-    where: { parcoursId, status: { not: 'ANNULEE' } },
-    data: { montantHT: total },
-  })
+  const [parcours, sequenceTotal, contractualisations] = await Promise.all([
+    tx.parcours.findUniqueOrThrow({ where: { id: parcoursId }, select: { track: true } }),
+    computeParcoursSequenceTotal(parcoursId, tx),
+    tx.contractualisation.findMany({
+      where: { parcoursId, status: { not: 'ANNULEE' } },
+      select: { id: true, _count: { select: { participants: true } } },
+    }),
+  ])
+
+  let parcoursTotal = 0
+  for (const contract of contractualisations) {
+    const montantHT = parcours.track === 'INTER' ? sequenceTotal * contract._count.participants : sequenceTotal
+    parcoursTotal += montantHT
+    await tx.contractualisation.update({
+      where: { id: contract.id },
+      data: { montantHT },
+    })
+  }
+
   return tx.parcours.update({
     where: { id: parcoursId },
-    data: { montantHT: total },
+    data: { montantHT: parcoursTotal },
   })
 }
 
@@ -114,6 +127,57 @@ export async function updateParcours(parcoursId: string, input: ParcoursInput) {
   })
 }
 
+export async function addFormationSession(parcoursId: string, input: FormationSessionInput) {
+  return db.$transaction(async (tx) => {
+    const { _max } = await tx.formationSession.aggregate({
+      where: { parcoursId },
+      _max: { ordre: true },
+    })
+    return tx.formationSession.create({
+      data: {
+        parcoursId,
+        ordre: (_max.ordre ?? 0) + 1,
+        titre: input.titre,
+      },
+    })
+  })
+}
+
+export async function updateFormationSession(sessionId: string, input: FormationSessionInput) {
+  return db.formationSession.update({
+    where: { id: sessionId },
+    data: { titre: input.titre },
+  })
+}
+
+async function resolveFormationSessionId(
+  parcoursId: string,
+  tx: Prisma.TransactionClient,
+  formationSessionId?: string,
+) {
+  if (formationSessionId) {
+    const session = await tx.formationSession.findFirst({
+      where: { id: formationSessionId, parcoursId, deletedAt: null },
+      select: { id: true },
+    })
+    if (!session) throw new Error('Session introuvable pour ce parcours.')
+    return session.id
+  }
+
+  const existing = await tx.formationSession.findFirst({
+    where: { parcoursId, deletedAt: null },
+    orderBy: { ordre: 'asc' },
+    select: { id: true },
+  })
+  if (existing) return existing.id
+
+  const created = await tx.formationSession.create({
+    data: { parcoursId, ordre: 1, titre: 'Session initiale' },
+    select: { id: true },
+  })
+  return created.id
+}
+
 function sequencePrismaData(input: SequenceInput) {
   return {
     titre: input.titre,
@@ -132,14 +196,15 @@ function sequencePrismaData(input: SequenceInput) {
   }
 }
 
-export async function addSequence(parcoursId: string, input: SequenceInput) {
+export async function addSequence(parcoursId: string, input: SequenceInput, formationSessionId?: string) {
   return db.$transaction(async (tx) => {
+    const resolvedSessionId = await resolveFormationSessionId(parcoursId, tx, formationSessionId)
     // 🔴 `ordre` is no longer user-facing — séquences display in date order —
     // but it stays a real, unique-per-parcours column (convocation refs like
     // "REF-CONVOC-3" are built from it), so it's assigned automatically here.
     const { _max } = await tx.sequence.aggregate({ where: { parcoursId }, _max: { ordre: true } })
     const sequence = await tx.sequence.create({
-      data: { parcoursId, ordre: (_max.ordre ?? 0) + 1, ...sequencePrismaData(input) },
+      data: { parcoursId, formationSessionId: resolvedSessionId, ordre: (_max.ordre ?? 0) + 1, ...sequencePrismaData(input) },
     })
     await recomputeParcoursDerived(parcoursId, tx)
     await recomputeMontants(parcoursId, tx)

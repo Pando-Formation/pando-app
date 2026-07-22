@@ -76,6 +76,12 @@ export const parcoursInputSchema = z
 
 export type ParcoursInput = z.infer<typeof parcoursInputSchema>
 
+export const formationSessionInputSchema = z.object({
+  titre: z.string().trim().min(1, 'Titre requis'),
+})
+
+export type FormationSessionInput = z.infer<typeof formationSessionInputSchema>
+
 export const sequenceInputSchema = z.object({
   titre: z.string().trim().min(1, 'Titre requis'),
   type: z.enum(['PRESENTIEL', 'DISTANCIEL', 'ELEARNING', 'COACHING', 'TRAVAIL_AUTONOME', 'DEFI']),

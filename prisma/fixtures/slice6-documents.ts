@@ -146,10 +146,15 @@ async function main() {
     }),
   )
 
+  const formationSession = await db.formationSession.create({
+    data: { parcoursId: parcours.id, ordre: 1, titre: 'Session documentaire' },
+  })
+
   // A past séquence — needed both to list in the convocation and to invoice.
   const pastSequence = await db.sequence.create({
     data: {
       parcoursId: parcours.id,
+      formationSessionId: formationSession.id,
       ordre: 1,
       titre: 'Jour 1',
       type: 'PRESENTIEL',
@@ -162,6 +167,7 @@ async function main() {
   const bordeauxSequence = await db.sequence.create({
     data: {
       parcoursId: parcours.id,
+      formationSessionId: formationSession.id,
       ordre: 2,
       titre: 'Jour 2',
       type: 'PRESENTIEL',
