@@ -9,6 +9,7 @@ import {
   updateParcours,
   addFormationSession,
   updateFormationSession,
+  deleteFormationSession,
   addSequence,
   updateSequence,
   deleteSequence,
@@ -169,6 +170,16 @@ export async function updateFormationSessionAction(
     return { formError: e instanceof Error ? e.message : 'Erreur inattendue.' }
   }
 
+  revalidatePath(`/parcours/${parcoursId}`)
+  redirect(`/parcours/${parcoursId}?tab=sequences`)
+}
+
+export async function deleteFormationSessionAction(formData: FormData) {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const parcoursId = String(formData.get('parcoursId') ?? '')
+  if (!id || !parcoursId) return
+  await deleteFormationSession(id)
   revalidatePath(`/parcours/${parcoursId}`)
   redirect(`/parcours/${parcoursId}?tab=sequences`)
 }

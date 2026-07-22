@@ -150,6 +150,25 @@ export async function updateFormationSession(sessionId: string, input: Formation
   })
 }
 
+export async function deleteFormationSession(sessionId: string) {
+  return db.$transaction(async (tx) => {
+    const session = await tx.formationSession.findUniqueOrThrow({
+      where: { id: sessionId },
+      select: {
+        parcoursId: true,
+        _count: { select: { sequences: true } },
+      },
+    })
+    if (session._count.sequences > 0) {
+      throw new Error("Une session contenant des séquences ne peut pas être supprimée.")
+    }
+    return tx.formationSession.update({
+      where: { id: sessionId },
+      data: { deletedAt: new Date() },
+    })
+  })
+}
+
 async function resolveFormationSessionId(
   parcoursId: string,
   tx: Prisma.TransactionClient,

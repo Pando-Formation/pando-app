@@ -23,8 +23,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { deleteSequenceAction } from '@/app/(app)/parcours/actions'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { deleteFormationSessionAction, deleteSequenceAction } from '@/app/(app)/parcours/actions'
 
 export type SequenceRow = {
   id: string
@@ -189,6 +189,7 @@ export function SequencesTable({
     () => new Set(data.flatMap((session) => session.sequences.map((sequence) => sequence.id))),
   )
   const { widths, startResize } = useColumnWidths()
+  const sourceSequenceCounts = useMemo(() => new Map(data.map((session) => [session.id, session.sequences.length])), [data])
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -309,6 +310,7 @@ export function SequencesTable({
               {rows.map((session) => {
                 const stats = sessionStats(session)
                 const sessionOpen = expandedSessions.has(session.id)
+                const totalSequenceCount = sourceSequenceCounts.get(session.id) ?? session.sequences.length
                 return (
                   <Fragment key={session.id}>
                     <TableRow className="bg-muted/30">
@@ -350,15 +352,35 @@ export function SequencesTable({
                       <TableCell className="align-top py-5" style={colStyle(widths.formateur)} />
                       <TableCell className="sticky right-0 z-10 min-w-[70px] border-l bg-card pe-6 align-top py-5 text-right">
                         {canWrite && (
-                          <Button
-                            render={<Link href={`/parcours/${parcoursId}/sessions/${session.id}/sequences/nouveau`} />}
-                            nativeButton={false}
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Ajouter une séquence à ${session.titre}`}
-                          >
-                            <PlusIcon />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Actions pour ${session.titre}`} />}>
+                              <MoreHorizontalIcon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-56">
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem render={<Link href={`/parcours/${parcoursId}/sessions/${session.id}/sequences/nouveau`} />}>
+                                  <PlusIcon />
+                                  Ajouter une séquence
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                              <DropdownMenuSeparator />
+                              {totalSequenceCount === 0 ? (
+                                <form action={deleteFormationSessionAction}>
+                                  <input type="hidden" name="id" value={session.id} />
+                                  <input type="hidden" name="parcoursId" value={parcoursId} />
+                                  <DropdownMenuItem variant="destructive" render={<button type="submit" className="w-full" />}>
+                                    <Trash2Icon />
+                                    Supprimer la session
+                                  </DropdownMenuItem>
+                                </form>
+                              ) : (
+                                <DropdownMenuItem variant="destructive" disabled title="Retirez d'abord les séquences de cette session.">
+                                  <Trash2Icon />
+                                  Supprimer la session
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </TableCell>
                     </TableRow>
