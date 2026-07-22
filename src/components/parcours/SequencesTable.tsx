@@ -8,6 +8,8 @@ import {
   SearchIcon,
   MoreHorizontalIcon,
   ArrowUpDownIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   PlusIcon,
   ClipboardCheckIcon,
   PencilIcon,
@@ -182,6 +184,10 @@ export function SequencesTable({
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(() => new Set(data.map((session) => session.id)))
+  const [expandedSequences, setExpandedSequences] = useState<Set<string>>(
+    () => new Set(data.flatMap((session) => session.sequences.map((sequence) => sequence.id))),
+  )
   const { widths, startResize } = useColumnWidths()
 
   const toggleSort = (key: SortKey) => {
@@ -191,6 +197,24 @@ export function SequencesTable({
       setSortKey(key)
       setSortDir('asc')
     }
+  }
+
+  const toggleSession = (id: string) => {
+    setExpandedSessions((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSequence = (id: string) => {
+    setExpandedSequences((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   const rows = useMemo(() => {
@@ -284,15 +308,30 @@ export function SequencesTable({
             <TableBody>
               {rows.map((session) => {
                 const stats = sessionStats(session)
+                const sessionOpen = expandedSessions.has(session.id)
                 return (
                   <Fragment key={session.id}>
                     <TableRow className="bg-muted/30">
                       <TableCell className="ps-6 align-top whitespace-normal py-5" style={colStyle(widths.titre)}>
-                        <span className="font-medium">{session.titre}</span>
-                        <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                          {session.sequences.length} séquence{session.sequences.length > 1 ? 's' : ''} · {stats.hours}h ·{' '}
-                          {euros(stats.montantHT)}
-                        </p>
+                        <div className="flex items-start gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={sessionOpen ? `Replier ${session.titre}` : `Déplier ${session.titre}`}
+                            aria-expanded={sessionOpen}
+                            onClick={() => toggleSession(session.id)}
+                          >
+                            {sessionOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                          </Button>
+                          <div>
+                            <span className="font-medium">{session.titre}</span>
+                            <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                              {session.sequences.length} séquence{session.sequences.length > 1 ? 's' : ''} · {stats.hours}h ·{' '}
+                              {euros(stats.montantHT)}
+                            </p>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell className="align-top py-5" style={colStyle(widths.type)}>
                         <Badge variant="accent">Session</Badge>
@@ -324,26 +363,41 @@ export function SequencesTable({
                       </TableCell>
                     </TableRow>
 
-                    {session.sequences.length === 0 ? (
+                    {sessionOpen && session.sequences.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="ps-6 py-4 text-muted-foreground">
+                        <TableCell colSpan={9} className="py-4 ps-14 text-muted-foreground">
                           Aucune séquence dans cette session.
                         </TableCell>
                       </TableRow>
-                    ) : (
+                    ) : sessionOpen ? (
                       session.sequences.map((s) => {
                         const hasMultipleDj = s.demiJournees.length > 1
+                        const sequenceOpen = expandedSequences.has(s.id)
 
                         return (
                           <Fragment key={s.id}>
                             <TableRow className="group">
-                              <TableCell className="ps-6 align-top whitespace-normal py-5" style={colStyle(widths.titre)}>
-                                <span className="font-medium">↳ {s.titre}</span>
-                                <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
-                                  {hasMultipleDj
-                                    ? `${s.demiJournees.length} demi-journées · ${s.heures}h`
-                                    : `${s.demiJournees.map((dj) => DEMI_JOURNEE_LABELS[dj] ?? dj).join(' + ')} · ${s.heures}h`}
-                                </p>
+                              <TableCell className="ps-12 align-top whitespace-normal py-5" style={colStyle(widths.titre)}>
+                                <div className="flex items-start gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    aria-label={sequenceOpen ? `Replier ${s.titre}` : `Déplier ${s.titre}`}
+                                    aria-expanded={sequenceOpen}
+                                    onClick={() => toggleSequence(s.id)}
+                                  >
+                                    {sequenceOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                                  </Button>
+                                  <div>
+                                    <span className="font-medium">{s.titre}</span>
+                                    <p className="t-caption-1" style={{ marginTop: 'var(--space-2)' }}>
+                                      {hasMultipleDj
+                                        ? `${s.demiJournees.length} demi-journées · ${s.heures}h`
+                                        : `${s.demiJournees.map((dj) => DEMI_JOURNEE_LABELS[dj] ?? dj).join(' + ')} · ${s.heures}h`}
+                                    </p>
+                                  </div>
+                                </div>
                               </TableCell>
                               <TableCell className="align-top py-5" style={colStyle(widths.type)}>
                                 <Badge variant="secondary">{SEQUENCE_TYPE_LABELS[s.type] ?? s.type}</Badge>
@@ -421,11 +475,11 @@ export function SequencesTable({
                               </TableCell>
                             </TableRow>
 
-                            {hasMultipleDj &&
+                            {sequenceOpen &&
                               s.demiJournees.map((dj) => (
                                 <TableRow key={`${s.id}-${dj}`} className="bg-muted/20">
-                                  <TableCell className="ps-6 align-top py-3" style={colStyle(widths.titre)}>
-                                    <span className="text-muted-foreground">↳↳ {DEMI_JOURNEE_LABELS[dj] ?? dj}</span>
+                                  <TableCell className="ps-20 align-top py-3" style={colStyle(widths.titre)}>
+                                    <span className="text-muted-foreground">{DEMI_JOURNEE_LABELS[dj] ?? dj}</span>
                                   </TableCell>
                                   <TableCell className="align-top py-3" style={colStyle(widths.type)} />
                                   <TableCell className="align-top py-3" style={colStyle(widths.date)} />
@@ -450,7 +504,7 @@ export function SequencesTable({
                           </Fragment>
                         )
                       })
-                    )}
+                    ) : null}
                   </Fragment>
                 )
               })}
